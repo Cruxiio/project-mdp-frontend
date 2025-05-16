@@ -1,6 +1,8 @@
 package com.example.nutrisaver
 
 import android.os.Bundle
+import android.widget.Space
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -26,13 +29,19 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -53,6 +63,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -65,28 +77,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NutriSaverTheme {
-                val navController = rememberNavController()
-
-                NavHost(navController = navController, startDestination = "login") {
-                    composable("login") {
-                        LoginScreen(onNavigateToRegister = {
-                            navController.navigate("register")
-                        })
-                    }
-                    composable("register") {
-                        RegisterScreen(onNavigateToLogin = {
-                            navController.navigate("login")
-                        })
-                    }
+                    val authViewModel = AuthViewModel()
+                    MyAppNavigation(authViewModel = authViewModel)
                 }
             }
         }
-    }
 }
 
 @Composable
-fun LoginScreen(onNavigateToRegister: () -> Unit) {
-    var username by remember { mutableStateOf("") }
+fun LoginScreen(modifier: Modifier = Modifier,
+                navController: NavHostController,
+                authViewModel: AuthViewModel,
+                innerPadding: PaddingValues = PaddingValues()
+) {
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
 
@@ -94,6 +98,18 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val circleSize = screenWidth
+    val authState = authViewModel.authState.observeAsState()
+    val context = LocalContext.current
+    LaunchedEffect(authState.value) {
+        when(authState.value){
+            is AuthState.Authenticated -> navController.navigate("Home")
+            is AuthState.Error -> Toast.makeText(context,
+                (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
+            else -> Unit
+        }
+    }
     val circleSize = LocalConfiguration.current.screenWidthDp.dp
 
     Box(modifier = Modifier
@@ -160,20 +176,13 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
                     .padding(horizontal = 32.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
+                Text("Email", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                OutlinedTextField(
                     modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Text("Username", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        value = username,
-                        onValueChange = { username = it },
-
-                        )
-                }
+                        .fillMaxWidth(),
+                    value = email,
+                    onValueChange = { email = it },
+                )
                 Spacer(modifier = Modifier.height(10.dp))
                 Column(
                     modifier = Modifier
@@ -207,16 +216,16 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Button(
                     onClick = {
-                        // LOGIKA LOGIN DISINI
-                    },
-                    contentPadding = PaddingValues(), // removes default padding to match Box
+                        authViewModel.login(email,password)
+                    }, enabled = authState.value != AuthState.Loading,
+                    contentPadding = PaddingValues(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent // make Button background transparent
+                        containerColor = Color.Transparent
                     ),
                     shape = CircleShape,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp) // or whatever height you want
+                        .height(50.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -225,7 +234,7 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Login",
+                            text = "Sign In",
                             fontSize = 24.sp,
                             fontFamily = OpenSans,
                             color = Color.White,
@@ -240,31 +249,34 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(30.dp))
 
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Don't Have an Account?",
-                        fontSize = 20.sp,
-                        fontFamily = OpenSans
+                        text = "Don't Have an Account? ",
+                        fontSize = 14.sp,
+                        fontFamily = OpenSans,
+                        color = Color.Black
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
                     TextButton(
                         onClick = {
-                            onNavigateToRegister()
+                            navController.navigate("Register")
                         }
                     ) {
-                        Text("Create an Account",
-                            fontSize = 20.sp,
+                        Text(
+                            text = "Sign up",
+                            fontSize = 14.sp,
                             style = TextStyle(
-                                textDecoration = TextDecoration.Underline,
                                 fontFamily = OpenSans,
                                 fontWeight = FontWeight.Bold,
                                 color = colorResource(R.color.green_dark)
-                            ))
+                            )
+                        )
                     }
                     Spacer(modifier = Modifier.height(50.dp))
                 }
@@ -274,208 +286,226 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
 }
 
 @Composable
-fun RegisterScreen(onNavigateToLogin: () -> Unit) {
+fun RegisterScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    innerPadding: PaddingValues = PaddingValues()
+) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-    val yellow_lemon = colorResource(id = R.color.yellow_lemon)
     val green = colorResource(id = R.color.green)
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
-    val greenDark = colorResource(id = R.color.green_dark)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp),
-    ) {
+    val authState = authViewModel.authState.observeAsState()
+    val context = LocalContext.current
+    LaunchedEffect(authState.value) {
+        when(authState.value){
+            is AuthState.Authenticated -> navController.navigate("Home")
+            is AuthState.Error -> Toast.makeText(context,
+                (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
+            else -> Unit
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .align(Alignment.TopCenter),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(30.dp))
-            Text("Create Account",
-                style = TextStyle(
-                    fontSize = 32.sp,
-                    fontFamily = OpenSans,
-                    fontWeight = FontWeight.Bold,
-                    color = green
-                )
+            Spacer(modifier = Modifier.height(45.dp))
+
+            Text(
+                text = "Create Account",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = green,
+                modifier = Modifier.padding(vertical = 40.dp)
             )
-            Spacer(modifier = Modifier.height(30.dp))
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(greenGradient)
-                    .padding(all = 15.dp)
+                    .padding(horizontal = 8.dp)
+                    .background(greenGradient, shape = RoundedCornerShape(20.dp))
+                    .padding(20.dp)
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.Start
                 ) {
-                    Text("Account Information",
-                        style = TextStyle(
-                            fontSize = 18.sp,
-                            fontFamily = OpenSans,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    )
-                    HintBasicTextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        hint = "Username",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                    )
-                    HintBasicTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        hint = "Email",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                    )
-                    HintBasicTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        hint = "Password",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                    )
-                    HintBasicTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        hint = "Confirm Password",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                    Text(
+                        text = "Account Information",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Text("Username", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        value = username,
+                        onValueChange = { username = it },
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(R.color.bg),
+                            unfocusedContainerColor = colorResource(R.color.bg))
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text("Email", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        value = email,
+                        onValueChange = { email = it },
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(R.color.bg),
+                            unfocusedContainerColor = colorResource(R.color.bg))
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text("Password", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        value = password,
+                        onValueChange = { password = it },
+                        label = {  },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(R.color.bg),
+                        unfocusedContainerColor = colorResource(R.color.bg))
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text("Confirm Password", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = {  },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(R.color.bg),
+                            unfocusedContainerColor = colorResource(R.color.bg))
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+
+
                     Button(
                         onClick = {
-                            // LOGIKA REGISTER DISINI
-                        },
+                            authViewModel.signup(email,password)
+                        }, enabled = authState.value != AuthState.Loading,
                         contentPadding = PaddingValues(),
-                        shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = yellow_lemon
+                            containerColor = colorResource(id = R.color.pastel_green)
                         ),
+                        shape = CircleShape,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp)
                     ) {
-                        Text(
-                            text = "Register",
-                            style = TextStyle(
-                                fontSize = 20.sp,
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(colorResource(R.color.pastel_green), shape = CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Sign Up",
+                                fontSize = 24.sp,
                                 fontFamily = OpenSans,
-                                fontWeight = FontWeight.Bold,
-                                color = greenDark
+                                color = colorResource(R.color.green_dark),
+                                fontWeight = FontWeight.Bold
                             )
-                        )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(30.dp))
             HorizontalDivider(
                 thickness = 2.dp
             )
             Spacer(modifier = Modifier.height(30.dp))
 
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Already Have an Account?",
-                    fontSize = 20.sp,
-                    fontFamily = OpenSans
+                    text = "Already Have an Account? ",
+                    fontSize = 14.sp,
+                    fontFamily = OpenSans,
+                    color = Color.Black
                 )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.width(5.dp))
                 TextButton(
                     onClick = {
-                        onNavigateToLogin()
+                        navController.navigate("Login")
                     }
                 ) {
-                    Text("Sign In",
-                        fontSize = 20.sp,
+                    Text(
+                        text = "Sign in",
+                        fontSize = 14.sp,
                         style = TextStyle(
-                            textDecoration = TextDecoration.Underline,
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold,
                             color = colorResource(R.color.green_dark)
-                        ))
-                }
-                Spacer(modifier = Modifier.height(50.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun HintBasicTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    hint: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .background(Color.White, RoundedCornerShape(10.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            singleLine = true,
-            textStyle = TextStyle(
-                color = Color.Black,
-                fontSize = 16.sp
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            decorationBox = { innerTextField ->
-                if (value.isEmpty()) {
-                    Text(
-                        text = hint,
-                        color = Color.Gray,
-                        fontSize = 16.sp
+                        )
                     )
                 }
-                innerTextField()
             }
-        )
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun Preview() {
-    NutriSaverTheme {
-        val navController = rememberNavController()
-        NavHost(navController = navController, startDestination = "login") {
-            composable("login") {
-                LoginScreen(onNavigateToRegister = {
-                    navController.navigate("register")
-                })
-            }
-            composable("register") {
-                RegisterScreen(onNavigateToLogin = {
-                    navController.navigate("login")
-                })
-            }
+            Spacer(modifier = Modifier.height(50.dp))
         }
     }
 }
+
+
+@Composable
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    innerPadding: PaddingValues = PaddingValues()
+) {
+    val authState = authViewModel.authState.observeAsState()
+
+    LaunchedEffect(authState.value) {
+        when(authState.value){
+            is AuthState.Unauthenticated -> navController.navigate("Login")
+            else -> Unit
+        }
+    }
+
+    Column(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Text(text = "Tes masuk home", fontSize = 32.sp)
+        TextButton(onClick = {
+            authViewModel.signout()
+        }){
+            Text( "Sign Out")
+        }
+    }
+
+}
+
