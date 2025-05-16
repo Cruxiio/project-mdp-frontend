@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -57,9 +55,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -70,6 +65,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.nutrisaver.ui.theme.NutriSaverTheme
 import com.example.nutrisaver.ui.theme.OpenSans
@@ -113,6 +110,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
             else -> Unit
         }
     }
+    val circleSize = LocalConfiguration.current.screenWidthDp.dp
 
     Box(modifier = Modifier
         .fillMaxSize(),
@@ -144,9 +142,12 @@ fun LoginScreen(modifier: Modifier = Modifier,
                 .zIndex(1f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(40.dp))
             Image(
-                painter = painterResource(R.drawable.ic_launcher_foreground),
+                painter = painterResource(R.drawable.logo_white),
+                modifier = Modifier
+                    .size(90.dp)
+                    .padding(bottom = 10.dp),
                 contentDescription = "App icon"
             )
             Text(
@@ -183,16 +184,21 @@ fun LoginScreen(modifier: Modifier = Modifier,
                     onValueChange = { email = it },
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                Text("Password", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                OutlinedTextField(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    value = password,
-                    onValueChange = { password = it },
-                    label = {  },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
+                        .fillMaxWidth()
+                ) {
+                    Text("Password", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        value = password,
+                        onValueChange = { password = it },
+                        label = {  },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    )
+                }
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically,) {
                     Checkbox(
@@ -272,8 +278,8 @@ fun LoginScreen(modifier: Modifier = Modifier,
                             )
                         )
                     }
+                    Spacer(modifier = Modifier.height(50.dp))
                 }
-                Spacer(modifier = Modifier.height(50.dp))
             }
         }
     }
