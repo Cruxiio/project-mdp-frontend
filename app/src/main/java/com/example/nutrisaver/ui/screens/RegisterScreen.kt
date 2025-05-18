@@ -224,11 +224,12 @@ fun RegisterScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+                    .padding(horizontal = 26.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
+                    modifier = Modifier.weight(1f),
                     text = "Already Have an Account? ",
                     fontSize = 18.sp,
                     fontFamily = OpenSans,
@@ -236,6 +237,7 @@ fun RegisterScreen(
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 TextButton(
+
                     contentPadding = PaddingValues(0.dp),
                     onClick = {
                         navController.navigate("login")
