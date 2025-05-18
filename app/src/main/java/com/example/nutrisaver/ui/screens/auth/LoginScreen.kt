@@ -1,4 +1,4 @@
-package com.example.nutrisaver.ui.screens
+package com.example.nutrisaver.ui.screens.auth
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -75,7 +75,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
     LaunchedEffect(authState.value) {
         when(authState.value){
             is AuthState.Authenticated -> {
-                navController.navigate("main") {
+                navController.navigate("user") {
                     popUpTo("auth") { inclusive = true } // ini biar gk bisa balik ke login screen
                     launchSingleTop = true
                 }

@@ -6,10 +6,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import androidx.navigation.compose.rememberNavController
-import com.example.nutrisaver.ui.screens.LoginScreen
-import com.example.nutrisaver.ui.screens.RegisterDetailScreen
-import com.example.nutrisaver.ui.screens.RegisterScreen
+import com.example.nutrisaver.ui.screens.auth.LoginScreen
+import com.example.nutrisaver.ui.screens.auth.RegisterDetailScreen
+import com.example.nutrisaver.ui.screens.auth.RegisterScreen
 import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.ProfileScreen
 
@@ -23,7 +22,7 @@ fun MyAppNavigation(
     NavHost(navController = navController, startDestination = "auth") {
 
         // navigation antara login dan register
-        navigation(startDestination = "register-detail", route = "auth") {
+        navigation(startDestination = "login", route = "auth") {
             composable("login") {
                 LoginScreen(
                     navController = navController,
@@ -37,7 +36,10 @@ fun MyAppNavigation(
                 )
             }
             composable("register-detail") {
-                RegisterDetailScreen()
+                RegisterDetailScreen(
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
             }
         }
 

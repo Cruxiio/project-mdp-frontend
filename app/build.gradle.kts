@@ -53,7 +53,6 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.foundation.android)
 //    implementation(libs.androidx.navigation.compose.jvmstubs)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -70,6 +69,8 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-auth")
     implementation("androidx.navigation:navigation-compose:2.9.0")
-    implementation("androidx.compose.material:material:1.8.1")
-    implementation("androidx.compose.material3:material3:1.2.0")
+
+    // Use material from the Compose BOM to ensure version compatibility
+    implementation("androidx.compose.material:material")
+    // Material3 is already included via libs.androidx.material3 above
 }
