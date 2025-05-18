@@ -42,3 +42,15 @@ val OpenSans = FontFamily(
     Font(R.font.open_sans_light, FontWeight.Light),
     Font(R.font.open_sans_extra_bold, FontWeight.ExtraBold)
 )
+
+val Roboto = FontFamily(
+    Font(R.font.roboto_regular),
+    Font(R.font.roboto_bold, FontWeight.Bold),
+    Font(R.font.roboto_semi_bold, FontWeight.SemiBold),
+    Font(R.font.roboto_extra_bold, FontWeight.ExtraBold),
+    Font(R.font.roboto_light, FontWeight.Light),
+    Font(R.font.roboto_medium, FontWeight.Medium),
+    Font(R.font.roboto_black, FontWeight.Black),
+    Font(R.font.roboto_extra_light, FontWeight.ExtraLight),
+    Font(R.font.roboto_thin, FontWeight.Thin),
+)

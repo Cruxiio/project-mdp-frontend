@@ -5,10 +5,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.example.nutrisaver.ui.screens.HomeScreen
 import com.example.nutrisaver.ui.screens.LoginScreen
+import com.example.nutrisaver.ui.screens.RegisterDetailScreen
 import com.example.nutrisaver.ui.screens.RegisterScreen
+import com.example.nutrisaver.ui.screens.user.DashboardScreen
+import com.example.nutrisaver.ui.screens.user.ProfileScreen
 
 @Composable
 fun MyAppNavigation(
@@ -16,15 +19,46 @@ fun MyAppNavigation(
     navController: NavHostController,
     authViewModel: AuthViewModel
 ) {
-    NavHost(navController = navController, startDestination = "Login") {
-        composable("Login") {
-            LoginScreen(modifier, navController, authViewModel)
+    // buat nested navigation
+    NavHost(navController = navController, startDestination = "auth") {
+
+        // navigation antara login dan register
+        navigation(startDestination = "register-detail", route = "auth") {
+            composable("login") {
+                LoginScreen(
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
+            }
+            composable("register") {
+                RegisterScreen(
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
+            }
+            composable("register-detail") {
+                RegisterDetailScreen()
+            }
         }
-        composable("Register") {
-            RegisterScreen(modifier, navController, authViewModel)
+
+        // navigation pada halaman user.
+        navigation(startDestination = "dashboard", route = "user") {
+            composable("dashboard") {
+                DashboardScreen()
+            }
+            composable("foodstock") {
+
+            }
+            composable("recipe") {
+
+            }
+            composable("profile") {
+                ProfileScreen(
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
+            }
         }
-        composable("Home") {
-            HomeScreen(modifier, navController, authViewModel)
-        }
+
     }
 }

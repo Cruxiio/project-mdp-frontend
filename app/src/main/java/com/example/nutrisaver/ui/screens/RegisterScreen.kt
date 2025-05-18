@@ -69,14 +69,17 @@ fun RegisterScreen(
     val context = LocalContext.current
     LaunchedEffect(authState.value) {
         when(authState.value){
-            is AuthState.Authenticated -> navController.navigate("Home")
+            is AuthState.Authenticated -> navController.navigate("register-detail")
             is AuthState.Error -> Toast.makeText(context,
                 (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
             else -> Unit
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(colorResource(R.color.bg))
+    ) {
 
         Column(
             modifier = Modifier
@@ -231,7 +234,7 @@ fun RegisterScreen(
                 TextButton(
                     contentPadding = PaddingValues(0.dp),
                     onClick = {
-                        navController.navigate("Login")
+                        navController.navigate("login")
                     }
                 ) {
                     Text(

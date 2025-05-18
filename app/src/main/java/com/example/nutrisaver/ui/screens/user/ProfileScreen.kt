@@ -1,4 +1,4 @@
-package com.example.nutrisaver.ui.screens
+package com.example.nutrisaver.ui.screens.user
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,7 +17,7 @@ import com.example.nutrisaver.AuthState
 import com.example.nutrisaver.AuthViewModel
 
 @Composable
-fun HomeScreen(
+fun ProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     authViewModel: AuthViewModel,

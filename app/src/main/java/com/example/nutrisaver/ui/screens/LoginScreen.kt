@@ -74,7 +74,12 @@ fun LoginScreen(modifier: Modifier = Modifier,
     val context = LocalContext.current
     LaunchedEffect(authState.value) {
         when(authState.value){
-            is AuthState.Authenticated -> navController.navigate("Home")
+            is AuthState.Authenticated -> {
+                navController.navigate("main") {
+                    popUpTo("auth") { inclusive = true } // ini biar gk bisa balik ke login screen
+                    launchSingleTop = true
+                }
+            }
             is AuthState.Error -> Toast.makeText(context,
                 (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
             else -> Unit
@@ -83,7 +88,8 @@ fun LoginScreen(modifier: Modifier = Modifier,
     val circleSize = LocalConfiguration.current.screenWidthDp.dp
 
     Box(modifier = Modifier
-        .fillMaxSize(),
+        .fillMaxSize()
+        .background(colorResource(R.color.bg)),
     ){
 
         Box(
@@ -236,7 +242,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
                     TextButton(
                         contentPadding = PaddingValues(0.dp),
                         onClick = {
-                            navController.navigate("Register")
+                            navController.navigate("register")
                         }
                     ) {
                         Text(
