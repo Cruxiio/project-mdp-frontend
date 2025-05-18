@@ -121,6 +121,7 @@ fun RegisterScreen(
                     OutlinedTextField(
                         modifier = Modifier
                             .fillMaxWidth(),
+                        singleLine = true,
                         value = username,
                         onValueChange = { username = it },
                         colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
@@ -135,6 +136,7 @@ fun RegisterScreen(
                     OutlinedTextField(
                         modifier = Modifier
                             .fillMaxWidth(),
+                        singleLine = true,
                         value = email,
                         onValueChange = { email = it },
                         colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
@@ -149,6 +151,7 @@ fun RegisterScreen(
                     OutlinedTextField(
                         modifier = Modifier
                             .fillMaxWidth(),
+                        singleLine = true,
                         value = password,
                         onValueChange = { password = it },
                         label = {  },
@@ -167,6 +170,7 @@ fun RegisterScreen(
                         modifier = Modifier
                             .fillMaxWidth(),
                         value = confirmPassword,
+                        singleLine = true,
                         onValueChange = { confirmPassword = it },
                         label = {  },
                         visualTransformation = PasswordVisualTransformation(),

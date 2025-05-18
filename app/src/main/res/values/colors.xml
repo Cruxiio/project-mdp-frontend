@@ -12,4 +12,6 @@
     <color name="bg2_2">#d1dbd2</color>
     <color name="item_1">#92b693</color>
     <color name="item_2">#52ad9f</color>
+
+    <color name="red">#da3422</color>
 </resources>

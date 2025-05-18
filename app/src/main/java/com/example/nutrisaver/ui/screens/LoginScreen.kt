@@ -156,25 +156,22 @@ fun LoginScreen(modifier: Modifier = Modifier,
                 OutlinedTextField(
                     modifier = Modifier
                         .fillMaxWidth(),
+                    singleLine = true,
                     value = email,
                     onValueChange = { email = it },
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                Column(
+                Text("Password", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                OutlinedTextField(
                     modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Text("Password", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        value = password,
-                        onValueChange = { password = it },
-                        label = {  },
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                    )
-                }
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    value = password,
+                    onValueChange = { password = it },
+                    label = {  },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically,) {
                     Checkbox(
