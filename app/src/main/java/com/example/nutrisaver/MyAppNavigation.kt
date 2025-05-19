@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.nutrisaver.ui.screens.LoginScreen
 import com.example.nutrisaver.ui.screens.RegisterDetailScreen
 import com.example.nutrisaver.ui.screens.RegisterScreen
+import com.example.nutrisaver.ui.screens.user.AddFoodStockScreen
 import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
 import com.example.nutrisaver.ui.screens.user.ProfileScreen
@@ -50,6 +51,9 @@ fun MyAppNavigation(
             }
             composable("foodstock") {
                 FoodStockScreen(navController = navController)
+            }
+            composable("addfoodstock") {
+                AddFoodStockScreen(navController = navController)
             }
             composable("recipe") {
                 RecipeScreen(navController = navController)

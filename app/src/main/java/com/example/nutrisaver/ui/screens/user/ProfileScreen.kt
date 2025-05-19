@@ -4,22 +4,31 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -68,6 +77,7 @@ fun ProfileScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileContent(modifier: Modifier = Modifier,
                    navController: NavHostController,
@@ -83,6 +93,15 @@ fun ProfileContent(modifier: Modifier = Modifier,
     val logoutBtn1 = colorResource(id = R.color.logout_btn_1)
     val logoutBtn2 = colorResource(id = R.color.logout_btn_2)
     val logoutGradient = Brush.verticalGradient(listOf(logoutBtn1, logoutBtn2))
+
+    val item1 = colorResource(id = R.color.item_1)
+    val item2 = colorResource(id = R.color.item_2)
+    val itemGradient = Brush.verticalGradient(listOf(item1, item2))
+
+    val usersAllergies: List<String> = listOf("tes") // TODO: Ganti ke allergies user dari database
+    val meatAllow = true // TODO: Ganti ke meatAllow user dari database
+    val dairyAllow = true // TODO: Ganti ke dairyAllow user dari database
+    val eggAllow = true // TODO: Ganti ke eggAllow user dari database
 
     val authState = authViewModel.authState.observeAsState()
 
@@ -100,26 +119,9 @@ fun ProfileContent(modifier: Modifier = Modifier,
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 20.dp)
+                .padding(top = 20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-//            Box(
-//                modifier = Modifier.fillMaxWidth().background(greenGradient)
-//            ) {
-//                Column(
-//                    modifier = Modifier.fillMaxWidth().padding(vertical = 15.dp),
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//                    Text(
-//                        "Profile",
-//                        fontFamily = OpenSans,
-//                        fontSize = 24.sp,
-//                        fontWeight = FontWeight.Bold,
-//                        color = Color.White
-//                    )
-//                }
-//            }
-
             Column(
                 modifier = modifier
                     .fillMaxWidth(),
@@ -174,7 +176,7 @@ fun ProfileContent(modifier: Modifier = Modifier,
                     Box(
                         modifier = Modifier.background(greenGradient)
                     ) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 10.dp),
+                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 10.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -288,20 +290,109 @@ fun ProfileContent(modifier: Modifier = Modifier,
                         )
                     }
                     HorizontalDivider(thickness = 1.dp)
-                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 15.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 15.dp),
+                    ) {
                         Text(
-                            "Height: ",
-                            fontFamily = OpenSans,
+                            "Diet Ratio",
                             fontSize = 18.sp,
+                            fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            "xx cm", // TODO: Ganti ke gender user
-                            fontFamily = OpenSans,
-                            fontSize = 18.sp
+                        Spacer(modifier = Modifier.height(8.dp))
+                        DietRatioBar(
+                            carbRatio = 0.5f, // TODO: Isi sama diet ratio user
+                            proteinRatio = 0.3f,
+                            fatRatio = 0.2f
                         )
+                    }
+                    HorizontalDivider(thickness = 1.dp)
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 15.dp),
+                    ) {
+                        Text(
+                            "Allergies",
+                            fontSize = 18.sp,
+                            fontFamily = OpenSans,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (usersAllergies.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                usersAllergies.forEach { allergy ->
+                                    Box(
+                                        modifier = Modifier
+                                            .background(
+                                                brush = itemGradient,
+                                                shape = CircleShape,
+                                            )
+                                            .padding(horizontal = 20.dp, vertical = 7.dp)
+                                    ) {
+                                        Text(
+                                            allergy,
+                                            color = Color.White,
+                                            fontFamily = OpenSans,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                }
+                            }
+                        } else {
+                            Text(
+                                "No Allergies",
+                                fontSize = 18.sp,
+                                fontFamily = OpenSans
+                            )
+                        }
+                    }
+                }
+                HorizontalDivider(thickness = 1.dp)
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 15.dp)
+                ) {
+                    Text("Food Restrictions",
+                        fontSize = 18.sp,
+                        fontFamily = OpenSans,
+                        fontWeight = FontWeight.Bold
+                        )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if(meatAllow) {
+                            Box(modifier = Modifier.background(Brush.verticalGradient(listOf(
+                                colorResource(R.color.pink_1), colorResource(R.color.pink_2)
+                            )), shape = CircleShape)) {
+                                Text("Meat",
+                                    fontFamily = OpenSans,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 7.dp))
+                            }
+                        }
+                        if(dairyAllow) {
+                            Box(modifier = Modifier.background(Brush.verticalGradient(listOf(
+                                colorResource(R.color.blue_1), colorResource(R.color.blue_2)
+                            )), shape = CircleShape)) {
+                                Text("Dairy",
+                                    fontFamily = OpenSans,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 7.dp))
+                            }
+                        }
+                        if(eggAllow) {
+                            Box(modifier = Modifier.background(Brush.verticalGradient(listOf(
+                                colorResource(R.color.yellow_1), colorResource(R.color.yellow_2)
+                            )), shape = CircleShape)) {
+                                Text("Egg",
+                                    fontFamily = OpenSans,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 7.dp))
+                            }
+                        }
                     }
                 }
                 HorizontalDivider(thickness = 1.dp)
@@ -317,7 +408,7 @@ fun ProfileContent(modifier: Modifier = Modifier,
                     shape = CircleShape,
                     modifier = Modifier
                         .height(50.dp)
-                        .padding(horizontal = 32.dp)
+                        .padding(horizontal = 24.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -327,7 +418,7 @@ fun ProfileContent(modifier: Modifier = Modifier,
                     ) {
                         Text(
                             text = "Logout",
-                            fontSize = 20.sp,
+                            fontSize = 18.sp,
                             fontFamily = OpenSans,
                             color = Color.White,
                             fontWeight = FontWeight.Bold
@@ -338,3 +429,55 @@ fun ProfileContent(modifier: Modifier = Modifier,
         }
     }
 }
+
+@Composable
+fun DietRatioBar(
+    carbRatio: Float,    // 0.0 to 1.0
+    proteinRatio: Float,
+    fatRatio: Float,
+    modifier: Modifier = Modifier
+) {
+    val total = carbRatio + proteinRatio + fatRatio
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(24.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .border(1.dp, colorResource(R.color.black), RoundedCornerShape(12.dp))
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(carbRatio / total)
+                .fillMaxHeight()
+                .background(colorResource(R.color.carbs)) // Light Blue for Carbs
+        )
+        Box(
+            modifier = Modifier
+                .weight(proteinRatio / total)
+                .fillMaxHeight()
+                .background(colorResource(R.color.protein)) // Light Green for Protein
+        )
+        Box(
+            modifier = Modifier
+                .weight(fatRatio / total)
+                .fillMaxHeight()
+                .background(colorResource(R.color.fat)) // Light Orange for Fats
+        )
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text("Carbs ${(carbRatio * 100).toInt()}%", fontSize = 14.sp, fontFamily = OpenSans,
+            fontWeight = FontWeight.Bold)
+        Text("Protein ${(proteinRatio * 100).toInt()}%", fontSize = 14.sp, fontFamily = OpenSans,
+            fontWeight = FontWeight.Bold)
+        Text("Fat ${(fatRatio * 100).toInt()}%", fontSize = 14.sp, fontFamily = OpenSans,
+            fontWeight = FontWeight.Bold)
+    }
+}
+

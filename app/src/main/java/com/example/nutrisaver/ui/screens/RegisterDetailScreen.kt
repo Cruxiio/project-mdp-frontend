@@ -50,7 +50,7 @@ fun RegisterDetailScreen(
 ) {
     var name by remember { mutableStateOf("") }
     val genderOptions = listOf("Male", "Female")
-    val (gender, onOptionSelected) = remember { mutableStateOf(genderOptions[0]) }
+    val (gender, onGenderOptionSelected) = remember { mutableStateOf(genderOptions[0]) }
 
     var showDateModal by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
@@ -82,6 +82,10 @@ fun RegisterDetailScreen(
     val onAllergyListChanged: (List<String>) -> Unit = { newList ->
         userAllergies = newList
     }
+
+    var (meatAllowed, onMeatOptionSelected) = remember { mutableStateOf(true) }
+    var (dairyAllowed, onDairyOptionSelected) = remember { mutableStateOf(true) }
+    var (eggAllowed, onEggOptionSelected) = remember { mutableStateOf(true) }
 
     val green = colorResource(id = R.color.green)
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
@@ -159,7 +163,7 @@ fun RegisterDetailScreen(
                             modifier = Modifier
                                 .selectable(
                                     selected = (text == gender),
-                                    onClick = { onOptionSelected(text) },
+                                    onClick = { onGenderOptionSelected(text) },
                                     role = Role.RadioButton
                                 )
                                 .padding(horizontal = 8.dp)
@@ -518,13 +522,68 @@ fun RegisterDetailScreen(
                 }
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(20.dp))
             HorizontalDivider(thickness = 2.dp)
+            Spacer(Modifier.height(10.dp))
+
+            Text("Food Restrictions", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "Please let us know if you consume the following food items. This helps us personalize your dietary recommendations.",
+                fontSize = 14.sp,
+                fontFamily = OpenSans,
+                color = Color.DarkGray
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Meat:", fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
+                    RadioButton(selected = meatAllowed, onClick = { onMeatOptionSelected(true) })
+                    Text("Yes")
+                    Spacer(Modifier.width(8.dp))
+                    RadioButton(selected = !meatAllowed, onClick = { onMeatOptionSelected(false) })
+                    Text("No")
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Dairy:", fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
+                    RadioButton(selected = dairyAllowed, onClick = { onDairyOptionSelected(true) })
+                    Text("Yes")
+                    Spacer(Modifier.width(8.dp))
+                    RadioButton(selected = !dairyAllowed, onClick = { onDairyOptionSelected(false) })
+                    Text("No")
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Egg:", fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
+                    RadioButton(selected = eggAllowed, onClick = { onEggOptionSelected(true) })
+                    Text("Yes")
+                    Spacer(Modifier.width(8.dp))
+                    RadioButton(selected = !eggAllowed, onClick = { onEggOptionSelected(false) })
+                    Text("No")
+                }
+            }
+
             Spacer(Modifier.height(10.dp))
 
             Button(
                 onClick = {
-                    // REGISTRASI USER KE DATABASE
+                    // TODO: REGISTRASI USER KE DATABASE
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(
