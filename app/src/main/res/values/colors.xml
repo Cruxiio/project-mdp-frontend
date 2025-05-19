@@ -13,6 +13,8 @@
     <color name="item_1">#92b693</color>
     <color name="item_2">#52ad9f</color>
 
+    <color name="logout_btn_1">#da3422</color>
+    <color name="logout_btn_2">#af0404</color>
     <color name="red">#da3422</color>
     <color name="red_light">#fd8a7e</color>
     <color name="yellow">#ffd790</color>
