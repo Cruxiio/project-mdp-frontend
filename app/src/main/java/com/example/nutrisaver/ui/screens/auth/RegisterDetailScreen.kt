@@ -65,21 +65,71 @@ fun RegisterDetailScreen(
     var goalExpanded by remember { mutableStateOf(false) }
     var goal by remember { mutableStateOf(goalOptions[0]) }
 
+    val dietTypeOptions = listOf("Vegan", "Ketogenic", "Low Carbs", "Strict Calories", "Free", "Custom")
+    var dietTypeExpanded by remember { mutableStateOf(false) }
+    var dietType by remember { mutableStateOf(dietTypeOptions[0]) }
+
     var targetWeight by remember { mutableStateOf(0) }
 
-    var protein by remember { mutableStateOf("") }
-    var carbs by remember { mutableStateOf("") }
-    var fat by remember { mutableStateOf("") }
-    val proteinVal = protein.toIntOrNull() ?: 0
-    val carbsVal = carbs.toIntOrNull() ?: 0
-    val fatVal = fat.toIntOrNull() ?: 0
+    // Macronutrient values as Floats
+    var protein by remember { mutableStateOf<String>("") }  // Default as empty string
+    var carbs by remember { mutableStateOf<String>("") }    // Default as empty string
+    var fat by remember { mutableStateOf<String>("") }        // Default as empty string
+
+    // Handle diet type changes and update the macronutrient values
+    fun updateMacronutrientRecommendations(dietType: String) {
+        when (dietType) {
+            "Vegan" -> {
+                protein = "27.5"
+                carbs = "47.5"
+                fat = "25"
+            }
+            "Ketogenic" -> {
+                protein = "20"
+                carbs = "10"
+                fat = "70"
+            }
+            "Low Carbs" -> {
+                protein = "30"
+                carbs = "30"
+                fat = "40"
+            }
+            "Strict Calories" -> {
+                protein = "30"
+                carbs = "45"
+                fat = "25"
+            }
+            "Free" -> {
+                protein = "20"
+                carbs = "50"
+                fat = "30"
+            }
+            "Custom" -> {
+                // Reset the values when "Custom" is selected
+                protein = ""
+                carbs = ""
+                fat = ""
+            }
+        }
+    }
+
+    // Trigger the update when the selected diet type changes
+    LaunchedEffect(dietType) {
+        updateMacronutrientRecommendations(dietType)
+    }
+
+    // Calculate the total macronutrient value
+    val proteinVal = protein.toFloatOrNull() ?: 0f
+    val carbsVal = carbs.toFloatOrNull() ?: 0f
+    val fatVal = fat.toFloatOrNull() ?: 0f
     val total = proteinVal + carbsVal + fatVal
 
-    // nanti diganti jadi allergen yang ada di database
-    val allAllergen = listOf("Peanuts", "Shellfish", "Dairy", "Eggs", "Wheat", "Soy")
+    // Handle allergies and other UI components
+    val allAllergen = listOf("Peanuts", "Tree Nuts", "Fish", "Shellfish", "Dairy", "Eggs", "Wheat", "Soy", "Gluten")
     var allergyExpanded by remember { mutableStateOf(false) }
     var selectedAllergy by remember { mutableStateOf(allAllergen[0]) }
     var userAllergies by remember { mutableStateOf(listOf<String>()) }
+
     // Local callback function that updates userAllergies state
     val onAllergyListChanged: (List<String>) -> Unit = { newList ->
         userAllergies = newList
@@ -96,60 +146,39 @@ fun RegisterDetailScreen(
     val item2 = colorResource(id = R.color.item_2)
     val itemGradient = Brush.verticalGradient(listOf(item1, item2))
 
-    // pindah halaman
+    // Page navigation logic
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
     LaunchedEffect(authState.value) {
-        when(authState.value){
+        when (authState.value) {
             is AuthState.Authenticated -> {
                 navController.navigate("user") {
-                    popUpTo("auth") { inclusive = true } // ini biar gk bisa balik ke login screen
+                    popUpTo("auth") { inclusive = true }
                     launchSingleTop = true
                 }
             }
-            is AuthState.Error -> Toast.makeText(context,
-                (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
+            is AuthState.Error -> {
+                Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
+            }
             else -> Unit
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundGradient)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Text(
-                "We Need Your Information",
-                fontSize = 23.sp,
-                fontFamily = OpenSans,
-                fontWeight = FontWeight.Bold,
-                color = green,
-                modifier = Modifier.padding(top = 40.dp)
-            )
-            Text(
-                "Please fill out the following form to help personalize your nutrition plan.",
-                fontSize = 16.sp,
-                fontFamily = OpenSans
-            )
+    Box(modifier = Modifier.fillMaxSize().background(backgroundGradient)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp).verticalScroll(rememberScrollState())) {
+            Text("We Need Your Information", fontSize = 23.sp, fontFamily = OpenSans, fontWeight = FontWeight.Bold, color = green, modifier = Modifier.padding(top = 40.dp))
+            Text("Please fill out the following form to help personalize your nutrition plan.", fontSize = 16.sp, fontFamily = OpenSans)
+
             Spacer(modifier = Modifier.height(10.dp))
             HorizontalDivider(thickness = 2.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Personal Information Section
             Text("Measurements", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text(
-                "Basic body measurements, gender and age help us calculate your recommended daily intake.",
-                fontSize = 14.sp,
-                fontFamily = OpenSans,
-                color = Color.DarkGray
-            )
+            Text("Basic body measurements, gender and age help us calculate your recommended daily intake.", fontSize = 14.sp, fontFamily = OpenSans, color = Color.DarkGray)
             Spacer(modifier = Modifier.height(10.dp))
-            Text("Name", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+
+            Text("Full Name", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -162,111 +191,52 @@ fun RegisterDetailScreen(
                     unfocusedContainerColor = colorResource(R.color.bg)
                 )
             )
-            Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            // Gender Radio Buttons
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Gender:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
 
                 Row(modifier = Modifier.selectableGroup()) {
                     genderOptions.forEach { text ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .selectable(
-                                    selected = (text == gender),
-                                    onClick = { onOptionSelected(text) },
-                                    role = Role.RadioButton
-                                )
-                                .padding(horizontal = 8.dp)
-                        ) {
-                            RadioButton(
-                                selected = (text == gender),
-                                onClick = null // Handled by parent Row
-                            )
-                            Text(
-                                text = text,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.selectable(selected = (text == gender), onClick = { onOptionSelected(text) }, role = Role.RadioButton).padding(horizontal = 8.dp)) {
+                            RadioButton(selected = (text == gender), onClick = null)
+                            Text(text = text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
+            // Date Picker and Other Fields
             Text("Date of Birth", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             OutlinedTextField(
                 value = dateOfBirth,
                 onValueChange = {},
                 readOnly = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showDateModal = true },
+                modifier = Modifier.fillMaxWidth().clickable { showDateModal = true },
                 trailingIcon = {
                     IconButton(onClick = { showDateModal = true }) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "Select date"
-                        )
+                        Icon(imageVector = Icons.Default.DateRange, contentDescription = "Select date")
                     }
                 },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = colorResource(R.color.black),
-                    unfocusedTextColor = colorResource(R.color.black),
-                    focusedContainerColor = colorResource(R.color.bg),
-                    unfocusedContainerColor = colorResource(R.color.bg)
-                )
+                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black), unfocusedTextColor = colorResource(R.color.black), focusedContainerColor = colorResource(R.color.bg), unfocusedContainerColor = colorResource(R.color.bg))
             )
 
             if (showDateModal) {
-                DatePickerDialog(
-                    onDismissRequest = { showDateModal = false },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showDateModal = false
-                        }) {
-                            Text("OK")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDateModal = false }) {
-                            Text("Cancel")
-                        }
-                    }
-                ) {
+                DatePickerDialog(onDismissRequest = { showDateModal = false }, confirmButton = { TextButton(onClick = { showDateModal = false }) { Text("OK") } }, dismissButton = { TextButton(onClick = { showDateModal = false }) { Text("Cancel") } }) {
                     DatePicker(state = datePickerState)
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
+            // Weight and Height Fields
             Text("Weight", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = weight.toString(),
-                    onValueChange = { input ->
-                        weight = input.filter { it.isDigit() }.toIntOrNull() ?: 0
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
+                    onValueChange = { input -> weight = input.filter { it.isDigit() }.toIntOrNull() ?: 0 },
+                    modifier = Modifier.weight(1f).padding(end = 8.dp),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colorResource(R.color.black),
-                        unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.bg),
-                        unfocusedContainerColor = colorResource(R.color.bg)
-                    )
+                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black), unfocusedTextColor = colorResource(R.color.black), focusedContainerColor = colorResource(R.color.bg), unfocusedContainerColor = colorResource(R.color.bg))
                 )
                 Text("kg", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
@@ -302,9 +272,9 @@ fun RegisterDetailScreen(
             HorizontalDivider(thickness = 2.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text("Goal", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Goal & Diet Type", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text(
-                "Choose your goal so we can tailor your nutrition plan accordingly.",
+                "Choose your goal and diet type so we can tailor your nutrition plan accordingly.",
                 fontSize = 14.sp,
                 fontFamily = OpenSans,
                 color = Color.DarkGray
@@ -350,6 +320,44 @@ fun RegisterDetailScreen(
             }
             Spacer(modifier = Modifier.height(10.dp))
 
+            Text("Diet Type", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            ExposedDropdownMenuBox(
+                expanded = dietTypeExpanded,
+                onExpandedChange = { dietTypeExpanded = !dietTypeExpanded }
+            ) {
+                OutlinedTextField(
+                    value = dietType,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = dietTypeExpanded)
+                    },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor = colorResource(R.color.black),
+                        focusedContainerColor = colorResource(R.color.bg),
+                        unfocusedContainerColor = colorResource(R.color.bg)
+                    )
+                )
+
+                ExposedDropdownMenu(
+                    expanded = dietTypeExpanded,
+                    onDismissRequest = { dietTypeExpanded = false }
+                ) {
+                    dietTypeOptions.forEach { selectionOption ->
+                        DropdownMenuItem(
+                            text = { Text(selectionOption) },
+                            onClick = {
+                                dietType = selectionOption
+                                dietTypeExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+
             Text("Target Weight", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier
@@ -380,7 +388,7 @@ fun RegisterDetailScreen(
             HorizontalDivider(thickness = 2.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text("Macronutient Ratio", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Macronutrient Ratio", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text(
                 "Set your desired percentage split between protein, carbs, and fats. Total must equal 100%.",
                 fontSize = 14.sp,
@@ -389,18 +397,21 @@ fun RegisterDetailScreen(
             )
 
             Spacer(modifier = Modifier.height(10.dp))
-            RatioInputField("Protein", protein, onValueChange = { protein = it })
-            RatioInputField("Carbs", carbs, onValueChange = { carbs = it })
-            RatioInputField("Fat", fat, onValueChange = { fat = it })
+            val isDietTypeCustom = dietType == "Custom"
+
+            RatioInputField("Protein", protein.toString(), onValueChange = { if (isDietTypeCustom) protein = it }, enabled = isDietTypeCustom)
+            RatioInputField("Carbs", carbs.toString(), onValueChange = { if (isDietTypeCustom) carbs = it }, enabled = isDietTypeCustom)
+            RatioInputField("Fat", fat.toString(), onValueChange = { if (isDietTypeCustom) fat = it}, enabled = isDietTypeCustom)
+
             Spacer(Modifier.height(10.dp))
             Text(
                 text = "Total: $total%",
-                color = if (total == 100) colorResource(R.color.green) else colorResource(R.color.red),
+                color = if (total.toFloat() == 100f) colorResource(R.color.green) else colorResource(R.color.red),
                 fontFamily = OpenSans,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.ExtraBold
             )
-            if (total != 100) {
+            if (total.toFloat() != 100f) {
                 Text("Total must equal 100%", color = Color.Red, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(10.dp))
@@ -544,7 +555,7 @@ fun RegisterDetailScreen(
             Button(
                 onClick = {
                     // REGISTRASI USER KE DATABASE
-                    authViewModel.signup(RegisterDetailInp(name,gender,dateOfBirth,weight,height,goal,targetWeight,proteinVal,carbsVal,fatVal,userAllergies))
+                    authViewModel.signup(RegisterDetailInp(name, gender, dateOfBirth, weight, height, goal, dietType, targetWeight, protein.toFloat(), carbs.toFloat(), fat.toFloat(), userAllergies))
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(
@@ -585,19 +596,17 @@ fun convertMillisToDate(millis: Long): String {
 fun RatioInputField(
     label: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
-        onValueChange = {
-            if (it.all { char -> char.isDigit() } && it.length <= 3) {
-                onValueChange(it)
-            }
-        },
+        onValueChange = onValueChange,
         label = { Text(label) },
         trailingIcon = { Text("%") },
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        enabled = enabled,
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = colorResource(R.color.black),
             unfocusedTextColor = colorResource(R.color.black),

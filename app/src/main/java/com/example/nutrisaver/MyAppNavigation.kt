@@ -19,7 +19,7 @@ fun MyAppNavigation(
     authViewModel: AuthViewModel
 ) {
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "user") {
+    NavHost(navController = navController, startDestination = "auth") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {

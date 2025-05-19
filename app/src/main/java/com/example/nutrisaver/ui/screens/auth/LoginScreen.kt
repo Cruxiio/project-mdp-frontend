@@ -231,7 +231,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
                 ) {
                     Text(
                         text = "Don't Have an Account? ",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontFamily = OpenSans,
                         color = Color.Black
                     )
@@ -244,7 +244,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
                     ) {
                         Text(
                             text = "Sign up",
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             style = TextStyle(
                                 fontFamily = OpenSans,
                                 fontWeight = FontWeight.Bold,

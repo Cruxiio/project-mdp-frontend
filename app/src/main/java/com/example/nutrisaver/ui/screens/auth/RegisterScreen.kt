@@ -88,7 +88,6 @@ fun RegisterScreen(
                 .align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(45.dp))
 
             Text(
                 text = "Create Account",
@@ -215,11 +214,11 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
             HorizontalDivider(
                 thickness = 2.dp
             )
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             Row(
                 modifier = Modifier
@@ -231,7 +230,7 @@ fun RegisterScreen(
                 Text(
                     modifier = Modifier.weight(1f),
                     text = "Already Have an Account? ",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontFamily = OpenSans,
                     color = Color.Black
                 )
@@ -245,7 +244,7 @@ fun RegisterScreen(
                 ) {
                     Text(
                         text = "Sign in",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         style = TextStyle(
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold,
@@ -254,7 +253,7 @@ fun RegisterScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }
