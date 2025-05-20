@@ -191,6 +191,7 @@ fun RegisterDetailScreen(
                     unfocusedContainerColor = colorResource(R.color.bg)
                 )
             )
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Gender Radio Buttons
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
