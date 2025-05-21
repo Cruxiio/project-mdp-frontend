@@ -12,6 +12,8 @@ import com.example.nutrisaver.ui.screens.RegisterDetailScreen
 import com.example.nutrisaver.ui.screens.RegisterScreen
 import com.example.nutrisaver.ui.screens.user.AddFoodStockScreen
 import com.example.nutrisaver.ui.screens.user.DashboardScreen
+import com.example.nutrisaver.ui.screens.user.EditInformationScreen
+import com.example.nutrisaver.ui.screens.user.EditProfileScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
 import com.example.nutrisaver.ui.screens.user.ProfileScreen
 import com.example.nutrisaver.ui.screens.user.RecipeScreen
@@ -45,7 +47,7 @@ fun MyAppNavigation(
         }
 
         // navigation pada halaman user.
-        navigation(startDestination = "dashboard", route = "user") {
+        navigation(startDestination = "editprofile", route = "user") {
             composable("dashboard") {
                 DashboardScreen(navController = navController)
             }
@@ -63,6 +65,12 @@ fun MyAppNavigation(
                     navController = navController,
                     authViewModel = authViewModel
                 )
+            }
+            composable("editinformation") {
+                EditInformationScreen(navController = navController)
+            }
+            composable("editprofile") {
+                EditProfileScreen(navController = navController)
             }
         }
 

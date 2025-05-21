@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -129,18 +130,18 @@ fun ProfileContent(modifier: Modifier = Modifier,
             ) {
                 Box {
                     Image(
-                        painter = painterResource(id = R.drawable.blank_profile),
+                        imageVector = Icons.Default.Person, // todo: diganti sama pfp user dr database
                         contentDescription = "Profile Picture",
                         modifier = Modifier
                             .size(130.dp)
                             .clip(CircleShape)
                             .border(
-                                BorderStroke(1.dp, Color.Black),
+                                BorderStroke(1.dp, Color.Gray),
                                 CircleShape
                             )
                     )
                     IconButton(
-                        onClick = { /* TODO: ke halaman edit profile */ },
+                        onClick = { navController.navigate("editprofile") },
                         modifier = Modifier
                             .size(25.dp)
                             .align(Alignment.BottomEnd)
@@ -189,7 +190,7 @@ fun ProfileContent(modifier: Modifier = Modifier,
                             )
                             Button(
                                 onClick = {
-                                    authViewModel.signout()
+                                    navController.navigate("editinformation")
                                 },
                                 contentPadding = PaddingValues(),
                                 colors = ButtonDefaults.buttonColors(
@@ -285,6 +286,22 @@ fun ProfileContent(modifier: Modifier = Modifier,
                         )
                         Text(
                             "--", // TODO: Ganti ke goal user
+                            fontFamily = OpenSans,
+                            fontSize = 18.sp
+                        )
+                    }
+                    HorizontalDivider(thickness = 1.dp)
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 15.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Target Weight: ",
+                            fontFamily = OpenSans,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "xx kg", // TODO: Ganti ke target weight user
                             fontFamily = OpenSans,
                             fontSize = 18.sp
                         )
