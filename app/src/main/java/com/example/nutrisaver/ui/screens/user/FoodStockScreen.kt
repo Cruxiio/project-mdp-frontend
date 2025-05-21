@@ -40,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -109,7 +111,14 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 label = { Text("Search") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = colorResource(R.color.black),
+                    unfocusedTextColor = colorResource(R.color.black),
+                    focusedContainerColor = colorResource(R.color.form_input),
+                    unfocusedContainerColor = colorResource(R.color.form_input)
+                ),
+                shape = RoundedCornerShape(10.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
             Row(
@@ -136,9 +145,10 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = colorResource(R.color.black),
                                 unfocusedTextColor = colorResource(R.color.black),
-                                focusedContainerColor = colorResource(R.color.bg),
-                                unfocusedContainerColor = colorResource(R.color.bg)
-                            )
+                                focusedContainerColor = colorResource(R.color.form_input),
+                                unfocusedContainerColor = colorResource(R.color.form_input)
+                            ),
+                            shape = RoundedCornerShape(10.dp)
                         )
 
                         ExposedDropdownMenu(
@@ -180,9 +190,10 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = colorResource(R.color.black),
                                 unfocusedTextColor = colorResource(R.color.black),
-                                focusedContainerColor = colorResource(R.color.bg),
-                                unfocusedContainerColor = colorResource(R.color.bg)
-                            )
+                                focusedContainerColor = colorResource(R.color.form_input),
+                                unfocusedContainerColor = colorResource(R.color.form_input)
+                            ),
+                            shape = RoundedCornerShape(10.dp)
                         )
 
                         ExposedDropdownMenu(
@@ -247,62 +258,73 @@ fun FoodStockItem() {
     val itemGradient = Brush.verticalGradient(listOf(item1, item2))
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(itemGradient, shape = RoundedCornerShape(20.dp))
+            .padding(bottom = 8.dp) //
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .shadow(
+                    elevation = 5.dp,
+                    shape = RoundedCornerShape(20.dp),
+                    clip = false
+                )
+                .background(itemGradient, shape = RoundedCornerShape(20.dp))
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp, horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    "Nama Stock", // TODO: nama stock
-                    fontFamily = OpenSans,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "Stock: ", // TODO: quantity dan satuan stock
-                    fontFamily = OpenSans,
-                    fontSize = 14.sp
-                )
-                Text(
-                    "Expired Date: ", // TODO: expired date
-                    fontFamily = OpenSans,
-                    fontSize = 14.sp
-                )
-            }
-            IconButton(
-                modifier = Modifier.background(
-                    colorResource(R.color.yellow),
-                    shape = RoundedCornerShape(10.dp)
-                ),
-                onClick = { /* TODO: logika edit stock */ }
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "Edit Button",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(
-                modifier = Modifier.background(
-                    colorResource(R.color.red_light),
-                    shape = RoundedCornerShape(10.dp)
-                ),
-                onClick = { /* TODO: logika delete stock */ }
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.delete),
-                    contentDescription = "Delete Button",
-                    modifier = Modifier.size(24.dp)
-                )
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        "Nama Stock", // TODO: nama stock
+                        fontFamily = OpenSans,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "Stock: ", // TODO: quantity dan satuan stock
+                        fontFamily = OpenSans,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        "Expired Date: ", // TODO: expired date
+                        fontFamily = OpenSans,
+                        fontSize = 14.sp
+                    )
+                }
+                IconButton(
+                    modifier = Modifier.background(
+                        colorResource(R.color.yellow),
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                    onClick = { /* TODO: logika edit stock */ }
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.edit),
+                        contentDescription = "Edit Button",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                IconButton(
+                    modifier = Modifier.background(
+                        colorResource(R.color.red_light),
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                    onClick = { /* TODO: logika delete stock */ }
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.delete),
+                        contentDescription = "Delete Button",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
+
 }

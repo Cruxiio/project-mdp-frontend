@@ -350,52 +350,6 @@ fun ProfileContent(modifier: Modifier = Modifier,
                     }
                 }
                 HorizontalDivider(thickness = 1.dp)
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 15.dp)
-                ) {
-                    Text("Food Restrictions",
-                        fontSize = 18.sp,
-                        fontFamily = OpenSans,
-                        fontWeight = FontWeight.Bold
-                        )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if(meatAllow) {
-                            Box(modifier = Modifier.background(Brush.verticalGradient(listOf(
-                                colorResource(R.color.pink_1), colorResource(R.color.pink_2)
-                            )), shape = CircleShape)) {
-                                Text("Meat",
-                                    fontFamily = OpenSans,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 7.dp))
-                            }
-                        }
-                        if(dairyAllow) {
-                            Box(modifier = Modifier.background(Brush.verticalGradient(listOf(
-                                colorResource(R.color.blue_1), colorResource(R.color.blue_2)
-                            )), shape = CircleShape)) {
-                                Text("Dairy",
-                                    fontFamily = OpenSans,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 7.dp))
-                            }
-                        }
-                        if(eggAllow) {
-                            Box(modifier = Modifier.background(Brush.verticalGradient(listOf(
-                                colorResource(R.color.yellow_1), colorResource(R.color.yellow_2)
-                            )), shape = CircleShape)) {
-                                Text("Egg",
-                                    fontFamily = OpenSans,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 7.dp))
-                            }
-                        }
-                    }
-                }
-                HorizontalDivider(thickness = 1.dp)
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(
                     onClick = {

@@ -124,11 +124,13 @@ fun RegisterScreen(
                         singleLine = true,
                         value = username,
                         onValueChange = { username = it },
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(
-                                R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
-                        )
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor = colorResource(R.color.black),
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -139,11 +141,13 @@ fun RegisterScreen(
                         singleLine = true,
                         value = email,
                         onValueChange = { email = it },
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(
-                                R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
-                        )
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor = colorResource(R.color.black),
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -157,11 +161,13 @@ fun RegisterScreen(
                         label = {  },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(
-                                R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
-                        )
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor = colorResource(R.color.black),
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -175,11 +181,13 @@ fun RegisterScreen(
                         label = {  },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(
-                                R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
-                        )
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor = colorResource(R.color.black),
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.height(20.dp))
 

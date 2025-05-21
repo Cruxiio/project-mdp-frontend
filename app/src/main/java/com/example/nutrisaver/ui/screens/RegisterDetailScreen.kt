@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
@@ -83,10 +84,6 @@ fun RegisterDetailScreen(
         userAllergies = newList
     }
 
-    var (meatAllowed, onMeatOptionSelected) = remember { mutableStateOf(true) }
-    var (dairyAllowed, onDairyOptionSelected) = remember { mutableStateOf(true) }
-    var (eggAllowed, onEggOptionSelected) = remember { mutableStateOf(true) }
-
     val green = colorResource(id = R.color.green)
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
@@ -134,7 +131,7 @@ fun RegisterDetailScreen(
                 color = Color.DarkGray
             )
             Spacer(modifier = Modifier.height(10.dp))
-            Text("Name", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Name", modifier = Modifier.padding(bottom = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -143,8 +140,8 @@ fun RegisterDetailScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = colorResource(R.color.black),
                     unfocusedTextColor = colorResource(R.color.black),
-                    focusedContainerColor = colorResource(R.color.bg),
-                    unfocusedContainerColor = colorResource(R.color.bg)
+                    focusedContainerColor = colorResource(R.color.form_input),
+                    unfocusedContainerColor = colorResource(R.color.form_input)
                 )
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -154,7 +151,7 @@ fun RegisterDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Gender:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("Gender:", modifier = Modifier.padding(bottom = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
 
                 Row(modifier = Modifier.selectableGroup()) {
                     genderOptions.forEach { text ->
@@ -170,7 +167,10 @@ fun RegisterDetailScreen(
                         ) {
                             RadioButton(
                                 selected = (text == gender),
-                                onClick = null // Handled by parent Row
+                                onClick = { onGenderOptionSelected(text) },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = colorResource(R.color.green),
+                                )
                             )
                             Text(
                                 text = text,
@@ -184,9 +184,9 @@ fun RegisterDetailScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text("Date of Birth", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Date of Birth", modifier = Modifier.padding(bottom = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             OutlinedTextField(
-                value = dateOfBirth,
+                value = if (dateOfBirth == "") "Select Date" else dateOfBirth,
                 onValueChange = {},
                 readOnly = true,
                 modifier = Modifier
@@ -201,10 +201,10 @@ fun RegisterDetailScreen(
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = colorResource(R.color.black),
-                    unfocusedTextColor = colorResource(R.color.black),
-                    focusedContainerColor = colorResource(R.color.bg),
-                    unfocusedContainerColor = colorResource(R.color.bg)
+                    focusedTextColor = if (dateOfBirth == "") Color.Gray else Color.Black,
+                    unfocusedTextColor = if (dateOfBirth == "") Color.Gray else Color.Black,
+                    focusedContainerColor = colorResource(R.color.form_input),
+                    unfocusedContainerColor = colorResource(R.color.form_input)
                 )
             )
 
@@ -230,7 +230,7 @@ fun RegisterDetailScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text("Weight", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Weight", modifier = Modifier.padding(bottom = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -249,14 +249,14 @@ fun RegisterDetailScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colorResource(R.color.black),
                         unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.bg),
-                        unfocusedContainerColor = colorResource(R.color.bg)
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
                     )
                 )
                 Text("kg", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(10.dp))
-            Text("Height", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Height", modifier = Modifier.padding(bottom = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -275,8 +275,8 @@ fun RegisterDetailScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colorResource(R.color.black),
                         unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.bg),
-                        unfocusedContainerColor = colorResource(R.color.bg)
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
                     )
                 )
                 Text("cm", fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -295,7 +295,7 @@ fun RegisterDetailScreen(
                 color = Color.DarkGray
             )
             Spacer(modifier = Modifier.height(10.dp))
-            Text("Select Goal", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Select Goal", modifier = Modifier.padding(bottom = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             ExposedDropdownMenuBox(
                 expanded = goalExpanded,
                 onExpandedChange = { goalExpanded = !goalExpanded }
@@ -313,8 +313,8 @@ fun RegisterDetailScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colorResource(R.color.black),
                         unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.bg),
-                        unfocusedContainerColor = colorResource(R.color.bg)
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
                     )
                 )
 
@@ -335,7 +335,7 @@ fun RegisterDetailScreen(
             }
             Spacer(modifier = Modifier.height(10.dp))
 
-            Text("Target Weight", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Target Weight", modifier = Modifier.padding(bottom = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -353,15 +353,13 @@ fun RegisterDetailScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colorResource(R.color.black),
                         unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.bg),
-                        unfocusedContainerColor = colorResource(R.color.bg)
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
                     )
                 )
                 Text("kg", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             HorizontalDivider(thickness = 2.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -373,7 +371,7 @@ fun RegisterDetailScreen(
                 color = Color.DarkGray
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(5.dp))
             RatioInputField("Protein", protein, onValueChange = { protein = it })
             RatioInputField("Carbs", carbs, onValueChange = { carbs = it })
             RatioInputField("Fat", fat, onValueChange = { fat = it })
@@ -388,7 +386,6 @@ fun RegisterDetailScreen(
             if (total != 100) {
                 Text("Total must equal 100%", color = Color.Red, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.height(10.dp))
 
             Spacer(modifier = Modifier.height(10.dp))
             HorizontalDivider(thickness = 2.dp)
@@ -423,8 +420,8 @@ fun RegisterDetailScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = colorResource(R.color.black),
                             unfocusedTextColor = colorResource(R.color.black),
-                            focusedContainerColor = colorResource(R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
                         )
                     )
                     ExposedDropdownMenu(
@@ -522,63 +519,8 @@ fun RegisterDetailScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
-            HorizontalDivider(thickness = 2.dp)
             Spacer(Modifier.height(10.dp))
-
-            Text("Food Restrictions", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text(
-                "Please let us know if you consume the following food items. This helps us personalize your dietary recommendations.",
-                fontSize = 14.sp,
-                fontFamily = OpenSans,
-                color = Color.DarkGray
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Meat:", fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
-                    RadioButton(selected = meatAllowed, onClick = { onMeatOptionSelected(true) })
-                    Text("Yes")
-                    Spacer(Modifier.width(8.dp))
-                    RadioButton(selected = !meatAllowed, onClick = { onMeatOptionSelected(false) })
-                    Text("No")
-                }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Dairy:", fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
-                    RadioButton(selected = dairyAllowed, onClick = { onDairyOptionSelected(true) })
-                    Text("Yes")
-                    Spacer(Modifier.width(8.dp))
-                    RadioButton(selected = !dairyAllowed, onClick = { onDairyOptionSelected(false) })
-                    Text("No")
-                }
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Egg:", fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
-                    RadioButton(selected = eggAllowed, onClick = { onEggOptionSelected(true) })
-                    Text("Yes")
-                    Spacer(Modifier.width(8.dp))
-                    RadioButton(selected = !eggAllowed, onClick = { onEggOptionSelected(false) })
-                    Text("No")
-                }
-            }
-
+            HorizontalDivider(thickness = 2.dp)
             Spacer(Modifier.height(10.dp))
 
             Button(
@@ -640,8 +582,8 @@ fun RatioInputField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = colorResource(R.color.black),
             unfocusedTextColor = colorResource(R.color.black),
-            focusedContainerColor = colorResource(R.color.bg),
-            unfocusedContainerColor = colorResource(R.color.bg)
+            focusedContainerColor = colorResource(R.color.form_input),
+            unfocusedContainerColor = colorResource(R.color.form_input)
         )
     )
 }
