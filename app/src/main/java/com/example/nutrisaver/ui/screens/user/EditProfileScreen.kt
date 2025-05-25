@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +22,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -31,6 +34,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +51,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -65,7 +72,48 @@ fun EditProfileScreen(navController: NavController) {
 }
 
 @Composable
-fun EditProfileContent(
+private fun TopBar(
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit = {}
+) {
+    val green = colorResource(id = R.color.green)
+    val greenTealDark = colorResource(id = R.color.green_teal_dark)
+    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(greenGradient)
+            .padding(vertical = 12.dp, horizontal = 16.dp)
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back Button",
+                    tint = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "Edit Profile",
+                fontSize = 20.sp,
+                fontFamily = OpenSans,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun EditProfileContent(
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
@@ -76,6 +124,10 @@ fun EditProfileContent(
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
+    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -83,52 +135,17 @@ fun EditProfileContent(
         selectedImageUri = uri
     }
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colorResource(R.color.bg))
+            .background(backgroundGradient),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top Bar
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp) // Increased height to accommodate profile image overlap
-                .background(greenGradient)
-                .zIndex(1f)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp, horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back Button",
-                        tint = Color.White
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Edit Profile",
-                    fontSize = 20.sp,
-                    fontFamily = OpenSans,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        }
-
-        // Profile Image (positioned to overlap)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 70.dp) // Position to overlap with the top bar
-                .zIndex(2f),
-            contentAlignment = Alignment.TopCenter
-        ) {
+        Column {
+            TopBar(onBackClick = { navController.popBackStack() })
             Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
@@ -157,7 +174,6 @@ fun EditProfileContent(
                         )
                     }
                 }
-
                 Button(
                     onClick = { imagePickerLauncher.launch("image/*") },
                     contentPadding = PaddingValues(),
@@ -191,37 +207,111 @@ fun EditProfileContent(
                     }
                 }
             }
-        }
-
-        HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(top = 290.dp))
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp) // Adjusted to account for profile image + button
-                .verticalScroll(rememberScrollState())
-                .zIndex(0f)
-        ) {
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Add your form fields here
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 24.dp)
             ) {
-                // Username field
                 Text(
                     text = "Username",
+                    modifier = Modifier.padding(bottom = 8.dp),
                     fontSize = 16.sp,
                     fontFamily = OpenSans,
                     fontWeight = FontWeight.Bold,
                     color = Color.DarkGray
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Add more form fields as needed
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    value = username,
+                    onValueChange = { username = it },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor = colorResource(R.color.black),
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
+                    )
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Email",
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.DarkGray
+                )
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    value = email,
+                    onValueChange = { email = it },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor = colorResource(R.color.black),
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
+                    )
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Password",
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.DarkGray
+                )
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    value = password,
+                    onValueChange = { password = it },
+                    label = {  },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor = colorResource(R.color.black),
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
+                    )
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+        }
+        Column(
+            modifier = Modifier.padding(vertical = 20.dp, horizontal = 24.dp)
+        ) {
+            Button(
+                onClick = {
+                    // TODO: Simpan editan user ke database
+                },
+                contentPadding = PaddingValues(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                shape = CircleShape,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(greenGradient, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Save Changes",
+                        fontSize = 20.sp,
+                        fontFamily = OpenSans,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         }
     }

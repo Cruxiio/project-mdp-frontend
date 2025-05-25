@@ -100,9 +100,6 @@ fun ProfileContent(modifier: Modifier = Modifier,
     val itemGradient = Brush.verticalGradient(listOf(item1, item2))
 
     val usersAllergies: List<String> = listOf("tes") // TODO: Ganti ke allergies user dari database
-    val meatAllow = true // TODO: Ganti ke meatAllow user dari database
-    val dairyAllow = true // TODO: Ganti ke dairyAllow user dari database
-    val eggAllow = true // TODO: Ganti ke eggAllow user dari database
 
     val authState = authViewModel.authState.observeAsState()
 
