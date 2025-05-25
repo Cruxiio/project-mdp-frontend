@@ -3,17 +3,24 @@ package com.example.nutrisaver.ui.screens.user
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
+import com.example.nutrisaver.ui.theme.OpenSans
 
 @Composable
 fun RecipeScreen(navController: NavController) {
@@ -34,12 +41,23 @@ private fun RecipeContent(modifier: Modifier = Modifier,
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
 
     Box(
-        modifier = modifier.background(backgroundGradient).fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(backgroundGradient)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 8.dp)
         ) {
-            
+            Text(
+                "Recipes",
+                fontSize = 24.sp,
+                fontFamily = OpenSans,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+
         }
     }
 }
