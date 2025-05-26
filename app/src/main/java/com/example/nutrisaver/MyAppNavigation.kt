@@ -19,6 +19,7 @@ import com.example.nutrisaver.ui.screens.user.FoodStockScreen
 import com.example.nutrisaver.ui.screens.user.ProfileScreen
 import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
 import com.example.nutrisaver.ui.screens.user.RecipeScreen
+import com.example.nutrisaver.ui.screens.user.SearchResultScreen
 
 @Composable
 fun MyAppNavigation(
@@ -49,7 +50,7 @@ fun MyAppNavigation(
         }
 
         // navigation pada halaman user.
-        navigation(startDestination = "recipedetail", route = "user") {
+        navigation(startDestination = "recipe", route = "user") {
             composable("dashboard") {
                 DashboardScreen(navController = navController)
             }
@@ -61,6 +62,9 @@ fun MyAppNavigation(
             }
             composable("recipe") {
                 RecipeScreen(navController = navController)
+            }
+            composable("searchresults") {
+                SearchResultScreen(navController = navController)
             }
             composable("recipedetail") {
                 RecipeDetailScreen(navController = navController)

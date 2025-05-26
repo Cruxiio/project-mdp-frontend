@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -110,7 +112,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = { Text("Search") },
+                placeholder = { Text("Search") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = colorResource(R.color.black),
@@ -118,15 +120,31 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                     focusedContainerColor = colorResource(R.color.form_input),
                     unfocusedContainerColor = colorResource(R.color.form_input)
                 ),
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search icon"
+                    )
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear search"
+                            )
+                        }
+                    }
+                },
                 shape = RoundedCornerShape(10.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // First Dropdown: Takes remaining space
                 Box(modifier = Modifier.weight(1f)) {
                     ExposedDropdownMenuBox(
                         expanded = filterExpanded,
@@ -167,11 +185,6 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                         }
                     }
                 }
-
-                // Spacer between dropdowns
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Second Dropdown: Fixed width in a Box
                 Box(modifier = Modifier.width(120.dp)) {
                     ExposedDropdownMenuBox(
                         expanded = filterTypeExpanded,

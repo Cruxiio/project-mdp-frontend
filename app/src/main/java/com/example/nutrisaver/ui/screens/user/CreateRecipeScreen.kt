@@ -55,7 +55,7 @@ private fun TopBar(
         }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "Edit Profile",
+            text = "Create Recipe",
             fontSize = 20.sp,
             fontFamily = OpenSans,
             fontWeight = FontWeight.Bold

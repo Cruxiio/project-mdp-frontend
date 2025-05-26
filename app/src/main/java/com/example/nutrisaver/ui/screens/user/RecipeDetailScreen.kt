@@ -77,7 +77,7 @@ private fun TopBar(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = "Recipe Detail",
+                text = "Search Results",
                 fontSize = 20.sp,
                 fontFamily = OpenSans,
                 fontWeight = FontWeight.Bold,
