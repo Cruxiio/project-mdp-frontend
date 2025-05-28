@@ -2,6 +2,7 @@ package com.example.nutrisaver.ui.screens.user
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -67,7 +69,8 @@ private fun RecipeContent(modifier: Modifier = Modifier,
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
-    val items = listOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5")
+    val recFoodStock = listOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5") // todo: ganti ke resep rekomendasi berdasarkan food stock dari database
+    val recNutrientIntake = listOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5") // todo: ganti ke resep rekomendasi berdasarkan nutrient intake user
     var searchQuery by remember { mutableStateOf("") }
 
     Box(
@@ -169,8 +172,8 @@ private fun RecipeContent(modifier: Modifier = Modifier,
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(items) { item ->
-                    RecipeItem()
+                items(recFoodStock) { item ->
+                    RecipeItem(navController)
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
@@ -186,8 +189,8 @@ private fun RecipeContent(modifier: Modifier = Modifier,
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(items) { item ->
-                    RecipeItem()
+                items(recNutrientIntake) { item ->
+                    RecipeItem(navController)
                 }
             }
         }
@@ -195,7 +198,9 @@ private fun RecipeContent(modifier: Modifier = Modifier,
 }
 
 @Composable
-private fun RecipeItem() {
+private fun RecipeItem(
+    navController: NavController
+) {
     val item1 = colorResource(id = R.color.item2_1)
     val item2 = colorResource(id = R.color.item2_2)
     val itemGradient = Brush.verticalGradient(listOf(item1, item2))
@@ -205,6 +210,10 @@ private fun RecipeItem() {
             .height(220.dp)
             .background(itemGradient, shape = RoundedCornerShape(10.dp))
             .padding(15.dp)
+            .clickable {
+                // todo: navigate ke recipe detail, passing juga itemnya
+                navController.navigate("recipedetail")
+            }
     ) {
        Column(
            modifier = Modifier.fillMaxWidth()
@@ -212,16 +221,33 @@ private fun RecipeItem() {
            Image(
                painter = painterResource(id = R.drawable.default_food_image), // todo: ganti ke gambar recipe
                contentDescription = "deskripsi gambar recipe",
-               modifier = Modifier.fillMaxWidth().width(150.dp).height(100.dp).padding(bottom = 4.dp),
+               modifier = Modifier
+                   .fillMaxWidth()
+                   .width(150.dp)
+                   .height(100.dp)
+                   .padding(bottom = 8.dp)
+                   .clip(RoundedCornerShape(10.dp)),
                contentScale = ContentScale.Crop,
            )
            Text(
                "Nama Recipe",
-               modifier = Modifier.fillMaxWidth(),
+               modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp),
                textAlign = TextAlign.Center,
-               fontSize = 16.sp,
+               fontSize = 18.sp,
                fontFamily = OpenSans,
                fontWeight = FontWeight.Bold
+           )
+           Text(
+               "Ready in: ",
+               modifier = Modifier.fillMaxWidth().padding(bottom = 3.dp),
+               fontSize = 16.sp,
+               fontFamily = OpenSans
+           )
+           Text(
+               "Calorie: ",
+               modifier = Modifier.fillMaxWidth(),
+               fontSize = 16.sp,
+               fontFamily = OpenSans
            )
        }
     }

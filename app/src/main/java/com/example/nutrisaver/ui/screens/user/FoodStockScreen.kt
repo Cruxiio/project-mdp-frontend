@@ -21,6 +21,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -35,6 +39,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,11 +51,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
@@ -92,6 +100,8 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
+
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -108,7 +118,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                 fontFamily = OpenSans,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -138,7 +148,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                 },
                 shape = RoundedCornerShape(10.dp)
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -269,6 +279,9 @@ fun FoodStockItem() {
     val item1 = colorResource(id = R.color.item_1)
     val item2 = colorResource(id = R.color.item_2)
     val itemGradient = Brush.verticalGradient(listOf(item1, item2))
+
+    val openAlertDialog = remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .padding(bottom = 8.dp) //
@@ -328,7 +341,9 @@ fun FoodStockItem() {
                         colorResource(R.color.red_light),
                         shape = RoundedCornerShape(10.dp)
                     ),
-                    onClick = { /* TODO: logika delete stock */ }
+                    onClick = {
+                        openAlertDialog.value = true // pakai dialog buat konfirmasi
+                    }
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.delete),
@@ -340,4 +355,73 @@ fun FoodStockItem() {
         }
     }
 
+    if (openAlertDialog.value) {
+        DeleteConfirmationDialog(
+            onDismiss = { openAlertDialog.value = false },
+            onConfirm = {
+                openAlertDialog.value = false
+                println("Confirmation registered") // todo: tambahkan logika delete item
+            },
+            icon = Icons.Default.Warning
+        )
+    }
+}
+
+@Composable
+fun DeleteConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    icon: ImageVector,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = colorResource(R.color.bg2_1),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(16.dp)
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.Red,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text("Delete Stock?", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Are you sure you want to delete this item?")
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(R.color.delete_cancel),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = onConfirm,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(R.color.delete_confirm),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Confirm")
+                    }
+                }
+            }
+        }
+    }
 }

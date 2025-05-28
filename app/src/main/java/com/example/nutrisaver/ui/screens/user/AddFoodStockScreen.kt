@@ -91,13 +91,13 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-
     val foodOptions = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant")
     var selectedFood by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
     val filteredOptions = foodOptions.filter {
         it.contains(query, ignoreCase = true)
     }
+
     var quantity by remember { mutableStateOf(0) }
     val unitOptions = listOf("g", "pcs", "ml")
     var unitExpanded by remember { mutableStateOf(false) }
