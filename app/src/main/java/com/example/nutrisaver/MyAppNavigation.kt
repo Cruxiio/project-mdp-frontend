@@ -6,11 +6,21 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import com.example.nutrisaver.ui.screens.auth.LoginScreen
-import com.example.nutrisaver.ui.screens.auth.RegisterDetailScreen
-import com.example.nutrisaver.ui.screens.auth.RegisterScreen
+import androidx.navigation.compose.rememberNavController
+import com.example.nutrisaver.ui.screens.LoginScreen
+import com.example.nutrisaver.ui.screens.RegisterDetailScreen
+import com.example.nutrisaver.ui.screens.RegisterScreen
+import com.example.nutrisaver.ui.screens.user.AddFoodStockScreen
+import com.example.nutrisaver.ui.screens.user.CreateRecipeScreen
 import com.example.nutrisaver.ui.screens.user.DashboardScreen
+import com.example.nutrisaver.ui.screens.user.EditInformationScreen
+import com.example.nutrisaver.ui.screens.user.EditProfileScreen
+import com.example.nutrisaver.ui.screens.user.FoodStockScreen
+import com.example.nutrisaver.ui.screens.user.NotificationScreen
 import com.example.nutrisaver.ui.screens.user.ProfileScreen
+import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
+import com.example.nutrisaver.ui.screens.user.RecipeScreen
+import com.example.nutrisaver.ui.screens.user.SearchResultScreen
 
 @Composable
 fun MyAppNavigation(
@@ -49,10 +59,22 @@ fun MyAppNavigation(
                 DashboardScreen(navController = navController)
             }
             composable("foodstock") {
-
+                FoodStockScreen(navController = navController)
+            }
+            composable("addfoodstock") {
+                AddFoodStockScreen(navController = navController)
             }
             composable("recipe") {
-
+                RecipeScreen(navController = navController)
+            }
+            composable("searchresults") {
+                SearchResultScreen(navController = navController)
+            }
+            composable("recipedetail") {
+                RecipeDetailScreen(navController = navController)
+            }
+            composable("createrecipe") {
+                CreateRecipeScreen(navController = navController)
             }
             composable("profile") {
                 ProfileScreen(
@@ -60,7 +82,19 @@ fun MyAppNavigation(
                     authViewModel = authViewModel
                 )
             }
+            composable("editinformation") {
+                EditInformationScreen(navController = navController)
+            }
+            composable("editprofile") {
+                EditProfileScreen(navController = navController)
+            }
+            composable("notification") {
+                NotificationScreen(navController = navController)
+            }
         }
 
+        navigation(startDestination = "splash", route = "admin") {
+
+        }
     }
 }

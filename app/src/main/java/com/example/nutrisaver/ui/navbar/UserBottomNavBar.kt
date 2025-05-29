@@ -30,8 +30,8 @@ import com.example.nutrisaver.ui.theme.OpenSans
 fun UserBottomNavBar(navController: NavController) {
     val items = listOf(
         UserBottomNavItem("dashboard", R.drawable.dashboard, "Dashboard"),
-        UserBottomNavItem("food_stock", R.drawable.foodstock, "Food Stock"),
-        UserBottomNavItem("recipes", R.drawable.recipe, "Recipes"),
+        UserBottomNavItem("foodstock", R.drawable.foodstock, "Food Stock"),
+        UserBottomNavItem("recipe", R.drawable.recipe, "Recipes"),
         UserBottomNavItem("profile", R.drawable.profile, "Profile"),
 
     )

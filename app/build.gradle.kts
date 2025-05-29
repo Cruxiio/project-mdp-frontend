@@ -82,4 +82,5 @@ dependencies {
 
     implementation("androidx.compose.material:material")
     // Material3 is already included via libs.androidx.material3 above
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }

@@ -18,12 +18,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -159,6 +161,13 @@ fun LoginScreen(modifier: Modifier = Modifier,
                     singleLine = true,
                     value = email,
                     onValueChange = { email = it },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor = colorResource(R.color.black),
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
+                    ),
+                    shape = RoundedCornerShape(10.dp)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text("Password", fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -170,7 +179,14 @@ fun LoginScreen(modifier: Modifier = Modifier,
                     onValueChange = { password = it },
                     label = {  },
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor = colorResource(R.color.black),
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
+                    ),
+                    shape = RoundedCornerShape(10.dp)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically,) {
