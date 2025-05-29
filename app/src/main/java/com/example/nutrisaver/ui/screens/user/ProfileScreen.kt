@@ -1,5 +1,8 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,18 +43,24 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.example.nutrisaver.AuthState
 import com.example.nutrisaver.AuthViewModel
 import com.example.nutrisaver.R
@@ -101,6 +110,13 @@ fun ProfileContent(modifier: Modifier = Modifier,
 
     val usersAllergies: List<String> = listOf("tes") // TODO: Ganti ke allergies user dari database
 
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
+
     val authState = authViewModel.authState.observeAsState()
 
     LaunchedEffect(authState.value) {
@@ -126,17 +142,35 @@ fun ProfileContent(modifier: Modifier = Modifier,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box {
-                    Image(
-                        imageVector = Icons.Default.Person, // todo: diganti sama pfp user dr database
-                        contentDescription = "Profile Picture",
+                    Box(
                         modifier = Modifier
                             .size(130.dp)
-                            .clip(CircleShape)
+                            .background(Color.Gray, shape = CircleShape)
                             .border(
                                 BorderStroke(1.dp, Color.Gray),
                                 CircleShape
                             )
-                    )
+                            .clickable {
+                                imagePickerLauncher.launch("image/*")
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (selectedImageUri != null) {
+                            Image(
+                                painter = rememberAsyncImagePainter(selectedImageUri),
+                                contentDescription = "Profile Picture",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Default Profile Picture",
+                                tint = Color.White,
+                                modifier = Modifier.size(60.dp)
+                            )
+                        }
+                    }
                     IconButton(
                         onClick = { navController.navigate("editprofile") },
                         modifier = Modifier

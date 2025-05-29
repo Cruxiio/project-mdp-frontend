@@ -3,6 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="form_input">#fcfff8</color>
+    <color name="gray_border">#c6c6c6</color>
     <color name="bg">#f6fbf0</color>
     <color name="green">#39a23d</color>
     <color name="green_teal_dark">#008063</color>
@@ -16,7 +17,8 @@
     <color name="item2_1">#bffabf</color>
     <color name="item2_2">#96cdc1</color>
     <color name="delete_confirm">#ed1d24</color>
-    <color name="delete_cancel">#6e6e6e</color>
+    <color name="cancel">#6e6e6e</color>
+    <color name="create_confirm">#46c143</color>
     <color name="logout_btn_1">#da3422</color>
     <color name="logout_btn_2">#af0404</color>
     <color name="red">#da3422</color>

@@ -1,27 +1,25 @@
 package com.example.nutrisaver.ui.screens.user
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -31,69 +29,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
-import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
 
 @Composable
-fun RecipeDetailScreen(navController: NavController) {
+fun NotificationScreen(navController: NavController) {
     Scaffold { innerPadding ->
-        RecipeDetailContent(modifier = Modifier.padding(innerPadding), navController)
+        NotificationContent(modifier = Modifier.padding(innerPadding), navController)
     }
 }
+
 
 @Composable
 private fun TopBar(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {}
 ) {
-    val green = colorResource(id = R.color.green)
-    val greenTealDark = colorResource(id = R.color.green_teal_dark)
-    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
-
-    Box(
-        modifier = Modifier
+    Row(
+        modifier = modifier
             .fillMaxWidth()
-            .background(greenGradient)
-            .padding(vertical = 12.dp, horizontal = 16.dp)
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back Button",
-                    tint = Color.White
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = "Recipe Detail",
-                fontSize = 20.sp,
-                fontFamily = OpenSans,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+        IconButton(onClick = onBackClick) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back Button"
             )
         }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Notification",
+            modifier = Modifier.weight(1f),
+            fontSize = 20.sp,
+            fontFamily = OpenSans,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
+
 @Composable
-private fun RecipeDetailContent(modifier: Modifier = Modifier,
-                        navController: NavController) {
+private fun NotificationContent(
+    modifier: Modifier = Modifier,
+    navController: NavController
+) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
@@ -108,48 +93,14 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(top = 70.dp, bottom = 80.dp)
+                .padding(top = 70.dp, bottom = 80.dp, end = 32.dp, start = 32.dp)
         ) {
-
-            Image(
-                painter = painterResource(id = R.drawable.default_food_image), // todo: ganti ke gambar recipe
-                contentDescription = "deskripsi gambar recipe",
-                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-                contentScale = ContentScale.Crop,
-            )
             Text(
-                "Nama Recipe",
-                modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
-                textAlign = TextAlign.Center,
-                fontSize = 24.sp,
+                "Reminder Preferences",
+                fontSize = 16.sp,
                 fontFamily = OpenSans,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(15.dp)
-            ) {
-                Text(
-                    "Calories: ",
-                    fontSize = 18.sp,
-                    fontFamily = OpenSans
-                )
-                Text(
-                    "Ready in: ",
-                    fontSize = 18.sp,
-                    fontFamily = OpenSans
-                )
-                HorizontalDivider(thickness = 2.dp)
-                Text(
-                    "Ingredients: ",
-                    fontSize = 18.sp,
-                    fontFamily = OpenSans,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
         TopBar(
             onBackClick = { navController.popBackStack() },
@@ -160,7 +111,7 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
         Box(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter)) {
             Button(
                 onClick = {
-                    navController.navigate("createrecipe")
+                    // todo: hilangkan semua notifikasi
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(
@@ -169,7 +120,7 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
                 shape = CircleShape,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(35.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -178,8 +129,8 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Create Recipe",
-                        fontSize = 20.sp,
+                        text = "Clear All Notification",
+                        fontSize = 18.sp,
                         fontFamily = OpenSans,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,

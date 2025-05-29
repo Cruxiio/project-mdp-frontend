@@ -100,8 +100,6 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
-
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -389,7 +387,7 @@ fun DeleteConfirmationDialog(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = Color.Red,
+                        tint = colorResource(R.color.delete_confirm),
                         modifier = Modifier.size(24.dp)
                     )
                     Text("Delete Stock?", fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -404,7 +402,7 @@ fun DeleteConfirmationDialog(
                         modifier = Modifier.weight(1f),
                         onClick = onDismiss,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(R.color.delete_cancel),
+                            containerColor = colorResource(R.color.cancel),
                             contentColor = Color.White
                         )
                     ) {

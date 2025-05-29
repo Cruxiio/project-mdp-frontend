@@ -28,6 +28,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
@@ -55,11 +57,13 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -137,16 +141,17 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
 
     val ingredientsChosen = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant") // todo: isi dengan ingredient yang dipilih
 
+    val openConfirmDialog = remember { mutableStateOf(false) }
+
     Box(
         modifier = modifier.background(backgroundGradient).fillMaxSize()
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(top = 70.dp, bottom = 80.dp)
         ) {
-            TopBar(
-                onBackClick = { navController.popBackStack() },
-                onInfoClick = { showInfoDialog = true }
-            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -275,7 +280,7 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(
                     onClick = {
-                        // todo: logika tambahkan ke lazycolumn
+                        // todo: logika tambahkan ke ingredients chosen
                     },
                     contentPadding = PaddingValues(),
                     colors = ButtonDefaults.buttonColors(
@@ -315,11 +320,17 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
                 }
             }
         }
+        TopBar(
+            onBackClick = { navController.popBackStack() },
+            onInfoClick = { showInfoDialog = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+        )
         Box(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter)) {
             Button(
                 onClick = {
-                    // todo: logika kurangi stock makanan
-                    navController.popBackStack()
+                    openConfirmDialog.value = true
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(
@@ -367,6 +378,19 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
     if (showInfoDialog) {
         InfoDialog(onDismissRequest = { showInfoDialog = false })
     }
+
+    if(openConfirmDialog.value) {
+        CreateConfirmDialog(
+            onDismissRequest = {
+                openConfirmDialog.value = false
+            },
+            onConfirmRequest = {
+                openConfirmDialog.value = false
+                // todo: logika kurangi stock makanan
+            },
+            icon = Icons.Default.CheckCircle
+        )
+    }
 }
 
 @Composable
@@ -383,57 +407,156 @@ private fun IngredientItem() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp, horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Nama Stock", // TODO: nama stock
+                text = "Nama Stock", // TODO: replace with dynamic name
                 fontFamily = OpenSans,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.width(130.dp)
             )
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        color = colorResource(R.color.yellow),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .clickable { /* TODO: Decrease action */ },
+                contentAlignment = Alignment.Center
             ) {
-                IconButton(
-                    onClick = { /* TODO: Decrease action */ },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            colorResource(R.color.yellow),
-                            shape = RoundedCornerShape(10.dp))
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_remove),
-                        contentDescription = "Minus"
-                    )
-                }
-                Text(
-                    "100 g", // todo: fanti ke kuantitas stock beserta satuannya
-                    fontSize = 18.sp,
-                    fontFamily = OpenSans
+                Icon(
+                    painter = painterResource(R.drawable.ic_remove),
+                    contentDescription = "Minus",
+                    modifier = Modifier.size(18.dp)
                 )
-                IconButton(
-                    onClick = { /* TODO: Increase action */ },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            colorResource(R.color.yellow),
-                            shape = RoundedCornerShape(10.dp))
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_add),
-                        contentDescription = "Plus"
+            }
+
+            Spacer(modifier = Modifier.width(5.dp))
+
+            Text(
+                text = "100", // TODO: dynamic quantity
+                fontSize = 18.sp,
+                fontFamily = OpenSans,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(40.dp)
+            )
+
+            Text(
+                text = "g", // TODO: dynamic unit
+                fontSize = 18.sp,
+                fontFamily = OpenSans,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(5.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        color = colorResource(R.color.yellow),
+                        shape = RoundedCornerShape(10.dp)
                     )
+                    .clickable { /* TODO: Increase action */ },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_add),
+                    contentDescription = "Plus",
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        color = colorResource(R.color.red_light),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .clickable { /* TODO: remove from ingredientsChosen */ },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Remove",
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CreateConfirmDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmRequest: () -> Unit,
+    icon: ImageVector,
+) {
+    Dialog(
+        onDismissRequest = { onDismissRequest() }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = colorResource(R.color.bg2_1),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(24.dp)
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = colorResource(R.color.create_confirm),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text("Confirm Recipe Creation", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Text("Are you sure you want to create this recipe?\n" +
+                        "The selected ingredients will be used and removed from your stock.")
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = onDismissRequest,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(R.color.cancel),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = onConfirmRequest,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(R.color.create_confirm),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Confirm")
+                    }
                 }
             }
         }
     }
-
 }
 
 @Composable
@@ -571,3 +694,4 @@ private fun FoodSearchBottomSheet(
         }
     }
 }
+
