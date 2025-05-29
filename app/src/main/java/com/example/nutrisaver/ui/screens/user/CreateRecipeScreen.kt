@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -19,15 +20,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -45,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -60,6 +67,7 @@ import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.google.firebase.components.Lazy
 
 @Composable
 fun CreateRecipeScreen(navController: NavController) {
@@ -112,6 +120,9 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
+    val green = colorResource(id = R.color.green)
+    val greenTealDark = colorResource(id = R.color.green_teal_dark)
+    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
     var showInfoDialog by remember { mutableStateOf(false) }
 
@@ -124,11 +135,13 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
         it.contains(query, ignoreCase = true)
     }
 
+    val ingredientsChosen = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant") // todo: isi dengan ingredient yang dipilih
+
     Box(
         modifier = modifier.background(backgroundGradient).fillMaxSize()
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
         ) {
             TopBar(
                 onBackClick = { navController.popBackStack() },
@@ -209,51 +222,218 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
                     selectedFood = selectedFood,
                     onClick = { showBottomSheet = true }
                 )
+                Spacer(modifier = Modifier.height(20.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Amount to Use:"
+                        "Amount to Use:",
+                        fontSize = 18.sp,
+                        fontFamily = OpenSans,
+                        modifier = Modifier.weight(1f)
                     )
-                    Spacer(modifier = Modifier.weight(1f))
-                    IconButton(
-                        onClick = { /* TODO: Decrease action */ },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(Color.LightGray, shape = RoundedCornerShape(10.dp))
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.RemoveCircleOutline,
-                            contentDescription = "Minus",
-                            tint = Color.Black
+                        IconButton(
+                            onClick = { /* TODO: Decrease action */ },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(
+                                    colorResource(R.color.item_1),
+                                    shape = RoundedCornerShape(10.dp))
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_remove),
+                                contentDescription = "Minus"
+                            )
+                        }
+                        Text(
+                            "100 g", // todo: fanti ke kuantitas stock beserta satuannya
+                            fontSize = 18.sp,
+                            fontFamily = OpenSans
+                        )
+                        IconButton(
+                            onClick = { /* TODO: Increase action */ },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(
+                                    colorResource(R.color.item_1),
+                                    shape = RoundedCornerShape(10.dp))
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_add),
+                                contentDescription = "Plus"
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = {
+                        // todo: logika tambahkan ke lazycolumn
+                    },
+                    contentPadding = PaddingValues(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(greenGradient, shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Add to List",
+                            fontSize = 20.sp,
+                            fontFamily = OpenSans,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
                         )
                     }
-                    Text(
-                        "100g"
-                    )
                 }
-                if (showBottomSheet) {
-                    FoodSearchBottomSheet(
-                        query = query,
-                        onQueryChange = { query = it },
-                        filteredOptions = filteredOptions,
-                        selectedFood = selectedFood,
-                        onSelectFood = {
-                            selectedFood = it
-                            showBottomSheet = false
-                            query = ""
-                        },
-                        onDismiss = { showBottomSheet = false },
-                        sheetState = sheetState
+                HorizontalDivider(modifier = Modifier.padding(vertical = 15.dp), thickness = 2.dp)
+                Text(
+                    "Ingredients",
+                    fontFamily = OpenSans,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 10.dp)
+                )
+                ingredientsChosen.forEach { item ->
+                    IngredientItem()
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+            }
+        }
+        Box(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter)) {
+            Button(
+                onClick = {
+                    // todo: logika kurangi stock makanan
+                    navController.popBackStack()
+                },
+                contentPadding = PaddingValues(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                shape = CircleShape,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(greenGradient, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Create this Recipe",
+                        fontSize = 20.sp,
+                        fontFamily = OpenSans,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }
         }
     }
 
+    if (showBottomSheet) {
+        FoodSearchBottomSheet(
+            query = query,
+            onQueryChange = { query = it },
+            filteredOptions = filteredOptions,
+            selectedFood = selectedFood,
+            onSelectFood = {
+                selectedFood = it
+                showBottomSheet = false
+                query = ""
+            },
+            onDismiss = { showBottomSheet = false },
+            sheetState = sheetState
+        )
+    }
+
     if (showInfoDialog) {
         InfoDialog(onDismissRequest = { showInfoDialog = false })
     }
+}
+
+@Composable
+private fun IngredientItem() {
+    val item1 = colorResource(id = R.color.item_1)
+    val item2 = colorResource(id = R.color.item_2)
+    val itemGradient = Brush.verticalGradient(listOf(item1, item2))
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(itemGradient, shape = RoundedCornerShape(20.dp))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp, horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Nama Stock", // TODO: nama stock
+                fontFamily = OpenSans,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { /* TODO: Decrease action */ },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            colorResource(R.color.yellow),
+                            shape = RoundedCornerShape(10.dp))
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_remove),
+                        contentDescription = "Minus"
+                    )
+                }
+                Text(
+                    "100 g", // todo: fanti ke kuantitas stock beserta satuannya
+                    fontSize = 18.sp,
+                    fontFamily = OpenSans
+                )
+                IconButton(
+                    onClick = { /* TODO: Increase action */ },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            colorResource(R.color.yellow),
+                            shape = RoundedCornerShape(10.dp))
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_add),
+                        contentDescription = "Plus"
+                    )
+                }
+            }
+        }
+    }
+
 }
 
 @Composable

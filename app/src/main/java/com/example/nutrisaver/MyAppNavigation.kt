@@ -50,7 +50,7 @@ fun MyAppNavigation(
         }
 
         // navigation pada halaman user.
-        navigation(startDestination = "recipe", route = "user") {
+        navigation(startDestination = "createrecipe", route = "user") {
             composable("dashboard") {
                 DashboardScreen(navController = navController)
             }
