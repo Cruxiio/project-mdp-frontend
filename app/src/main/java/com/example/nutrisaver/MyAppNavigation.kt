@@ -7,9 +7,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.example.nutrisaver.ui.screens.LoginScreen
-import com.example.nutrisaver.ui.screens.RegisterDetailScreen
-import com.example.nutrisaver.ui.screens.RegisterScreen
+import com.example.nutrisaver.ui.screens.auth.LoginScreen
+import com.example.nutrisaver.ui.screens.auth.RegisterDetailScreen
+import com.example.nutrisaver.ui.screens.auth.RegisterScreen
 import com.example.nutrisaver.ui.screens.user.AddFoodStockScreen
 import com.example.nutrisaver.ui.screens.user.CreateRecipeScreen
 import com.example.nutrisaver.ui.screens.user.DashboardScreen
