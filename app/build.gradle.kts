@@ -64,22 +64,27 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    implementation(platform(libs.firebase.bom.v33130))
 
     // Add the dependency for the Firebase Authentication library
     // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation("com.google.firebase:firebase-auth")
-    implementation("androidx.navigation:navigation-compose:2.9.0")
+    implementation(libs.google.firebase.auth)
+    implementation(libs.androidx.navigation.compose)
 
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0") // Retrofit library
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0") // Gson converter for Retrofit
-    implementation ("com.squareup.retrofit2:converter-moshi:2.9.0")
+    implementation (libs.retrofit) // Retrofit library
+    implementation (libs.converter.gson) // Gson converter for Retrofit
+    implementation (libs.converter.moshi)
 
     // Moshi dependencies
-    implementation ("com.squareup.moshi:moshi:1.12.0")
-    implementation ("com.squareup.moshi:moshi-kotlin:1.12.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2") // Kotlin Coroutines (if using coroutines with Retrofit)
+    implementation (libs.moshi)
+    implementation (libs.moshi.kotlin)
+    implementation (libs.kotlinx.coroutines.android) // Kotlin Coroutines (if using coroutines with Retrofit)
 
-    implementation("androidx.compose.material:material")
+    implementation(libs.androidx.material)
     // Material3 is already included via libs.androidx.material3 above
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.play.services.auth)
+
 }

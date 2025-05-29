@@ -39,7 +39,7 @@ fun ProfileScreen(
     ){
         Text(text = "Tes masuk home", fontSize = 32.sp)
         TextButton(onClick = {
-            authViewModel.signout()
+            authViewModel.signOut()
         }){
             Text( "Sign Out")
         }

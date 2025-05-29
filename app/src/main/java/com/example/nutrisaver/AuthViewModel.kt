@@ -1,26 +1,38 @@
 package com.example.nutrisaver
 
+import android.app.Activity
+import android.app.Application // Tambahkan import ini
 import android.util.Patterns
+import androidx.lifecycle.AndroidViewModel // Ubah ViewModel menjadi AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope // Tambahkan import ini
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterDetailInp
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterInp
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch // Tambahkan import ini
 
-class AuthViewModel : ViewModel() {
+// Ubah AuthViewModel menjadi AndroidViewModel dan tambahkan Application sebagai parameter konstruktor
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val auth : FirebaseAuth = FirebaseAuth.getInstance()
     private val _authState = MutableLiveData<AuthState>()
     val authState: LiveData<AuthState> = _authState
-    var registerInp: RegisterInp = RegisterInp() // buat simpan sementara data dari hal register 1
+    var registerInp: RegisterInp = RegisterInp()
+
+    // Instansiasi GoogleAuthClient menggunakan application context
+    private val googleAuthClient = GoogleAuthClient(application)
 
     init {
+        // Panggil checkAuthStatus dari GoogleAuthClient karena itu yang paling update
+        // atau pastikan keduanya konsisten. Untuk sekarang, checkAuthStatus Firebase cukup.
         checkAuthStatus()
     }
 
     fun checkAuthStatus(){
+        // Anda bisa juga memanggil googleAuthClient.isSignedIn() di sini jika ingin
+        // memastikan konsistensi penuh, tapi firebaseAuth.currentUser biasanya cukup.
         if (auth.currentUser != null){
-            // klo udh login
             _authState.value = AuthState.Authenticated
         }
         else{
@@ -33,71 +45,94 @@ class AuthViewModel : ViewModel() {
             _authState.value = AuthState.Error("Email dan Password wajib diisi!")
             return
         }
-
+        _authState.value = AuthState.Loading // Set loading state
         auth.signInWithEmailAndPassword(email,password)
             .addOnCompleteListener{task ->
                 if(task.isSuccessful){
                     _authState.value = AuthState.Authenticated
                 }
                 else{
-                    _authState.value = AuthState.Error(task.exception?.message?: "Terjadi masalah")
+                    _authState.value = AuthState.Error(task.exception?.message?: "Terjadi masalah saat login")
                 }
             }
     }
 
+    // Modifikasi signInWithGoogle untuk menerima Activity
+    fun signInWithGoogle(activityContext: Activity) { // Ubah tipe Context menjadi Activity
+        _authState.value = AuthState.Loading
+        viewModelScope.launch {
+            try {
+                // Teruskan activityContext ke googleAuthClient.signIn
+                val success = googleAuthClient.signIn(activityContext)
+                if (success) {
+                    _authState.value = AuthState.Authenticated
+                } else {
+                    _authState.value = AuthState.Error("Google Sign-In Gagal. Periksa log untuk detail.")
+                }
+            } catch (e: CancellationException) {
+                _authState.value = AuthState.Unauthenticated
+                println("Google Sign-In dibatalkan oleh pengguna: ${e.message}")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _authState.value = AuthState.Error(e.message ?: "Terjadi error saat Sign In dengan Google.")
+            }
+        }
+    }
+
+
     fun registerPage1(username: String,email : String, password : String, confPass:String) {
-        // check input kosong
+        // ... (kode registerPage1 tetap sama)
         if(email.isEmpty() || password.isEmpty() || username.isEmpty() || confPass.isEmpty()){
             _authState.value = AuthState.Error("Input register wajib diisi!")
             return
         }
-
-        //check password dan confPass
         if (password != confPass){
             _authState.value = AuthState.Error("Password dan confirm password harus sama!")
             return
         }
-
-        // check format email
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
             _authState.value = AuthState.Error("Format email tidak sesuai!")
             return
         }
-
-        // check email sudah terdaftar atau blom
-
-        // check username sudah terdaftar atau blom
-
-        // simpan data register ke temp variabel
         registerInp = RegisterInp(username,email,password)
-
-        // ganti state
         _authState.value = AuthState.ToRegisterPage2
     }
 
     fun signup(inp: RegisterDetailInp){
-        // check input kosong
-        val err = inp.checkKosong();
+        // ... (kode signup tetap sama)
+        val err = inp.checkKosong()
         if(err != ""){
             _authState.value = AuthState.Error(err)
             return
         }
-
-        // create user using firebase
+        _authState.value = AuthState.Loading // Set loading state
         auth.createUserWithEmailAndPassword(registerInp.email,registerInp.password)
             .addOnCompleteListener{task ->
                 if(task.isSuccessful){
                     _authState.value = AuthState.Authenticated
                 }
                 else{
-                    _authState.value = AuthState.Error(task.exception?.message?: "Terjadi masalah")
+                    _authState.value = AuthState.Error(task.exception?.message?: "Terjadi masalah saat registrasi")
                 }
             }
     }
 
-    fun signout(){
-        auth.signOut()
-        _authState.value = AuthState.Unauthenticated
+    // Ubah nama menjadi signOut dan panggil googleAuthClient.signOut()
+    fun signOut(){
+        _authState.value = AuthState.Loading // Opsional: Set loading state
+        viewModelScope.launch {
+            try {
+                googleAuthClient.signOut() // Ini sudah termasuk firebaseAuth.signOut()
+                _authState.value = AuthState.Unauthenticated
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e // Rethrow jika cancellation
+                e.printStackTrace()
+                _authState.value = AuthState.Error(e.message ?: "Terjadi error saat Sign Out.")
+                // Meskipun error, coba set ke Unauthenticated karena Firebase sign out mungkin berhasil
+                // atau state bisa jadi tidak konsisten.
+                // _authState.value = AuthState.Unauthenticated // Opsional, tergantung behavior yang diinginkan
+            }
+        }
     }
 }
 
