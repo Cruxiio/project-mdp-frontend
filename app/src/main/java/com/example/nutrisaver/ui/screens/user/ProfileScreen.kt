@@ -401,7 +401,7 @@ fun ProfileContent(modifier: Modifier = Modifier,
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(
                     onClick = {
-                        authViewModel.signout()
+                        authViewModel.signOut()
                     },
                     contentPadding = PaddingValues(),
                     colors = ButtonDefaults.buttonColors(
