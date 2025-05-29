@@ -1,4 +1,4 @@
-package com.example.nutrisaver.ui.screens
+package com.example.nutrisaver.ui.screens.auth
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -69,7 +69,7 @@ fun RegisterScreen(
     val context = LocalContext.current
     LaunchedEffect(authState.value) {
         when(authState.value){
-            is AuthState.Authenticated -> navController.navigate("register-detail")
+            is AuthState.ToRegisterPage2 -> navController.navigate("register-detail")
             is AuthState.Error -> Toast.makeText(context,
                 (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
             else -> Unit
@@ -88,7 +88,6 @@ fun RegisterScreen(
                 .align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(45.dp))
 
             Text(
                 text = "Create Account",
@@ -194,7 +193,7 @@ fun RegisterScreen(
 
                     Button(
                         onClick = {
-                            authViewModel.signup(email,password)
+                            authViewModel.registerPage1(username,email,password,confirmPassword)
                         }, enabled = authState.value != AuthState.Loading,
                         contentPadding = PaddingValues(),
                         colors = ButtonDefaults.buttonColors(
@@ -223,11 +222,11 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
             HorizontalDivider(
                 thickness = 2.dp
             )
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             Row(
                 modifier = Modifier
@@ -239,7 +238,7 @@ fun RegisterScreen(
                 Text(
                     modifier = Modifier.weight(1f),
                     text = "Already Have an Account? ",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontFamily = OpenSans,
                     color = Color.Black
                 )
@@ -253,7 +252,7 @@ fun RegisterScreen(
                 ) {
                     Text(
                         text = "Sign in",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         style = TextStyle(
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold,
@@ -262,7 +261,7 @@ fun RegisterScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }

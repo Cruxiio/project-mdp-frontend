@@ -65,7 +65,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
-import com.example.nutrisaver.ui.screens.convertMillisToDate
+import com.example.nutrisaver.ui.screens.auth.convertMillisToDate
 import com.example.nutrisaver.ui.theme.OpenSans
 
 @Composable

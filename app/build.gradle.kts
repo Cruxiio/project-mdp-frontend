@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt")
 
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
@@ -53,7 +54,6 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.foundation.android)
 //    implementation(libs.androidx.navigation.compose.jvmstubs)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -70,7 +70,17 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-auth")
     implementation("androidx.navigation:navigation-compose:2.9.0")
-    implementation("androidx.compose.material:material:1.8.1")
-    implementation("androidx.compose.material3:material3:1.2.0")
+
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0") // Retrofit library
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0") // Gson converter for Retrofit
+    implementation ("com.squareup.retrofit2:converter-moshi:2.9.0")
+
+    // Moshi dependencies
+    implementation ("com.squareup.moshi:moshi:1.12.0")
+    implementation ("com.squareup.moshi:moshi-kotlin:1.12.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2") // Kotlin Coroutines (if using coroutines with Retrofit)
+
+    implementation("androidx.compose.material:material")
+    // Material3 is already included via libs.androidx.material3 above
     implementation("io.coil-kt:coil-compose:2.4.0")
 }
