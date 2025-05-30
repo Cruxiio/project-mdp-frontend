@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel // Ubah ViewModel menjadi AndroidView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope // Tambahkan import ini
+import com.example.nutrisaver.data.repositories.AuthRepo
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterDetailInp
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterInp
 import com.google.firebase.auth.FirebaseAuth
@@ -14,11 +15,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch // Tambahkan import ini
 
 // Ubah AuthViewModel menjadi AndroidViewModel dan tambahkan Application sebagai parameter konstruktor
-class AuthViewModel(application: Application) : AndroidViewModel(application) {
+class AuthViewModel(authRepo:AuthRepo,application: Application) : AndroidViewModel(application) {
     private val auth : FirebaseAuth = FirebaseAuth.getInstance()
     private val _authState = MutableLiveData<AuthState>()
     val authState: LiveData<AuthState> = _authState
     var registerInp: RegisterInp = RegisterInp()
+
 
     // Instansiasi GoogleAuthClient menggunakan application context
     private val googleAuthClient = GoogleAuthClient(application)
@@ -55,6 +57,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     _authState.value = AuthState.Error(task.exception?.message?: "Terjadi masalah saat login")
                 }
             }
+
     }
 
     // Modifikasi signInWithGoogle untuk menerima Activity

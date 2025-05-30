@@ -6,6 +6,9 @@ plugins {
 
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
+
+    // Add the secret gradle plugin plugin (.env)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -28,6 +31,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            //ini variabel buat env
+//            buildConfigField("String", "BASE_URL", "http://10.0.2.2:3000/")
+//            buildConfigField("String","API_PATH_PREFIX","api")
         }
     }
     compileOptions {
