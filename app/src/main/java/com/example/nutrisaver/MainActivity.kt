@@ -79,7 +79,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             NutriSaverTheme {
                 val navController = rememberNavController()
-                val authViewModel: AuthViewModel = viewModel()
+
+                // Buat instance CustomViewModelFactory
+                val factory = CustomViewModelFactory
+                // define view models
+                val authViewModel: AuthViewModel = viewModel(factory=factory)
 
                 MyAppNavigation(navController = navController, authViewModel = authViewModel)
             }
