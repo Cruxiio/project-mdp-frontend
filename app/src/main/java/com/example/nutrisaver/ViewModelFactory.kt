@@ -10,10 +10,11 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
         with(modelClass) {
             val application = checkNotNull(extras[APPLICATION_KEY]) as NutriSaverApplication
             val authRepository = application.authRepo
-//            val todoRepository = TodoApplication.todoRepository
+            val commonRepository = application.commonRepo
+
             when {
                 isAssignableFrom(AuthViewModel::class.java) ->
-                    AuthViewModel(authRepository,application)
+                    AuthViewModel(commonRepository,authRepository,application)
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

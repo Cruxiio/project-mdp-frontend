@@ -1,12 +1,20 @@
 package com.example.nutrisaver.data.sources.remote
 
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
+import com.example.nutrisaver.data.sources.remote.common.AlergenGetAllResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface Webservice {
+    // common api (api buat data yang digunakan pilihan input kyk selectbox)
+    // api ini bisa diakses tanpa auth token
+    @GET("api/common/alergen")
+    suspend fun getAlergen(@Query("keyword") keyword:String): AlergenGetAllResponse
+
+    //===========================================================================
+    // auth api
     @POST("api/auth/register")
     suspend fun register(@Body body:UserJson):UserJson
 

@@ -43,6 +43,7 @@ import androidx.navigation.NavHostController
 import com.example.nutrisaver.AuthState
 import com.example.nutrisaver.AuthViewModel
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.sources.remote.common.Alergen
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterDetailInp
 import com.example.nutrisaver.ui.theme.OpenSans
 import java.text.SimpleDateFormat
@@ -57,7 +58,7 @@ fun RegisterDetailScreen(
     innerPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     var name by remember { mutableStateOf("") }
-    val genderOptions = listOf("Male", "Female")
+    val genderOptions = listOf("male", "female")
     val (gender, onGenderOptionSelected) = remember { mutableStateOf(genderOptions[0]) }
 
     var showDateModal by remember { mutableStateOf(false) }
@@ -67,11 +68,11 @@ fun RegisterDetailScreen(
     var weight by remember { mutableStateOf(0) }
     var height by remember { mutableStateOf(0) }
 
-    val goalOptions = listOf("Diet", "Maintain Weight", "Gain Muscle")
+    val goalOptions = listOf("diet", "maintain", "gain")
     var goalExpanded by remember { mutableStateOf(false) }
     var goal by remember { mutableStateOf(goalOptions[0]) }
 
-    val dietTypeOptions = listOf("Vegan", "Ketogenic", "Low Carbs", "Strict Calories", "Free", "Custom")
+    val dietTypeOptions = listOf("vegan", "ketogenic", "low carbs", "strict calories", "free", "custom")
     var dietTypeExpanded by remember { mutableStateOf(false) }
     var dietType by remember { mutableStateOf(dietTypeOptions[0]) }
 
@@ -85,32 +86,32 @@ fun RegisterDetailScreen(
     // Handle diet type changes and update the macronutrient values
     fun updateMacronutrientRecommendations(dietType: String) {
         when (dietType) {
-            "Vegan" -> {
+            "vegan" -> {
                 protein = "27.5"
                 carbs = "47.5"
                 fat = "25"
             }
-            "Ketogenic" -> {
+            "ketogenic" -> {
                 protein = "20"
                 carbs = "10"
                 fat = "70"
             }
-            "Low Carbs" -> {
+            "low carbs" -> {
                 protein = "30"
                 carbs = "30"
                 fat = "40"
             }
-            "Strict Calories" -> {
+            "strict calories" -> {
                 protein = "30"
                 carbs = "45"
                 fat = "25"
             }
-            "Free" -> {
+            "free" -> {
                 protein = "20"
                 carbs = "50"
                 fat = "30"
             }
-            "Custom" -> {
+            "custom" -> {
                 // Reset the values when "Custom" is selected
                 protein = ""
                 carbs = ""
@@ -131,13 +132,16 @@ fun RegisterDetailScreen(
     val total = proteinVal + carbsVal + fatVal
 
     // Handle allergies and other UI components
-    val allAllergen = listOf("Peanuts", "Tree Nuts", "Fish", "Shellfish", "Dairy", "Eggs", "Wheat", "Soy", "Gluten")
+    val alergenOption by authViewModel.alergenState.observeAsState(emptyList())
+//    val allAllergen = listOf("Peanuts", "Tree Nuts", "Fish", "Shellfish", "Dairy", "Eggs", "Wheat", "Soy", "Gluten")
     var allergyExpanded by remember { mutableStateOf(false) }
-    var selectedAllergy by remember { mutableStateOf(allAllergen[0]) }
-    var userAllergies by remember { mutableStateOf(listOf<String>()) }
+//    var selectedAllergy by remember { mutableStateOf(allAllergen[0]) }
+//    var userAllergies by remember { mutableStateOf(listOf<String>()) }
+    var selectedAllergy by remember { mutableStateOf<Alergen?>(null) }
+    var userAllergies by remember { mutableStateOf<List<Alergen>>(listOf<Alergen>()) }
 
     // Local callback function that updates userAllergies state
-    val onAllergyListChanged: (List<String>) -> Unit = { newList ->
+    val onAllergyListChanged: (List<Alergen>) -> Unit = { newList ->
         userAllergies = newList
     }
 
@@ -480,7 +484,7 @@ fun RegisterDetailScreen(
                     onExpandedChange = { allergyExpanded = !allergyExpanded }
                 ) {
                     OutlinedTextField(
-                        value = if (selectedAllergy.isNotEmpty()) selectedAllergy else "Select allergy",
+                        value = selectedAllergy?.name ?: "Select allergy",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = {
@@ -499,9 +503,9 @@ fun RegisterDetailScreen(
                         expanded = allergyExpanded,
                         onDismissRequest = { allergyExpanded = false }
                     ) {
-                        allAllergen.forEach { allergy ->
+                        alergenOption.forEach { allergy ->
                             DropdownMenuItem(
-                                text = { Text(allergy) },
+                                text = { Text(allergy.name) },
                                 onClick = {
                                     selectedAllergy = allergy
                                     allergyExpanded = false
@@ -513,10 +517,10 @@ fun RegisterDetailScreen(
 
                 Button(
                     onClick = {
-                        if (selectedAllergy.isNotEmpty() && selectedAllergy !in userAllergies) {
-                            val updatedList = userAllergies + selectedAllergy
+                        if (selectedAllergy != null && selectedAllergy !in userAllergies) {
+                            val updatedList: List<Alergen> = userAllergies + selectedAllergy!!
                             onAllergyListChanged(updatedList)
-                            selectedAllergy = ""
+                            selectedAllergy = null
                         }
                     },
                     contentPadding = PaddingValues(),
@@ -560,7 +564,7 @@ fun RegisterDetailScreen(
                             AssistChip(
                                 onClick = { /* gk perlu diisi */ },
                                 label = { Text(
-                                    allergy,
+                                    allergy.name,
                                     color = Color.White,
                                     fontFamily = OpenSans,
                                     fontWeight = FontWeight.Bold
