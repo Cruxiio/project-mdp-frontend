@@ -2,23 +2,32 @@ package com.example.nutrisaver
 
 import android.app.Activity
 import android.app.Application // Tambahkan import ini
+import android.util.Log
 import android.util.Patterns
 import androidx.lifecycle.AndroidViewModel // Ubah ViewModel menjadi AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope // Tambahkan import ini
 import com.example.nutrisaver.data.repositories.AuthRepo
+import com.example.nutrisaver.data.repositories.CommonRepo
+import com.example.nutrisaver.data.sources.remote.auth.User
+import com.example.nutrisaver.data.sources.remote.common.Alergen
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterDetailInp
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterInp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GetTokenResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch // Tambahkan import ini
+import kotlinx.coroutines.tasks.await
 
 // Ubah AuthViewModel menjadi AndroidViewModel dan tambahkan Application sebagai parameter konstruktor
-class AuthViewModel(authRepo:AuthRepo,application: Application) : AndroidViewModel(application) {
+class AuthViewModel(var commonRepo: CommonRepo,var authRepo:AuthRepo,application: Application) : AndroidViewModel(application) {
     private val auth : FirebaseAuth = FirebaseAuth.getInstance()
     private val _authState = MutableLiveData<AuthState>()
+    private val _alergenState = MutableLiveData<List<Alergen>>()
     val authState: LiveData<AuthState> = _authState
+    val alergenState: LiveData<List<Alergen>> = _alergenState
     var registerInp: RegisterInp = RegisterInp()
 
 
@@ -40,14 +49,25 @@ class AuthViewModel(authRepo:AuthRepo,application: Application) : AndroidViewMod
         else{
             _authState.value = AuthState.Unauthenticated
         }
+        getAlergen("")
+
     }
 
+    // ======================== common repo func ==========================
+    fun getAlergen(keyword:String) {
+        viewModelScope.launch {
+            _alergenState.value = commonRepo.getAlergen(keyword)
+            Log.d("debug alergen","${alergenState.value}")
+        }
+    }
+
+    // ======================== auth repo func ============================
     fun login(email : String, password : String){
         if(email.isEmpty() || password.isEmpty()){
             _authState.value = AuthState.Error("Email dan Password wajib diisi!")
             return
         }
-        _authState.value = AuthState.Loading // Set loading state
+        // _authState.value = AuthState.Loading // Set loading state
         auth.signInWithEmailAndPassword(email,password)
             .addOnCompleteListener{task ->
                 if(task.isSuccessful){
@@ -108,16 +128,57 @@ class AuthViewModel(authRepo:AuthRepo,application: Application) : AndroidViewMod
             _authState.value = AuthState.Error(err)
             return
         }
+
+
+        Log.d("debug inp", "${inp}")
+        Log.d("debug date", "${MockDB.dateFormater(inp.dateOfBirth)}")
         _authState.value = AuthState.Loading // Set loading state
-        auth.createUserWithEmailAndPassword(registerInp.email,registerInp.password)
-            .addOnCompleteListener{task ->
-                if(task.isSuccessful){
-                    _authState.value = AuthState.Authenticated
-                }
-                else{
-                    _authState.value = AuthState.Error(task.exception?.message?: "Terjadi masalah saat registrasi")
-                }
+        viewModelScope.launch {
+            val authResult = auth.createUserWithEmailAndPassword(registerInp.email,registerInp.password).await()
+
+            val user: FirebaseUser? = authResult.user
+
+
+            if (user != null ){
+                // ambil data dari firebase
+                val uid:String =  user.uid
+
+                // data auth token
+                val tokenResult: GetTokenResult? = user.getIdToken(true).await() // forceRefresh = true
+                val idToken: String = tokenResult?.token ?: ""
+
+                Log.d("debug", "uuid: ${uid} ")
+                Log.d("debug", "auth token: ${idToken} ")
+
+                // add data to backend
+                val newUser = authRepo.register(User(null,uid, "user", registerInp.username, registerInp.email,
+                        inp.name, inp.gender, MockDB.dateFormater(inp.dateOfBirth), inp.weight, inp.height, inp.goalOption, inp.dietTypeOption, inp.targetWeight,
+                        inp.protein, inp.carbs, inp.fat, null, inp.alergen))
+
+                Log.d("debug user detail","$newUser")
+
+                // ganti state buat ganti halaman
+                _authState.value = AuthState.Authenticated
             }
+            else{
+                _authState.value = AuthState.Error("User not found in firebase!")
+            }
+
+
+
+        }
+//        auth.createUserWithEmailAndPassword(registerInp.email,registerInp.password)
+//            .addOnCompleteListener{task ->
+//                if(task.isSuccessful){
+//                    _authState.value = AuthState.Authenticated
+//                }
+//                else{
+//                    _authState.value = AuthState.Error(task.exception?.message?: "Terjadi masalah saat registrasi")
+//                }
+//            }
+
+
+
     }
 
     // Ubah nama menjadi signOut dan panggil googleAuthClient.signOut()
