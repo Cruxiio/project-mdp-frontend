@@ -444,7 +444,7 @@ fun RegisterDetailScreen(
             )
 
             Spacer(modifier = Modifier.height(10.dp))
-            val isDietTypeCustom = dietType == "Custom"
+            val isDietTypeCustom = dietType == "custom"
 
             RatioInputField("Protein", protein.toString(), onValueChange = { if (isDietTypeCustom) protein = it }, enabled = isDietTypeCustom)
             RatioInputField("Carbs", carbs.toString(), onValueChange = { if (isDietTypeCustom) carbs = it }, enabled = isDietTypeCustom)
@@ -628,7 +628,7 @@ fun RegisterDetailScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(30.dp))
         }
     }
 }

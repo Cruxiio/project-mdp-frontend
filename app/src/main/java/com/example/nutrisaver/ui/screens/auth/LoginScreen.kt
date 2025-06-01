@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -120,276 +122,282 @@ fun LoginScreen(modifier: Modifier = Modifier,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .zIndex(0.5f),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .zIndex(0.5f)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(80.dp)
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
-            Image(
-                painter = painterResource(R.drawable.logo_white),
-                modifier = Modifier
-                    .size(90.dp)
-                    .padding(bottom = 10.dp),
-                contentDescription = "App icon"
-            )
-            Text(
-                modifier = Modifier
-                    .padding(bottom = 5.dp),
-                text = "Welcome Back!",
-                fontSize = 35.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontFamily = OpenSans
-            )
-            Text(
-                text = "Login to NutriSaver",
-                fontSize = 20.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontFamily = OpenSans
-            )
-
-            Spacer(modifier = Modifier.height(45.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+            Column (
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Email", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = OpenSans)
-                OutlinedTextField(
+                Spacer(modifier = Modifier.height(40.dp))
+                Image(
+                    painter = painterResource(R.drawable.logo_white),
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    singleLine = true,
-                    value = email,
-                    onValueChange = { email = it },
-                    textStyle = TextStyle(fontFamily = OpenSans),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colorResource(R.color.black),
-                        unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.form_input),
-                        unfocusedContainerColor = colorResource(R.color.form_input)
-                    ),
-                    shape = RoundedCornerShape(10.dp)
+                        .size(90.dp)
+                        .padding(bottom = 10.dp),
+                    contentDescription = "App icon"
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Password", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = OpenSans)
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    singleLine = true,
-                    value = password,
-                    onValueChange = { password = it },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    textStyle = TextStyle(fontFamily = OpenSans),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colorResource(R.color.black),
-                        unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.form_input),
-                        unfocusedContainerColor = colorResource(R.color.form_input)
-                    ),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically,) {
-                    Checkbox(
-                        checked = rememberMe,
-                        onCheckedChange = { rememberMe = it }
-                    )
-                    Text(
-                        "Remember Me",
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontFamily = OpenSans
-                        )
-                    )
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Button(
-                    onClick = {
-                        authViewModel.login(email,password)
-                    },
-                    enabled = authState.value != AuthState.Loading,
-                    contentPadding = PaddingValues(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(greenGradient, shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Sign In",
-                            fontSize = 20.sp,
-                            fontFamily = OpenSans,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        thickness = 1.dp,
-                        color = Color.Gray.copy(alpha = 0.5f)
-                    )
-                    Text(
-                        text = "OR",
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        fontSize = 14.sp,
-                        fontFamily = OpenSans,
-                        color = Color.Gray
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        thickness = 1.dp,
-                        color = Color.Gray.copy(alpha = 0.5f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Tombol Sign in with Google - Disesuaikan
-                Button(
-                    onClick = {
-                        val activity = context as? Activity
-                        if (activity != null) {
-                            authViewModel.signInWithGoogle(activity) // Panggil dengan activity
-                        } else {
-                            // Ini seharusnya tidak terjadi jika Composable Anda berada dalam Activity
-                            Toast.makeText(context, "Error: Tidak dapat menemukan Activity Context", Toast.LENGTH_LONG).show()
-                        }
-//                        Toast.makeText(context, "Google Sign-In Clicked", Toast.LENGTH_SHORT).show()
-                    },
-                    enabled = authState.value != AuthState.Loading, // Samakan dengan tombol utama
-                    contentPadding = PaddingValues(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    shape = CircleShape, // Samakan bentuknya
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(greenTealDark, shape = CircleShape), // Gunakan gradient yang sama
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            // horizontalArrangement = Arrangement.Center // Box sudah center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.google), // GANTI DENGAN DRAWABLE ANDA
-                                contentDescription = "Google sign in",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color.Unspecified
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Sign in with Google",
-                                fontFamily = OpenSans,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Tombol Sign in with Facebook - Disesuaikan
-                Button(
-                    onClick = {
-                        // TODO: Implement Facebook Sign-In logic
-                        Toast.makeText(context, "Facebook Sign-In Clicked", Toast.LENGTH_SHORT).show()
-                    },
-                    enabled = authState.value != AuthState.Loading, // Samakan dengan tombol utama
-                    contentPadding = PaddingValues(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    shape = CircleShape, // Samakan bentuknya
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(greenTealDark, shape = CircleShape), // Gunakan gradient yang sama
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            // horizontalArrangement = Arrangement.Center // Box sudah center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.facebook),
-                                contentDescription = "Facebook sign in",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color.Unspecified
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Sign in with Facebook",
-                                fontFamily = OpenSans,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color.White // Teks menjadi putih
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(20.dp))
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
                 Text(
-                    text = "Don't Have an Account? ",
-                    fontSize = 16.sp,
-                    fontFamily = OpenSans,
-                    color = Color.Black
+                    modifier = Modifier
+                        .padding(bottom = 5.dp),
+                    text = "Welcome Back!",
+                    fontSize = 35.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = OpenSans
                 )
-                TextButton(
-                    contentPadding = PaddingValues(0.dp),
-                    onClick = {
-                        navController.navigate("register")
-                    }
-                ) {
-                    Text(
-                        text = "Sign up",
-                        fontSize = 16.sp,
-                        style = TextStyle(
-                            fontFamily = OpenSans,
-                            fontWeight = FontWeight.Bold,
-                            color = colorResource(R.color.green_dark)
-                        )
-                    )
-                }
+                Text(
+                    text = "Login to NutriSaver",
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = OpenSans
+                )
             }
+
+           Column {
+               Column(
+                   modifier = Modifier
+                       .fillMaxWidth()
+                       .padding(horizontal = 32.dp),
+               ) {
+                   Text("Email", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = OpenSans)
+                   OutlinedTextField(
+                       modifier = Modifier
+                           .fillMaxWidth(),
+                       singleLine = true,
+                       value = email,
+                       onValueChange = { email = it },
+                       textStyle = TextStyle(fontFamily = OpenSans),
+                       colors = OutlinedTextFieldDefaults.colors(
+                           focusedTextColor = colorResource(R.color.black),
+                           unfocusedTextColor = colorResource(R.color.black),
+                           focusedContainerColor = colorResource(R.color.form_input),
+                           unfocusedContainerColor = colorResource(R.color.form_input)
+                       ),
+                       shape = RoundedCornerShape(10.dp)
+                   )
+                   Spacer(modifier = Modifier.height(16.dp))
+                   Text("Password", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = OpenSans)
+                   OutlinedTextField(
+                       modifier = Modifier
+                           .fillMaxWidth(),
+                       singleLine = true,
+                       value = password,
+                       onValueChange = { password = it },
+                       visualTransformation = PasswordVisualTransformation(),
+                       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                       textStyle = TextStyle(fontFamily = OpenSans),
+                       colors = OutlinedTextFieldDefaults.colors(
+                           focusedTextColor = colorResource(R.color.black),
+                           unfocusedTextColor = colorResource(R.color.black),
+                           focusedContainerColor = colorResource(R.color.form_input),
+                           unfocusedContainerColor = colorResource(R.color.form_input)
+                       ),
+                       shape = RoundedCornerShape(10.dp)
+                   )
+                   Spacer(modifier = Modifier.height(10.dp))
+                   Row(verticalAlignment = Alignment.CenterVertically,) {
+                       Checkbox(
+                           checked = rememberMe,
+                           onCheckedChange = { rememberMe = it }
+                       )
+                       Text(
+                           "Remember Me",
+                           style = TextStyle(
+                               fontSize = 16.sp,
+                               fontFamily = OpenSans
+                           )
+                       )
+                   }
+                   Spacer(modifier = Modifier.height(10.dp))
+                   Button(
+                       onClick = {
+                           authViewModel.login(email,password)
+                       },
+                       enabled = authState.value != AuthState.Loading,
+                       contentPadding = PaddingValues(),
+                       colors = ButtonDefaults.buttonColors(
+                           containerColor = Color.Transparent
+                       ),
+                       shape = CircleShape,
+                       modifier = Modifier
+                           .fillMaxWidth()
+                           .height(50.dp)
+                   ) {
+                       Box(
+                           modifier = Modifier
+                               .fillMaxSize()
+                               .background(greenGradient, shape = CircleShape),
+                           contentAlignment = Alignment.Center
+                       ) {
+                           Text(
+                               text = "Sign In",
+                               fontSize = 20.sp,
+                               fontFamily = OpenSans,
+                               color = Color.White,
+                               fontWeight = FontWeight.Bold
+                           )
+                       }
+                   }
+
+                   Spacer(modifier = Modifier.height(20.dp))
+
+                   Row(
+                       modifier = Modifier.fillMaxWidth(),
+                       verticalAlignment = Alignment.CenterVertically,
+                       horizontalArrangement = Arrangement.SpaceBetween
+                   ) {
+                       HorizontalDivider(
+                           modifier = Modifier.weight(1f),
+                           thickness = 1.dp,
+                           color = Color.Gray.copy(alpha = 0.5f)
+                       )
+                       Text(
+                           text = "OR",
+                           modifier = Modifier.padding(horizontal = 8.dp),
+                           fontSize = 14.sp,
+                           fontFamily = OpenSans,
+                           color = Color.Gray
+                       )
+                       HorizontalDivider(
+                           modifier = Modifier.weight(1f),
+                           thickness = 1.dp,
+                           color = Color.Gray.copy(alpha = 0.5f)
+                       )
+                   }
+
+                   Spacer(modifier = Modifier.height(24.dp))
+
+                   // Tombol Sign in with Google - Disesuaikan
+                   Button(
+                       onClick = {
+                           val activity = context as? Activity
+                           if (activity != null) {
+                               authViewModel.signInWithGoogle(activity) // Panggil dengan activity
+                           } else {
+                               // Ini seharusnya tidak terjadi jika Composable Anda berada dalam Activity
+                               Toast.makeText(context, "Error: Tidak dapat menemukan Activity Context", Toast.LENGTH_LONG).show()
+                           }
+//                        Toast.makeText(context, "Google Sign-In Clicked", Toast.LENGTH_SHORT).show()
+                       },
+                       enabled = authState.value != AuthState.Loading, // Samakan dengan tombol utama
+                       contentPadding = PaddingValues(),
+                       colors = ButtonDefaults.buttonColors(
+                           containerColor = Color.Transparent
+                       ),
+                       shape = CircleShape, // Samakan bentuknya
+                       modifier = Modifier
+                           .fillMaxWidth()
+                           .height(50.dp)
+                   ) {
+                       Box(
+                           modifier = Modifier
+                               .fillMaxSize()
+                               .background(greenTealDark, shape = CircleShape), // Gunakan gradient yang sama
+                           contentAlignment = Alignment.Center
+                       ) {
+                           Row(
+                               verticalAlignment = Alignment.CenterVertically,
+                               // horizontalArrangement = Arrangement.Center // Box sudah center
+                           ) {
+                               Icon(
+                                   painter = painterResource(id = R.drawable.google), // GANTI DENGAN DRAWABLE ANDA
+                                   contentDescription = "Google sign in",
+                                   modifier = Modifier.size(24.dp),
+                                   tint = Color.Unspecified
+                               )
+                               Spacer(modifier = Modifier.width(8.dp))
+                               Text(
+                                   text = "Sign in with Google",
+                                   fontFamily = OpenSans,
+                                   fontWeight = FontWeight.Bold,
+                                   fontSize = 16.sp,
+                                   color = Color.White
+                               )
+                           }
+                       }
+                   }
+
+                   Spacer(modifier = Modifier.height(16.dp))
+
+                   // Tombol Sign in with Facebook - Disesuaikan
+                   Button(
+                       onClick = {
+                           // TODO: Implement Facebook Sign-In logic
+                           Toast.makeText(context, "Facebook Sign-In Clicked", Toast.LENGTH_SHORT).show()
+                       },
+                       enabled = authState.value != AuthState.Loading, // Samakan dengan tombol utama
+                       contentPadding = PaddingValues(),
+                       colors = ButtonDefaults.buttonColors(
+                           containerColor = Color.Transparent
+                       ),
+                       shape = CircleShape, // Samakan bentuknya
+                       modifier = Modifier
+                           .fillMaxWidth()
+                           .height(50.dp)
+                   ) {
+                       Box(
+                           modifier = Modifier
+                               .fillMaxSize()
+                               .background(greenTealDark, shape = CircleShape), // Gunakan gradient yang sama
+                           contentAlignment = Alignment.Center
+                       ) {
+                           Row(
+                               verticalAlignment = Alignment.CenterVertically,
+                               // horizontalArrangement = Arrangement.Center // Box sudah center
+                           ) {
+                               Icon(
+                                   painter = painterResource(id = R.drawable.facebook),
+                                   contentDescription = "Facebook sign in",
+                                   modifier = Modifier.size(24.dp),
+                                   tint = Color.Unspecified
+                               )
+                               Spacer(modifier = Modifier.width(8.dp))
+                               Text(
+                                   text = "Sign in with Facebook",
+                                   fontFamily = OpenSans,
+                                   fontWeight = FontWeight.Bold,
+                                   fontSize = 16.sp,
+                                   color = Color.White // Teks menjadi putih
+                               )
+                           }
+                       }
+                   }
+                   Spacer(modifier = Modifier.height(20.dp))
+               }
+
+               Row(
+                   modifier = Modifier
+                       .fillMaxWidth(),
+                   horizontalArrangement = Arrangement.Center,
+                   verticalAlignment = Alignment.CenterVertically
+               ) {
+                   Text(
+                       text = "Don't Have an Account? ",
+                       fontSize = 16.sp,
+                       fontFamily = OpenSans,
+                       color = Color.Black
+                   )
+                   TextButton(
+                       contentPadding = PaddingValues(0.dp),
+                       onClick = {
+                           navController.navigate("register")
+                       }
+                   ) {
+                       Text(
+                           text = "Sign up",
+                           fontSize = 16.sp,
+                           style = TextStyle(
+                               fontFamily = OpenSans,
+                               fontWeight = FontWeight.Bold,
+                               color = colorResource(R.color.green_dark)
+                           )
+                       )
+                   }
+               }
+           }
         }
     }
 }
