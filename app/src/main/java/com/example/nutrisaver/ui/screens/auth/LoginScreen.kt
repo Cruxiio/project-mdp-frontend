@@ -100,7 +100,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
             modifier = Modifier
                 .size(circleSize)
                 .offset(
-                    y = -(circleSize / 1.2f)
+                    y = -(circleSize / 1.3f)
                 )
                 .background(greenGradient)
                 .zIndex(0f)
@@ -109,7 +109,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
             modifier = Modifier
                 .size(circleSize)
                 .offset(
-                    y = -(circleSize / 3.0f)
+                    y = -(circleSize / 3.3f)
                 )
                 .clip(CircleShape)
                 .background(greenGradient)
@@ -148,7 +148,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
                 fontFamily = OpenSans
             )
 
-            Spacer(modifier = Modifier.height(45.dp))
+            Spacer(modifier = Modifier.height(75.dp))
 
             Column(
                 modifier = Modifier
@@ -308,52 +308,6 @@ fun LoginScreen(modifier: Modifier = Modifier,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
                                 color = Color.White
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Tombol Sign in with Facebook - Disesuaikan
-                Button(
-                    onClick = {
-                        // TODO: Implement Facebook Sign-In logic
-                        Toast.makeText(context, "Facebook Sign-In Clicked", Toast.LENGTH_SHORT).show()
-                    },
-                    enabled = authState.value != AuthState.Loading, // Samakan dengan tombol utama
-                    contentPadding = PaddingValues(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    shape = CircleShape, // Samakan bentuknya
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(greenTealDark, shape = CircleShape), // Gunakan gradient yang sama
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            // horizontalArrangement = Arrangement.Center // Box sudah center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.facebook),
-                                contentDescription = "Facebook sign in",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color.Unspecified
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Sign in with Facebook",
-                                fontFamily = OpenSans,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color.White // Teks menjadi putih
                             )
                         }
                     }
