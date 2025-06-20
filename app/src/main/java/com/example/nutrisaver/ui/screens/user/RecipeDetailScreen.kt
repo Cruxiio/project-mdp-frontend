@@ -12,15 +12,19 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -108,48 +113,64 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(top = 70.dp, bottom = 80.dp)
+                .padding(top = 70.dp, bottom = 100.dp)
         ) {
-
+            // Recipe Image
             Image(
-                painter = painterResource(id = R.drawable.default_food_image), // todo: ganti ke gambar recipe
-                contentDescription = "deskripsi gambar recipe",
-                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-                contentScale = ContentScale.Crop,
-            )
-            Text(
-                "Nama Recipe",
-                modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
-                textAlign = TextAlign.Center,
-                fontSize = 24.sp,
-                fontFamily = OpenSans,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Column(
+                painter = painterResource(id = R.drawable.default_food_image),
+                contentDescription = "Recipe Image",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(15.dp)
+                    .aspectRatio(16f / 9f),
+                contentScale = ContentScale.Crop,
+            )
+
+            // Overlapping rounded box with recipe information
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .offset(y = (-40).dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(backgroundGradient),
             ) {
-                Text(
-                    "Calories: ",
-                    fontSize = 18.sp,
-                    fontFamily = OpenSans
-                )
-                Text(
-                    "Ready in: ",
-                    fontSize = 18.sp,
-                    fontFamily = OpenSans
-                )
-                HorizontalDivider(thickness = 2.dp)
-                Text(
-                    "Ingredients: ",
-                    fontSize = 18.sp,
-                    fontFamily = OpenSans,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Recipe Title
+                    Text(
+                        text = "Nasi Pecel", // todo: ganti ke nama makanan
+                        fontSize = 28.sp,
+                        fontFamily = OpenSans,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Recipe Information
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Calories: 200 kal",
+                            fontSize = 16.sp,
+                            fontFamily = OpenSans,
+                            color = Color.Black
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
             }
+
+            // Add extra space to account for the overlapping card
+            Spacer(modifier = Modifier.height(20.dp))
         }
         TopBar(
             onBackClick = { navController.popBackStack() },

@@ -93,8 +93,8 @@ dependencies {
     // Material3 is already included via libs.androidx.material3 above
     implementation("io.coil-kt:coil-compose:2.4.0")
 
-    // ycharts buat grafik
-    implementation("co.yml:ycharts:2.1.0")
+//    // ycharts buat grafik
+//    implementation("co.yml:ycharts:2.1.0")
 
     // Google Authentication dependencies
     implementation(libs.androidx.credentials)
