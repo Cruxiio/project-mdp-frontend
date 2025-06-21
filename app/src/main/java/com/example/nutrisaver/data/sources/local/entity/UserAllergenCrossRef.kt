@@ -6,9 +6,10 @@ import androidx.room.Index
 @Entity(
     tableName = "user_allergen_cross_ref",
     primaryKeys = ["uuid", "allergenId"],
-    indices = [Index(value = ["allergenId"])] // Index untuk performa query
+    indices = [Index(value = ["allergenId"])]
 )
 data class UserAllergenCrossRef(
+    // Anotasi @PrimaryKey dihapus dari sini
     val uuid: String,
     val allergenId: Int
 )

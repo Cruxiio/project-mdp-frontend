@@ -6,7 +6,7 @@ import com.example.nutrisaver.data.model.Allergen
 
 @Entity(tableName = "allergen")
 data class AllergenEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     val allergenId: Int,
     val name: String
 ) {

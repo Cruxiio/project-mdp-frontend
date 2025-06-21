@@ -12,7 +12,7 @@ import com.example.nutrisaver.data.sources.local.entity.UserAllergenCrossRef
 
 @Database(
     entities = [UserEntity::class, AllergenEntity::class, UserAllergenCrossRef::class],
-    version = 1, // Mulai dari 1. Naikkan jika ada perubahan skema
+    version = 2, // Mulai dari 1. Naikkan jika ada perubahan skema
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -27,9 +27,9 @@ abstract class AppDatabase : RoomDatabase() {
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
-                    context.applicationContext,
+                    context.applicationContext, 
                     AppDatabase::class.java,
-                    "nutrisaver_database"
+                    "nutrisaver"
                 )
                     // Sebaiknya gunakan migration di produksi, tapi ini cukup untuk development
                     .fallbackToDestructiveMigration()

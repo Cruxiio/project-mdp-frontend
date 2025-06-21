@@ -8,9 +8,9 @@ import java.time.Instant
 
 @Entity(tableName = "user")
 data class UserEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    var id: Int=0,
     var uuid: String,
-    var id: Int?,
     var username: String,
     var email: String,
     var name: String,
@@ -32,8 +32,8 @@ data class UserEntity(
     companion object {
         // Mengubah Model Domain (User) menjadi Entity (UserEntity)
         fun fromUser(user: User): UserEntity = UserEntity(
+            id = user.id?:0,
             uuid = user.uuid,
-            id = user.id,
             username = user.username,
             email = user.email,
             name = user.name,
@@ -58,8 +58,8 @@ data class UserEntity(
 // Fungsi ekstensi untuk mengubah Entity (UserEntity) menjadi Model Domain (User)
 // Didefinisikan di luar kelas karena membutuhkan List<Alergen> sebagai parameter tambahan
 fun UserEntity.toUser(allergens: List<Allergen>): User = User(
-    uuid = this.uuid,
     id = this.id,
+    uuid = this.uuid,
     username = this.username,
     email = this.email,
     name = this.name,
