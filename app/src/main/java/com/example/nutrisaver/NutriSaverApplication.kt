@@ -3,6 +3,8 @@ package com.example.nutrisaver
 //import com.example.nutrisaver.Build
 
 import android.app.Application
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import com.example.nutrisaver.data.repositories.AuthRepo
 import com.example.nutrisaver.data.repositories.AuthRepoImpl
 import com.example.nutrisaver.data.repositories.CommonRepo
@@ -35,13 +37,22 @@ class NutriSaverApplication : Application() {
         // Mereka membutuhkan DAO dari database
         val authLocalDataSource = AuthLocalDataSourceImpl(database.userDao())
         val commonLocalDataSource = CommonLocalDataSourceImpl(database.allergenDao())
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY // BODY akan menampilkan semua detail response
+        }
 
+        // 2. Buat OkHttpClient dan tambahkan interceptor
+        val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
         //Inisialisasi Dependensi Remote (Retrofit, Moshi) ===
         val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         val retrofit = Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl("http://10.0.2.2:3000/") // Pastikan IP ini benar untuk emulator Anda
+            .baseUrl("http://10.0.2.2:3000/")
+            .client(okHttpClient)// Pastikan IP ini benar untuk emulator Anda
             .build()
+
         val retrofitService = retrofit.create(Webservice::class.java)
 
         //Buat instance untuk semua Remote Data Source ===

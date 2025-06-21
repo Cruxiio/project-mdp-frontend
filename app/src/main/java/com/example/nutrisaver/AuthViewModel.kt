@@ -153,7 +153,7 @@ class AuthViewModel(var commonRepo: CommonRepo,var authRepo:AuthRepo,application
                 val newUser = authRepo.register(
                     User(null,uuid, registerInp.username, registerInp.email,
                         inp.name, inp.gender, MockDB.dateFormater(inp.dateOfBirth), inp.weight, inp.height, inp.goalOption, inp.dietTypeOption, inp.targetWeight,
-                        inp.protein, inp.carbs, inp.fat, null, inp.alergen)
+                        inp.protein, inp.carbs, inp.fat, null, inp.allergen)
                 )
 
                 Log.d("debug user detail","$newUser")

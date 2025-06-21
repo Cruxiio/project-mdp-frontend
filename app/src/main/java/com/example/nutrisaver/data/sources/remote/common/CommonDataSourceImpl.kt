@@ -8,8 +8,8 @@ class CommonDataSourceImpl(
 ): CommonDataSource {
     override suspend fun getAllergen(keyword: String): List<Allergen> {
         // ambil data dari Backend
-        val alergenData = webservice.getAllergen(keyword)
+        val allergenData = webservice.getAllergen(keyword)
         // konvert ke list class alergen yang bisa dipakai di kotlin
-        return alergenData.alergen.map { Allergen.fromAllergenJson(it) }
+        return (allergenData.allergen ?: emptyList()).map { Allergen.fromAllergenJson(it) }
     }
 }

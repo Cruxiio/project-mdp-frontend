@@ -23,7 +23,7 @@ data class UserJson (
     @Json(name = "carbs_ratio") var carbs: Float,
     @Json(name = "fat_ratio") var fat: Float,
     @Json(name = "profile_picture") var profilePicture: String?, // Bisa null
-    @Json(name = "allergen") var allergen: List<AllergenJson>,
+    @Json(name = "allergen") var allergen: List<AllergenJson>?,
     @Json(name = "createdAt") var createdAt: String,
     @Json(name = "updatedAt") var updatedAt: String,
     @Json(name = "deletedAt") var deletedAt: String? = null

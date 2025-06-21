@@ -19,10 +19,10 @@ data class User (
 ){
     companion object{
         fun fromUserJson(t: UserJson) =  User(t.id, t.uuid, t.username, t.email,
-                t.name, t.gender, t.dateOfBirth, t.weight, t.height, t.goalOption, t.dietTypeOption, t.targetWeight,
-                t.protein, t.carbs, t.fat, t.profilePicture , t.allergen.map { Allergen.fromAllergenJson(it) },
-                Instant.parse(t.createdAt), Instant.parse(t.updatedAt), t.deletedAt?.let { Instant.parse(it) })
-
+            t.name, t.gender, t.dateOfBirth, t.weight, t.height, t.goalOption, t.dietTypeOption, t.targetWeight,
+            t.protein, t.carbs, t.fat, t.profilePicture,
+            t.allergen?.map { Allergen.fromAllergenJson(it) } ?: emptyList(),
+            Instant.parse(t.createdAt), Instant.parse(t.updatedAt), t.deletedAt?.let { Instant.parse(it) })
     }
 
     fun toUserJson() = UserJson(

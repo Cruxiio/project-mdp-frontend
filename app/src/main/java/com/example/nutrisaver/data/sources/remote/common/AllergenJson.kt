@@ -14,6 +14,6 @@ data class AllergenJson(
 // ini class buat nampung response dari backend
 @JsonClass(generateAdapter = true)
 data class AllergenGetAllResponse(
-    @Json(name = "allergen") var alergen: List<AllergenJson>,
+    @Json(name = "allergen") var allergen: List<AllergenJson>?,
 ){
 }

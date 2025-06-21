@@ -10,7 +10,7 @@ import retrofit2.http.Query
 interface Webservice {
     // common api (api buat data yang digunakan pilihan input kyk selectbox)
     // api ini bisa diakses tanpa auth token
-    @GET("api/common/alergen")
+    @GET("api/common/allergen")
     suspend fun getAllergen(@Query("keyword") keyword:String): AllergenGetAllResponse
 
     //===========================================================================
