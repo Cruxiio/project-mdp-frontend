@@ -1,5 +1,6 @@
 package com.example.nutrisaver.data.sources.remote.auth
 
+import com.example.nutrisaver.data.model.User
 import com.example.nutrisaver.data.sources.remote.Webservice
 
 class AuthDataSourceImpl(

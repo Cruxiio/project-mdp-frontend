@@ -10,8 +10,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope // Tambahkan import ini
 import com.example.nutrisaver.data.repositories.AuthRepo
 import com.example.nutrisaver.data.repositories.CommonRepo
-import com.example.nutrisaver.data.sources.remote.auth.User
-import com.example.nutrisaver.data.sources.remote.common.Alergen
+import com.example.nutrisaver.data.model.User
+import com.example.nutrisaver.data.model.Allergen
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterDetailInp
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterInp
 import com.google.firebase.auth.FirebaseAuth
@@ -25,9 +25,9 @@ import kotlinx.coroutines.tasks.await
 class AuthViewModel(var commonRepo: CommonRepo,var authRepo:AuthRepo,application: Application) : AndroidViewModel(application) {
     private val auth : FirebaseAuth = FirebaseAuth.getInstance()
     private val _authState = MutableLiveData<AuthState>()
-    private val _alergenState = MutableLiveData<List<Alergen>>()
+    private val _alergenState = MutableLiveData<List<Allergen>>()
     val authState: LiveData<AuthState> = _authState
-    val alergenState: LiveData<List<Alergen>> = _alergenState
+    val alergenState: LiveData<List<Allergen>> = _alergenState
     var registerInp: RegisterInp = RegisterInp()
 
 
@@ -56,7 +56,7 @@ class AuthViewModel(var commonRepo: CommonRepo,var authRepo:AuthRepo,application
     // ======================== common repo func ==========================
     fun getAlergen(keyword:String) {
         viewModelScope.launch {
-            _alergenState.value = commonRepo.getAlergen(keyword)
+            _alergenState.value = commonRepo.getAllergen(keyword)
             Log.d("debug alergen","${alergenState.value}")
         }
     }
@@ -129,7 +129,6 @@ class AuthViewModel(var commonRepo: CommonRepo,var authRepo:AuthRepo,application
             return
         }
 
-
         Log.d("debug inp", "${inp}")
         Log.d("debug date", "${MockDB.dateFormater(inp.dateOfBirth)}")
         _authState.value = AuthState.Loading // Set loading state
@@ -141,19 +140,21 @@ class AuthViewModel(var commonRepo: CommonRepo,var authRepo:AuthRepo,application
 
             if (user != null ){
                 // ambil data dari firebase
-                val uid:String =  user.uid
+                val uuid:String =  user.uid
 
                 // data auth token
                 val tokenResult: GetTokenResult? = user.getIdToken(true).await() // forceRefresh = true
                 val idToken: String = tokenResult?.token ?: ""
 
-                Log.d("debug", "uuid: ${uid} ")
+                Log.d("debug", "uuid: ${uuid} ")
                 Log.d("debug", "auth token: ${idToken} ")
 
                 // add data to backend
-                val newUser = authRepo.register(User(null,uid, "user", registerInp.username, registerInp.email,
+                val newUser = authRepo.register(
+                    User(null,uuid, registerInp.username, registerInp.email,
                         inp.name, inp.gender, MockDB.dateFormater(inp.dateOfBirth), inp.weight, inp.height, inp.goalOption, inp.dietTypeOption, inp.targetWeight,
-                        inp.protein, inp.carbs, inp.fat, null, inp.alergen))
+                        inp.protein, inp.carbs, inp.fat, null, inp.alergen)
+                )
 
                 Log.d("debug user detail","$newUser")
 

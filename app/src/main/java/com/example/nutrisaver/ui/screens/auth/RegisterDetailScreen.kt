@@ -43,7 +43,7 @@ import androidx.navigation.NavHostController
 import com.example.nutrisaver.AuthState
 import com.example.nutrisaver.AuthViewModel
 import com.example.nutrisaver.R
-import com.example.nutrisaver.data.sources.remote.common.Alergen
+import com.example.nutrisaver.data.model.Allergen
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterDetailInp
 import com.example.nutrisaver.ui.theme.OpenSans
 import java.text.SimpleDateFormat
@@ -137,11 +137,11 @@ fun RegisterDetailScreen(
     var allergyExpanded by remember { mutableStateOf(false) }
 //    var selectedAllergy by remember { mutableStateOf(allAllergen[0]) }
 //    var userAllergies by remember { mutableStateOf(listOf<String>()) }
-    var selectedAllergy by remember { mutableStateOf<Alergen?>(null) }
-    var userAllergies by remember { mutableStateOf<List<Alergen>>(listOf<Alergen>()) }
+    var selectedAllergy by remember { mutableStateOf<Allergen?>(null) }
+    var userAllergies by remember { mutableStateOf<List<Allergen>>(listOf<Allergen>()) }
 
     // Local callback function that updates userAllergies state
-    val onAllergyListChanged: (List<Alergen>) -> Unit = { newList ->
+    val onAllergyListChanged: (List<Allergen>) -> Unit = { newList ->
         userAllergies = newList
     }
 
@@ -518,7 +518,7 @@ fun RegisterDetailScreen(
                 Button(
                     onClick = {
                         if (selectedAllergy != null && selectedAllergy !in userAllergies) {
-                            val updatedList: List<Alergen> = userAllergies + selectedAllergy!!
+                            val updatedList: List<Allergen> = userAllergies + selectedAllergy!!
                             onAllergyListChanged(updatedList)
                             selectedAllergy = null
                         }
