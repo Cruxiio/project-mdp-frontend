@@ -2,6 +2,7 @@ package com.example.nutrisaver.ui.screens.user
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -289,18 +291,27 @@ fun FoodStockItem() {
                 .fillMaxWidth()
                 .shadow(
                     elevation = 5.dp,
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(10.dp),
                     clip = false
                 )
-                .background(itemGradient, shape = RoundedCornerShape(20.dp))
+                .background(itemGradient, shape = RoundedCornerShape(10.dp))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp, horizontal = 20.dp),
+                    .padding(vertical = 10.dp, horizontal = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Image(
+                    painter = painterResource(id = R.drawable.default_food_image), // todo: ganti ke gambar recipe
+                    contentDescription = "deskripsi gambar foodstock",
+                    modifier = Modifier
+                        .width(70.dp)
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(5.dp)),
+                    contentScale = ContentScale.Crop,
+                )
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
@@ -311,43 +322,47 @@ fun FoodStockItem() {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        "Stock: ", // TODO: quantity dan satuan stock
+                        "Stock: 20 kg", // TODO: quantity dan satuan stock
                         fontFamily = OpenSans,
                         fontSize = 14.sp
                     )
                     Text(
-                        "Expired Date: ", // TODO: expired date
+                        "Expired Date: 10/10/2020", // TODO: expired date
                         fontFamily = OpenSans,
                         fontSize = 14.sp
                     )
                 }
-                IconButton(
-                    modifier = Modifier.background(
-                        colorResource(R.color.yellow),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                    onClick = { /* TODO: logika edit stock */ }
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.edit),
-                        contentDescription = "Edit Button",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                IconButton(
-                    modifier = Modifier.background(
-                        colorResource(R.color.red_light),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                    onClick = {
-                        openAlertDialog.value = true // pakai dialog buat konfirmasi
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(colorResource(R.color.yellow))
+                            .clickable { /* TODO: logika edit stock */ },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.edit),
+                            contentDescription = "Edit Button",
+                            modifier = Modifier.size(18.dp) // smaller icon
+                        )
                     }
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.delete),
-                        contentDescription = "Delete Button",
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(colorResource(R.color.red_light))
+                            .clickable { openAlertDialog.value = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.delete),
+                            contentDescription = "Delete Button",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }

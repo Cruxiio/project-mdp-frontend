@@ -16,6 +16,8 @@ import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.EditInformationScreen
 import com.example.nutrisaver.ui.screens.user.EditProfileScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
+import com.example.nutrisaver.ui.screens.user.HistoryMealLogScreen
+import com.example.nutrisaver.ui.screens.user.LogMealScreen
 import com.example.nutrisaver.ui.screens.user.NotificationScreen
 import com.example.nutrisaver.ui.screens.user.ProfileScreen
 import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
@@ -29,7 +31,7 @@ fun MyAppNavigation(
     authViewModel: AuthViewModel
 ) {
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "auth") {
+    NavHost(navController = navController, startDestination = "user") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {
@@ -57,6 +59,13 @@ fun MyAppNavigation(
         navigation(startDestination = "dashboard", route = "user") {
             composable("dashboard") {
                 DashboardScreen(navController = navController)
+            }
+            composable("logmeal/{mealType}") {backStackEntry ->
+                val mealType = backStackEntry.arguments?.getString("mealType") ?: ""
+                LogMealScreen(navController = navController, mealType = mealType)
+            }
+            composable("loghistory") {
+                HistoryMealLogScreen(navController = navController)
             }
             composable("foodstock") {
                 FoodStockScreen(navController = navController)
