@@ -416,13 +416,12 @@ fun ChooseRecipeForm(
         "Rice",
         "Salmon",
         "Avocado"
-    )
+    ) // todo: ganti ke list recipe (recipenya dari remote atau local?)
     val filteredOptions = foodOptions.filter {
         it.contains(query, ignoreCase = true)
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Food Selection
         RecipeSelector(
             selectedFood = selectedFood,
             onClick = { showBottomSheet = true }
@@ -436,11 +435,11 @@ fun ChooseRecipeForm(
             onUnitChange = onUnitChange
         )
 
-        // Nutrition Fields (Numeric Only)
-        FormField(label = "Calories", value = calories, placeholder = "Enter Food Calories", onValueChange = onCaloriesChange, isNumeric = true)
-        FormField(label = "Carbs", value = carbs, placeholder = "Enter Food Carbs", onValueChange = onCarbsChange, isNumeric = true)
-        FormField(label = "Protein", value = protein, placeholder = "Enter Food Protein", onValueChange = onProteinChange, isNumeric = true)
-        FormField(label = "Fat", value = fat, placeholder = "Enter Food Fat", onValueChange = onFatChange, isNumeric = true)
+        // Nutrition Fields (Numeric Only, now disabled)
+        FormField(label = "Calories", value = calories, onValueChange = onCaloriesChange, isNumeric = true, enabled = false)
+        FormField(label = "Carbs", value = carbs, onValueChange = onCarbsChange, isNumeric = true, enabled = false)
+        FormField(label = "Protein", value = protein, onValueChange = onProteinChange, isNumeric = true, enabled = false)
+        FormField(label = "Fat", value = fat, onValueChange = onFatChange, isNumeric = true, enabled = false)
     }
 
     if (showBottomSheet) {
@@ -482,7 +481,7 @@ private fun RecipeSelector(selectedFood: String?, onClick: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = selectedFood ?: "Select an ingredient",
+                text = selectedFood ?: "Select a recipe",
                 color = if (selectedFood == null) Color.Gray else Color.Black,
                 fontFamily = OpenSans,
                 fontSize = 16.sp
@@ -571,27 +570,15 @@ private fun RecipeSearchBottomSheet(
         }
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-            OutlinedTextField(
+            TextField(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = {
-                    Text(
-                        "Search food...",
-                        fontSize = 16.sp,
-                        fontFamily = OpenSans,
-                        color = Color.Gray
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(0.4.dp, Color.DarkGray, RoundedCornerShape(8.dp)),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = colorResource(R.color.form_input),
-                    unfocusedContainerColor = colorResource(R.color.form_input),
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent
-                ),
-                shape = RoundedCornerShape(8.dp)
+                placeholder = { Text("Search Recipe...",
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    color = Color.Gray
+                ) },
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -644,7 +631,8 @@ fun FormField(
     value: String = "",
     onValueChange: (String) -> Unit = {},
     placeholder: String = "",
-    isNumeric: Boolean = false // New parameter to control numeric input
+    isNumeric: Boolean = false, // New parameter to control numeric input
+    enabled: Boolean = true // New parameter to control enabled state
 ) {
     Column {
         Text(
@@ -667,14 +655,18 @@ fun FormField(
                     onValueChange(newValue)
                 }
             },
+            enabled = enabled, // Use the new enabled parameter
             modifier = Modifier
                 .fillMaxWidth()
                 .border(0.4.dp, Color.Gray, RoundedCornerShape(8.dp)),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = colorResource(R.color.form_input),
                 unfocusedContainerColor = colorResource(R.color.form_input),
+                disabledContainerColor = colorResource(R.color.form_input).copy(alpha = 0.5f), // Lighter background for disabled
                 focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent
+                unfocusedBorderColor = Color.Transparent,
+                disabledBorderColor = Color.Transparent, // Border handled by .border modifier
+                disabledTextColor = Color.DarkGray // Lighter text for disabled
             ),
             shape = RoundedCornerShape(8.dp),
             placeholder = {
@@ -682,7 +674,7 @@ fun FormField(
                     text = placeholder,
                     fontSize = 16.sp,
                     fontFamily = OpenSans,
-                    color = Color.Gray
+                    color = Color.Gray.copy(alpha = if (enabled) 1f else 0.7f) // Adjust placeholder color for disabled
                 )
             },
             keyboardOptions = if (isNumeric) {
@@ -765,7 +757,7 @@ fun QuantityUnitField(
                     )
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_add),
+                    painter = painterResource(id = R.drawable.ic_add),
                     contentDescription = "Plus",
                     tint = Color.Black
                 )

@@ -107,15 +107,15 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
     Box(
-        modifier = modifier.background(backgroundGradient).fillMaxSize()
+        modifier = modifier.fillMaxSize()
+            .background(backgroundGradient)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(top = 70.dp, bottom = 100.dp)
+                .padding(top = 70.dp)
         ) {
-            // Recipe Image
             Image(
                 painter = painterResource(id = R.drawable.default_food_image),
                 contentDescription = "Recipe Image",
@@ -125,52 +125,39 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
                 contentScale = ContentScale.Crop,
             )
 
-            // Overlapping rounded box with recipe information
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .offset(y = (-40).dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(backgroundGradient),
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Recipe Title
+                Text(
+                    text = "Nasi Pecel", // todo: ganti ke nama makanan
+                    fontSize = 28.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Recipe Information
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Recipe Title
                     Text(
-                        text = "Nasi Pecel", // todo: ganti ke nama makanan
-                        fontSize = 28.sp,
+                        text = "Calories: 200 kal",
+                        fontSize = 16.sp,
                         fontFamily = OpenSans,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
+                        color = Color.Black
                     )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Recipe Information
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Calories: 200 kal",
-                            fontSize = 16.sp,
-                            fontFamily = OpenSans,
-                            color = Color.Black
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
-
-            // Add extra space to account for the overlapping card
-            Spacer(modifier = Modifier.height(20.dp))
         }
         TopBar(
             onBackClick = { navController.popBackStack() },
