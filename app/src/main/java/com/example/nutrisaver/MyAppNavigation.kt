@@ -16,6 +16,7 @@ import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.EditInformationScreen
 import com.example.nutrisaver.ui.screens.user.EditProfileScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
+import com.example.nutrisaver.ui.screens.user.LogMealScreen
 import com.example.nutrisaver.ui.screens.user.NotificationScreen
 import com.example.nutrisaver.ui.screens.user.ProfileScreen
 import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
@@ -57,6 +58,10 @@ fun MyAppNavigation(
         navigation(startDestination = "dashboard", route = "user") {
             composable("dashboard") {
                 DashboardScreen(navController = navController)
+            }
+            composable("logmeal/{mealType}") {backStackEntry ->
+                val mealType = backStackEntry.arguments?.getString("mealType") ?: ""
+                LogMealScreen(navController = navController, mealType = mealType)
             }
             composable("foodstock") {
                 FoodStockScreen(navController = navController)

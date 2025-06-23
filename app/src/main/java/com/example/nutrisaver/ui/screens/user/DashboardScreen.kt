@@ -74,6 +74,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import kotlin.math.cos
 import kotlin.math.sin
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun DashboardScreen(navController: NavController) {
@@ -113,7 +116,12 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 32.dp, vertical = 16.dp)
+                .padding(
+                    top = 24.dp,
+                    start = 24.dp,
+                    end = 24.dp,
+                    bottom = 16.dp
+                )
         ) {
             Row(
                 modifier = Modifier
@@ -141,39 +149,45 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(vertical = 10.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp)
-                    .background(colorResource(R.color.form_input), shape = CircleShape)
-                    .border(2.dp, colorResource(R.color.gray_border), shape = CircleShape)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(25.dp),
+                colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Row {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         "Your Current Goal",
                         fontSize = 18.sp,
                         fontFamily = OpenSans,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                        color = Color.Black
                     )
-                    Spacer(modifier = Modifier.weight(1f))
+
                     Box(
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .background(greenGradient, shape = CircleShape)
+                            .background(greenGradient, shape = RoundedCornerShape(20.dp))
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Text(
-                            "Lose Weight", // todo: ubah ini jadi goalnya user
+                            "Lose Weight", // todo: ganti ke goal user
                             fontSize = 18.sp,
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            color = Color.White
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             CalorieProgressBar(
                 // todo: insert parameternya disini nanti
@@ -184,7 +198,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             Row(modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Your Current Goal",
+                    "Daily Meal Log",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = OpenSans,
@@ -229,43 +243,53 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 MealLogCard(
                     type = "Breakfast",
                     calories = breakfastCalories,
+                    protein = 50.1f, // todo: ganti ke total protein utk breakfast
+                    fat = 22.7f,     // todo: ganti ke total fat utk breakfast
+                    carbs = 38.4f,   // todo: ganti ke total carbs utk breakfast
                     gradient = Brush.verticalGradient(
                         colors = listOf(
                             colorResource(R.color.blue_1),
                             colorResource(R.color.blue_2)
                         )
                     ),
-                    onLogClick = { onLogClick("breakfast") },
-                    modifier = Modifier.weight(1f)
+                    onLogClick = { navController.navigate("logmeal/breakfast") },
+                    modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(12.dp))
                 MealLogCard(
                     type = "Lunch",
                     calories = lunchCalories,
+                    protein = 50.1f, // todo: ganti ke total protein utk lunch
+                    fat = 22.7f,     // todo: ganti ke total fat utk lunch
+                    carbs = 38.4f,   // todo: ganti ke total carbs utk lunch
                     gradient = Brush.verticalGradient(
                         colors = listOf(
                             colorResource(R.color.yellow_1),
                             colorResource(R.color.yellow_2)
                         )
                     ),
-                    onLogClick = { onLogClick("lunch") },
-                    modifier = Modifier.weight(1f)
+                    onLogClick = { navController.navigate("logmeal/lunch") },
+                    modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(12.dp))
                 MealLogCard(
                     type = "Dinner",
                     calories = dinnerCalories,
+                    protein = 50.1f, // todo: ganti ke total protein utk dinner
+                    fat = 22.7f,     // todo: ganti ke total fat utk dinner
+                    carbs = 38.4f,   // todo: ganti ke total carbs utk dinner
                     gradient = Brush.verticalGradient(
                         colors = listOf(
                             colorResource(R.color.pink_1),
                             colorResource(R.color.pink_2)
                         )
                     ),
-                    onLogClick = { onLogClick("dinner") },
-                    modifier = Modifier.weight(1f)
+                    onLogClick = { navController.navigate("logmeal/dinner") },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -280,11 +304,11 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colorResource(R.color.form_input), shape = RoundedCornerShape(20.dp))
-                    .border(2.dp, colorResource(R.color.gray_border), shape = RoundedCornerShape(20.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -348,12 +372,21 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
+
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    "Weight Report",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = OpenSans,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
         }
     }
-}
-
-fun onLogClick(s: String) {
-
 }
 
 @Composable
@@ -371,7 +404,7 @@ fun WaterIntakeButton(
         ),
         shape = CircleShape,
         modifier = modifier
-            .height(48.dp)
+            .height(40.dp)
             .fillMaxWidth(),
         contentPadding = PaddingValues(0.dp)
     ) {
@@ -415,13 +448,15 @@ fun WaterIntakeButton(
 fun MealLogCard(
     type: String,
     calories: MutableState<Int>?,
+    protein: Float = 0f,
+    fat: Float = 0f,
+    carbs: Float = 0f,
     gradient: Brush,
     onLogClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -432,66 +467,132 @@ fun MealLogCard(
                 .padding(16.dp)
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                // Top content
-                Column (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 7.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Icon(
+                        painter = painterResource(
+                            when (type.lowercase()) {
+                                "breakfast" -> R.drawable.breakfast_icon
+                                "lunch" -> R.drawable.lunch_icon
+                                "dinner" -> R.drawable.dinner_icon
+                                else -> R.drawable.breakfast_icon
+                            }
+                        ),
+                        contentDescription = "$type icon",
+                        modifier = Modifier.size(32.dp),
+                        tint = Color.Black
+                    )
+                    // Meal type text
                     Text(
                         text = type,
-                        fontSize = 15.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        fontFamily = OpenSans
+                        fontFamily = OpenSans,
+                        modifier = Modifier.weight(1f).padding(start = 12.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Total kcal",
-                        fontSize = 14.sp,
-                        color = Color.Black.copy(alpha = 0.7f),
-                        fontFamily = OpenSans
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = calories?.value?.let { "$it kcal" } ?: "-",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        fontFamily = OpenSans
-                    )
+                    // Plus button
+                    IconButton(
+                        onClick = onLogClick,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add $type",
+                            tint = Color.Black,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
 
-                // Log button at bottom
-                Button(
-                    onClick = onLogClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(36.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(18.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Nutritional information row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text(
-                        text = "Log",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = OpenSans
+                    // Calories
+                    NutritionItem(
+                        label = "Calories",
+                        value = calories?.value?.toString() ?: "0",
+                        unit = "kcal",
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Protein
+                    NutritionItem(
+                        label = "Protein",
+                        value = protein.toString(),
+                        unit = "gram",
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Fat
+                    NutritionItem(
+                        label = "Fat",
+                        value = fat.toString(),
+                        unit = "gram",
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Carbs
+                    NutritionItem(
+                        label = "Carbs",
+                        value = carbs.toString(),
+                        unit = "gram",
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun NutritionItem(
+    label: String,
+    value: String,
+    unit: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            fontFamily = OpenSans
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = value,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            fontFamily = OpenSans
+        )
+
+        Text(
+            text = unit,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            fontFamily = OpenSans
+        )
     }
 }
 
@@ -504,9 +605,15 @@ fun CalorieProgressBar(
     carbs: Pair<Int, Int> = Pair(95, 110),
     modifier: Modifier = Modifier
 ) {
-    var animationPlayed by remember { mutableStateOf(false) }
+    val currentDate = LocalDate.now()
+    val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale.getDefault())
+    val formattedDate = currentDate.format(formatter)
+
+    // Calculate progress - this was missing!
     val progress = currentCalories.toFloat() / targetCalories.toFloat()
 
+    // Progress Display with Animation and Responsiveness
+    var animationPlayed by remember { mutableStateOf(false) }
     val animatedProgress by animateFloatAsState(
         targetValue = if (animationPlayed) progress else 0f,
         animationSpec = tween(durationMillis = 1000),
@@ -517,97 +624,202 @@ fun CalorieProgressBar(
         animationPlayed = true
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        // Circular Progress Bar - responsive sizing
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    top = 20.dp,
+                    start = 20.dp,
+                    end = 20.dp,
+                    bottom = 5.dp
+                )
         ) {
-            val containerWidth = maxWidth // 85% of available width
-            val containerHeight = containerWidth * 0.6f // Height is 60% of width for semi-circle
-
-            Box(
-                modifier = Modifier.size(containerWidth, containerHeight),
-                contentAlignment = Alignment.Center
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
             ) {
-                Canvas(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    drawCircularProgressBar(
-                        progress = animatedProgress,
-                        size = size
-                    )
-                }
+                Text(
+                    text = "Your Progress",
+                    fontSize = 20.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Top)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = formattedDate,
+                    fontSize = 14.sp,
+                    fontFamily = OpenSans,
+                    color = Color.Gray,
+                    modifier = Modifier.align(Alignment.Top)
+                )
+            }
 
-                // Center content - scales with container size
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.offset(y = containerHeight * 0.1f) // 10% of container height
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left side - Animated Percentage
+                val animatedPercentage by animateFloatAsState(
+                    targetValue = if (animationPlayed) (progress * 100) else 0f,
+                    animationSpec = tween(durationMillis = 1000),
+                    label = "percentage"
+                )
+
+                Text(
+                    text = "${animatedPercentage.toInt()}%",
+                    fontSize = 54.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.weight(1f)
+                )
+
+                BoxWithConstraints(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "🔥",
-                        fontSize = (containerWidth.value * 0.12f).sp // Font size scales with width
-                    )
-                    Spacer(modifier = Modifier.height(containerHeight * 0.05f))
-                    Text(
-                        text = "$currentCalories Kcal",
-                        fontSize = (containerWidth.value * 0.09f).sp, // Responsive font size
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        fontFamily = OpenSans
-                    )
-                    Text(
-                        text = "of $targetCalories kcal",
-                        fontSize = (containerWidth.value * 0.045f).sp, // Responsive font size
-                        color = Color.Gray,
-                        fontFamily = OpenSans
-                    )
+                    val containerWidth = maxWidth
+                    val circleSize = minOf(containerWidth * 1.6f, 180.dp) // Made much bigger
+                    val circleHeight = circleSize * 0.8f // Increased height ratio for better proportion
+
+                    Box(
+                        modifier = Modifier.size(circleSize, circleHeight),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        Canvas(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            val strokeWidth = (circleSize.value * 0.1f).dp.toPx() // Slightly thinner stroke for bigger circle
+                            val radius = (circleSize.value * 0.42f).dp.toPx() // Bigger radius
+                            val center = Offset(size.width / 2, radius + strokeWidth / 2)
+
+                            // Background half-circle arc
+                            drawArc(
+                                color = Color.Gray.copy(alpha = 0.2f),
+                                startAngle = 180f,
+                                sweepAngle = 180f,
+                                useCenter = false,
+                                topLeft = Offset(
+                                    center.x - radius,
+                                    center.y - radius
+                                ),
+                                size = Size(radius * 2, radius * 2),
+                                style = Stroke(
+                                    width = strokeWidth,
+                                    cap = StrokeCap.Round
+                                )
+                            )
+
+                            // Progress half-circle arc
+                            val sweepAngle = 180f * animatedProgress
+                            drawArc(
+                                color = Color(0xFF4CAF50),
+                                startAngle = 180f,
+                                sweepAngle = sweepAngle,
+                                useCenter = false,
+                                topLeft = Offset(
+                                    center.x - radius,
+                                    center.y - radius
+                                ),
+                                size = Size(radius * 2, radius * 2),
+                                style = Stroke(
+                                    width = strokeWidth,
+                                    cap = StrokeCap.Round
+                                )
+                            )
+
+                            // Progress indicator dot
+                            if (animatedProgress > 0) {
+                                val angle = Math.toRadians((180 + sweepAngle).toDouble())
+                                val dotX = center.x + radius * cos(angle).toFloat()
+                                val dotY = center.y + radius * sin(angle).toFloat()
+
+                                drawCircle(
+                                    color = Color.White,
+                                    radius = (circleSize.value * 0.03f).dp.toPx(), // Responsive dot size
+                                    center = Offset(dotX, dotY)
+                                )
+                            }
+                        }
+
+                        // Center content positioned under the arc - Made bigger
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .offset(y = (-15).dp) // Adjusted offset for bigger size
+                        ) {
+                            Text(
+                                text = "🔥",
+                                fontSize = (circleSize.value * 0.18f).sp // Bigger emoji
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$currentCalories Kcal",
+                                fontSize = (circleSize.value * 0.12f).sp, // Bigger font size
+                                fontFamily = OpenSans,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "of $targetCalories Kcal",
+                                fontSize = (circleSize.value * 0.08f).sp, // Bigger font size
+                                fontFamily = OpenSans,
+                                color = Color.Gray
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
 
-        // Macronutrients Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            MacronutrientCard(
-                title = "Protein",
-                current = protein.first,
-                target = protein.second,
-                color = Color(0xFF4CAF50),
-                modifier = Modifier.weight(1f)
-            )
+    Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.width(16.dp))
+    // Macronutrients with Animation
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MacronutrientCard(
+            title = "Protein",
+            current = protein.first,
+            target = protein.second,
+            color = Color(0xFF4CAF50),
+            animationPlayed = animationPlayed,
+            modifier = Modifier.weight(1f)
+        )
 
-            MacronutrientCard(
-                title = "Fats",
-                current = fats.first,
-                target = fats.second,
-                color = Color(0xFFFF7043),
-                modifier = Modifier.weight(1f)
-            )
+        MacronutrientCard(
+            title = "Fat",
+            current = fats.first,
+            target = fats.second,
+            color = Color(0xFFFF5722),
+            animationPlayed = animationPlayed,
+            modifier = Modifier.weight(1f)
+        )
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            MacronutrientCard(
-                title = "Carbs",
-                current = carbs.first,
-                target = carbs.second,
-                color = Color(0xFFFFC107),
-                modifier = Modifier.weight(1f)
-            )
-        }
+        MacronutrientCard(
+            title = "Carbs",
+            current = carbs.first,
+            target = carbs.second,
+            color = Color(0xFFFFC107),
+            animationPlayed = animationPlayed,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
-
 
 @Composable
 fun MacronutrientCard(
@@ -615,105 +827,67 @@ fun MacronutrientCard(
     current: Int,
     target: Int,
     color: Color,
+    animationPlayed: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    val animatedProgress by animateFloatAsState(
+        targetValue = if (animationPlayed) (current.toFloat() / target.toFloat()) else 0f,
+        animationSpec = tween(durationMillis = 1000, delayMillis = 200),
+        label = "macro_progress"
+    )
+
+    val animatedCurrent by animateFloatAsState(
+        targetValue = if (animationPlayed) current.toFloat() else 0f,
+        animationSpec = tween(durationMillis = 1000, delayMillis = 200),
+        label = "macro_current"
+    )
+
+    Card(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        shape = RoundedCornerShape(15.dp),
+        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Text(
-            text = title,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.Black,
-            fontFamily = OpenSans
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Progress indicator line
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(Color.Gray.copy(alpha = 0.2f))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(12.dp)
         ) {
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                fontFamily = OpenSans
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Animated Progress indicator line
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(fraction = (current.toFloat() / target.toFloat()).coerceAtMost(1f))
+                    .fillMaxWidth()
+                    .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(color)
+                    .background(Color.Gray.copy(alpha = 0.2f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(fraction = animatedProgress.coerceAtMost(1f))
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(color)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "${animatedCurrent.toInt()}/${target}g",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                fontFamily = OpenSans
             )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "$current/${target}g",
-            fontSize = 14.sp,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-            fontFamily = OpenSans
-        )
-    }
-}
-
-
-fun DrawScope.drawCircularProgressBar(
-    progress: Float,
-    size: Size
-) {
-    val strokeWidth = 26.dp.toPx()
-    val radius = (size.minDimension - strokeWidth) / 2
-    val center = Offset(size.width / 2, size.height / 2)
-
-    // Background arc
-    drawArc(
-        color = Color.Gray.copy(alpha = 0.2f),
-        startAngle = 180f,
-        sweepAngle = 180f,
-        useCenter = false,
-        topLeft = Offset(
-            center.x - radius,
-            center.y - radius
-        ),
-        size = Size(radius * 2, radius * 2),
-        style = Stroke(
-            width = strokeWidth,
-            cap = StrokeCap.Round
-        )
-    )
-
-    // Progress arc
-    val sweepAngle = 180f * progress
-    drawArc(
-        color = Color(0xFF39a23d),
-        startAngle = 180f,
-        sweepAngle = sweepAngle,
-        useCenter = false,
-        topLeft = Offset(
-            center.x - radius,
-            center.y - radius
-        ),
-        size = Size(radius * 2, radius * 2),
-        style = Stroke(
-            width = strokeWidth,
-            cap = StrokeCap.Round
-        )
-    )
-
-    // Progress indicator dot
-    if (progress > 0) {
-        val angle = Math.toRadians((180 + sweepAngle).toDouble())
-        val dotX = center.x + radius * cos(angle).toFloat()
-        val dotY = center.y + radius * sin(angle).toFloat()
-
-        drawCircle(
-            color = Color.White,
-            radius = 7.dp.toPx(),
-            center = Offset(dotX, dotY)
-        )
     }
 }
