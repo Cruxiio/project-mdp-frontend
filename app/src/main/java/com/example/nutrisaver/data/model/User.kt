@@ -3,32 +3,89 @@ package com.example.nutrisaver.data.model
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import java.time.Instant
 
-data class User (
-    var id: Int?, // bisa null atau diisi -1
+data class User(
+    var id: Int?,
     var uuid: String,
+    var role: String,
+    var name: String,
     var username: String,
     var email: String,
-    var name : String, var gender : String, var dateOfBirth:String,
-    var weight:Int, var height:Int, var goalOption:String, var dietTypeOption : String, var targetWeight:Int,
-    var protein: Float, var carbs: Float, var fat: Float,
-    var profilePicture: String?, // Bisa null
+    var dateOfBirth: String,
+    var gender: String,
+    var weight: Int,
+    var height: Int,
+    var profilePicture: String?,
+    var goal: String,
+    var targetWeight: Int,
+    var dietType: String,
+    var proteinRatio: Float,
+    var carbsRatio: Float,
+    var fatRatio: Float,
     var allergen: List<Allergen>,
-    var createdAt: Instant = Instant.now(),
-    var updatedAt: Instant = Instant.now(),
-    var deletedAt: Instant? = null// Bisa null
-){
-    companion object{
-        fun fromUserJson(t: UserJson) =  User(t.id, t.uuid, t.username, t.email,
-            t.name, t.gender, t.dateOfBirth, t.weight, t.height, t.goalOption, t.dietTypeOption, t.targetWeight,
-            t.protein, t.carbs, t.fat, t.profilePicture,
-            t.allergen?.map { Allergen.fromAllergenJson(it) } ?: emptyList(),
-            Instant.parse(t.createdAt), Instant.parse(t.updatedAt), t.deletedAt?.let { Instant.parse(it) })
+    var nutritionNeeds: NutritionNeeds?, // Objek domain untuk nutrisi, bisa null
+    var firebaseToken: String?,
+    var createdAt: Instant?,
+    var updatedAt: Instant?,
+    var deletedAt: Instant? = null
+) {
+    companion object {
+        // Mapper dari UserJson (dari API) ke User (untuk aplikasi)
+        fun fromUserJson(json: UserJson): User? {
+            // Validasi field wajib ada agar tidak crash
+            if (json.uuid == null || json.name == null || json.username == null || json.email == null) {
+                return null
+            }
+            return User(
+                id = json.id,
+                uuid = json.uuid,
+                role = "user",
+                name = json.name,
+                username = json.username,
+                email = json.email,
+                dateOfBirth = json.date_of_birth ?: "",
+                gender = json.gender ?: "",
+                weight = json.weight ?: 0,
+                height = json.height ?: 0,
+                profilePicture = json.profile_picture,
+                goal = json.goal ?: "",
+                targetWeight = json.target_weight ?: 0,
+                dietType = json.diet_type ?: "",
+                proteinRatio = json.protein_ratio ?: 0f,
+                carbsRatio = json.carbs_ratio ?: 0f,
+                fatRatio = json.fat_ratio ?: 0f,
+                allergen = json.allergen?.map { Allergen.fromAllergenJson(it) } ?: emptyList(),
+                nutritionNeeds = json.nutrition_needs?.let { NutritionNeeds.fromNutritionNeedsJson(it) },
+                firebaseToken = json.firebase_token,
+                createdAt = json.createdAt?.let { Instant.parse(it) },
+                updatedAt = json.updatedAt?.let { Instant.parse(it) },
+                deletedAt = json.deletedAt?.let { Instant.parse(it) }
+            )
+        }
     }
 
     fun toUserJson() = UserJson(
-        id, uuid, username, email, name, gender, dateOfBirth,
-        weight, height, goalOption, dietTypeOption, targetWeight,
-        protein, carbs, fat, profilePicture, allergen.map { it.toAllergenJson() },
-        createdAt.toString(), updatedAt.toString(), deletedAt?.toString()
+        id = this.id,
+        uuid = this.uuid,
+        role = this.role,
+        name = this.name,
+        username = this.username,
+        email = this.email,
+        date_of_birth = this.dateOfBirth,
+        gender = this.gender,
+        weight = this.weight,
+        height = this.height,
+        profile_picture = this.profilePicture,
+        goal = this.goal,
+        target_weight = this.targetWeight,
+        diet_type = this.dietType,
+        protein_ratio = this.proteinRatio,
+        carbs_ratio = this.carbsRatio,
+        fat_ratio = this.fatRatio,
+        allergen = this.allergen.map { it.toAllergenJson() },
+        nutrition_needs = this.nutritionNeeds?.toNutritionNeedsJson(),
+        firebase_token = this.firebaseToken,
+        createdAt = this.createdAt?.toString(),
+        updatedAt = this.updatedAt?.toString(),
+        deletedAt = this.deletedAt?.toString()
     )
 }

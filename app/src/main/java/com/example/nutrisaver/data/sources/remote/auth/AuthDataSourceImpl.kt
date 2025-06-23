@@ -7,8 +7,9 @@ class AuthDataSourceImpl(
     private val webservice: Webservice
 ): AuthDataSource {
     override suspend fun register(user: User): User {
-        val newUser = webservice.register(user.toUserJson())
-        return User.fromUserJson(newUser)
+        val newUserJson = webservice.register(user.toUserJson())
+        val mappedUser = User.fromUserJson(newUserJson)
+        return mappedUser ?: throw IllegalStateException("Gagal mem-parsing data user dari server setelah registrasi.")
     }
 
     override suspend fun getUserDetail(uuid: String): User {

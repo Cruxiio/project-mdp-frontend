@@ -12,7 +12,7 @@ import com.example.nutrisaver.data.sources.local.entity.UserAllergenCrossRef
 
 @Database(
     entities = [UserEntity::class, AllergenEntity::class, UserAllergenCrossRef::class],
-    version = 2, // Mulai dari 1. Naikkan jika ada perubahan skema
+    version = 3, // Mulai dari 1. Naikkan jika ada perubahan skema
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
