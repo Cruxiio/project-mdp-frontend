@@ -34,6 +34,9 @@ class AuthViewModel(
     private val _alergenState = MutableLiveData<List<Allergen>>()
     val alergenState: LiveData<List<Allergen>> = _alergenState
 
+    private val _userProfile = MutableLiveData<User?>()
+    val userProfile: LiveData<User?> = _userProfile
+
     var registerInp: RegisterInp = RegisterInp()
 
     // GoogleAuthClient diinisialisasi di sini (asumsi kelasnya sudah ada)
@@ -213,6 +216,38 @@ class AuthViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 _authState.value = AuthState.Error(e.message ?: "Terjadi error saat Sign Out.")
+            }
+        }
+    }
+
+    fun fetchUserProfile() {
+        val firebaseUser = auth.currentUser
+        if (firebaseUser == null) {
+            _authState.value = AuthState.Error("User tidak login.")
+            return
+        }
+
+        _authState.value = AuthState.Loading
+        viewModelScope.launch {
+            try {
+                // 1. Ambil Firebase ID Token terbaru
+                val token = firebaseUser.getIdToken(true).await().token
+
+                // 2. Ambil UID dari user yang sedang login
+                val uid = firebaseUser.uid
+
+                if (token != null) {
+                    // 3. Panggil repository dengan KEDUA parameter: token dan uid
+                    val profile = authRepo.getUserProfile(token, uid)
+                    _userProfile.value = profile
+                    _authState.value = AuthState.Authenticated
+                } else {
+                    throw Exception("Gagal mendapatkan token autentikasi.")
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e("AuthViewModel", "Gagal mengambil profil user", e)
+                _authState.value = AuthState.Error(e.message ?: "Gagal memuat profil.")
             }
         }
     }
