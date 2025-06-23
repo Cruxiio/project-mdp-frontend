@@ -321,50 +321,6 @@ fun LoginScreen(modifier: Modifier = Modifier,
                    }
 
                    Spacer(modifier = Modifier.height(16.dp))
-
-                   // Tombol Sign in with Facebook - Disesuaikan
-                   Button(
-                       onClick = {
-                           // TODO: Implement Facebook Sign-In logic
-                           Toast.makeText(context, "Facebook Sign-In Clicked", Toast.LENGTH_SHORT).show()
-                       },
-                       enabled = authState.value != AuthState.Loading, // Samakan dengan tombol utama
-                       contentPadding = PaddingValues(),
-                       colors = ButtonDefaults.buttonColors(
-                           containerColor = Color.Transparent
-                       ),
-                       shape = CircleShape, // Samakan bentuknya
-                       modifier = Modifier
-                           .fillMaxWidth()
-                           .height(50.dp)
-                   ) {
-                       Box(
-                           modifier = Modifier
-                               .fillMaxSize()
-                               .background(greenTealDark, shape = CircleShape), // Gunakan gradient yang sama
-                           contentAlignment = Alignment.Center
-                       ) {
-                           Row(
-                               verticalAlignment = Alignment.CenterVertically,
-                               // horizontalArrangement = Arrangement.Center // Box sudah center
-                           ) {
-                               Icon(
-                                   painter = painterResource(id = R.drawable.facebook),
-                                   contentDescription = "Facebook sign in",
-                                   modifier = Modifier.size(24.dp),
-                                   tint = Color.Unspecified
-                               )
-                               Spacer(modifier = Modifier.width(8.dp))
-                               Text(
-                                   text = "Sign in with Facebook",
-                                   fontFamily = OpenSans,
-                                   fontWeight = FontWeight.Bold,
-                                   fontSize = 16.sp,
-                                   color = Color.White // Teks menjadi putih
-                               )
-                           }
-                       }
-                   }
                    Spacer(modifier = Modifier.height(20.dp))
                }
 
