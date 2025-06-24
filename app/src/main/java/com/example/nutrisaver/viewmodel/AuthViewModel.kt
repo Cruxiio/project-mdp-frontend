@@ -1,4 +1,4 @@
-package com.example.nutrisaver
+package com.example.nutrisaver.viewmodel
 
 import android.app.Activity
 import android.app.Application // Tambahkan import ini
@@ -8,6 +8,8 @@ import androidx.lifecycle.AndroidViewModel // Ubah ViewModel menjadi AndroidView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope // Tambahkan import ini
+import com.example.nutrisaver.GoogleAuthClient
+import com.example.nutrisaver.MockDB
 import com.example.nutrisaver.data.repositories.AuthRepo
 import com.example.nutrisaver.data.repositories.CommonRepo
 import com.example.nutrisaver.data.model.User
@@ -16,7 +18,6 @@ import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterDetailInp
 import com.example.nutrisaver.ui.screens.auth.authDTO.RegisterInp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GetTokenResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch // Tambahkan import ini
 import kotlinx.coroutines.tasks.await
@@ -33,9 +34,6 @@ class AuthViewModel(
 
     private val _alergenState = MutableLiveData<List<Allergen>>()
     val alergenState: LiveData<List<Allergen>> = _alergenState
-
-    private val _userProfile = MutableLiveData<User?>()
-    val userProfile: LiveData<User?> = _userProfile
 
     var registerInp: RegisterInp = RegisterInp()
 
@@ -107,7 +105,8 @@ class AuthViewModel(
                 if (task.isSuccessful) {
                     _authState.value = AuthState.Authenticated
                 } else {
-                    _authState.value = AuthState.Error(task.exception?.message ?: "Terjadi masalah saat login")
+                    _authState.value =
+                        AuthState.Error(task.exception?.message ?: "Terjadi masalah saat login")
                 }
             }
     }
@@ -126,7 +125,8 @@ class AuthViewModel(
                 _authState.value = AuthState.Unauthenticated
                 Log.w("AuthViewModel", "Google Sign-In dibatalkan", e)
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Terjadi error saat Sign In dengan Google.")
+                _authState.value =
+                    AuthState.Error(e.message ?: "Terjadi error saat Sign In dengan Google.")
             }
         }
     }
@@ -202,7 +202,8 @@ class AuthViewModel(
                 // IMPROVEMENT: Tangani semua kemungkinan error (network, duplikat, dll)
                 if (e is CancellationException) throw e // Jangan tangani cancellation
                 Log.e("AuthViewModel", "Signup failed", e)
-                _authState.value = AuthState.Error(e.message ?: "Terjadi kesalahan saat registrasi.")
+                _authState.value =
+                    AuthState.Error(e.message ?: "Terjadi kesalahan saat registrasi.")
             }
         }
     }
@@ -216,38 +217,6 @@ class AuthViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 _authState.value = AuthState.Error(e.message ?: "Terjadi error saat Sign Out.")
-            }
-        }
-    }
-
-    fun fetchUserProfile() {
-        val firebaseUser = auth.currentUser
-        if (firebaseUser == null) {
-            _authState.value = AuthState.Error("User tidak login.")
-            return
-        }
-
-        _authState.value = AuthState.Loading
-        viewModelScope.launch {
-            try {
-                // 1. Ambil Firebase ID Token terbaru
-                val token = firebaseUser.getIdToken(true).await().token
-
-                // 2. Ambil UID dari user yang sedang login
-                val uid = firebaseUser.uid
-
-                if (token != null) {
-                    // 3. Panggil repository dengan KEDUA parameter: token dan uid
-                    val profile = authRepo.getUserProfile(token, uid)
-                    _userProfile.value = profile
-                    _authState.value = AuthState.Authenticated
-                } else {
-                    throw Exception("Gagal mendapatkan token autentikasi.")
-                }
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Log.e("AuthViewModel", "Gagal mengambil profil user", e)
-                _authState.value = AuthState.Error(e.message ?: "Gagal memuat profil.")
             }
         }
     }

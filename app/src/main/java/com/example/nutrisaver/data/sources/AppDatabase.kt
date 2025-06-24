@@ -5,20 +5,23 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.nutrisaver.data.sources.local.dao.AllergenDao
+import com.example.nutrisaver.data.sources.local.dao.ConsumptionDao
 import com.example.nutrisaver.data.sources.local.entity.UserEntity
 import com.example.nutrisaver.data.sources.local.dao.UserDao
 import com.example.nutrisaver.data.sources.local.entity.AllergenEntity
+import com.example.nutrisaver.data.sources.local.entity.DailyConsumptionEntity
 import com.example.nutrisaver.data.sources.local.entity.UserAllergenCrossRef
 
 @Database(
-    entities = [UserEntity::class, AllergenEntity::class, UserAllergenCrossRef::class],
-    version = 3, // Mulai dari 1. Naikkan jika ada perubahan skema
+    entities = [UserEntity::class, AllergenEntity::class, UserAllergenCrossRef::class, DailyConsumptionEntity::class],
+    version = 5, // Mulai dari 1. Naikkan jika ada perubahan skema
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
     abstract fun allergenDao(): AllergenDao
+    abstract fun consumptionDao(): ConsumptionDao
 
     companion object {
         @Volatile

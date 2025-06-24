@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -45,8 +44,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,14 +67,13 @@ import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import com.example.nutrisaver.viewmodel.UserState
+import com.example.nutrisaver.viewmodel.UserViewModel
 import kotlin.math.cos
 import kotlin.math.sin
 import java.time.LocalDate
@@ -83,42 +81,64 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun DashboardScreen(navController: NavController) {
+fun DashboardScreen(navController: NavController, userViewModel: UserViewModel) {
     Scaffold(
         bottomBar = {
             UserBottomNavBar(navController = navController)
         }
     ) { innerPadding ->
-        DashboardContent(modifier = Modifier.padding(innerPadding), navController)
+        DashboardContent(modifier = Modifier.padding(innerPadding), navController, userViewModel)
     }
 }
 
 @Composable
-fun DashboardContent(modifier: Modifier = Modifier, navController: NavController) {
-    val background = colorResource(id = R.color.bg2_1)
-    val background2 = colorResource(id = R.color.bg2_2)
-    val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
-    val green = colorResource(id = R.color.green)
-    val greenTealDark = colorResource(id = R.color.green_teal_dark)
-    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
+fun DashboardContent(modifier: Modifier = Modifier, navController: NavController, userViewModel: UserViewModel) {
+    // --- 1. AMBIL SEMUA DATA DARI VIEWMODEL ---
+    val userProfile by userViewModel.userProfile.observeAsState()
+    val consumption by userViewModel.todaysConsumption.observeAsState()
+    val userState by userViewModel.userState.observeAsState()
 
-    // todo: ganti ke total calorie user berdasarkan masing-masing tipe
-    val breakfastCalories = remember { mutableStateOf(0) }
-    val lunchCalories = remember { mutableStateOf(0) }
-    val dinnerCalories = remember { mutableStateOf(0) }
+    // --- 2. PICU REFRESH DATA DARI REMOTE SAAT LAYAR MUNCUL ---
+    LaunchedEffect(key1 = Unit) {
+        userViewModel.refreshDashboardData()
+    }
 
-    // todo: ganti ke water intake user
-    val currentIntake = remember { mutableStateOf(1000) }
-    val targetIntake = 2000
-    // Water intake progress should still cap at 1.0 for the LinearProgressIndicator
-    val waterIntakeProgress = minOf(currentIntake.value.toFloat() / targetIntake.toFloat(), 1f)
+    // --- 3. SIAPKAN VARIABEL UNTUK UI DENGAN NILAI DEFAULT ---
+    // Variabel ini akan otomatis ter-update saat 'consumption' dan 'userProfile' berubah
+    val currentCalories = consumption?.totalCalories?.toFloat() ?: 0f
+    val targetCalories = consumption?.targetCalories ?: 2000f
+
+    val currentProtein = consumption?.totalProtein?.toInt() ?: 0
+    val targetProtein = consumption?.targetProtein?.toInt() ?: 100
+
+    val currentFat = consumption?.totalFat?.toInt() ?: 0
+    val targetFat = consumption?.targetFat?.toInt() ?: 70
+
+    val currentCarbs = consumption?.totalCarbs?.toInt() ?: 0
+    val targetCarbs = consumption?.targetCarbs?.toInt() ?: 250
+
+    var currentWater by remember(consumption) { mutableStateOf(consumption?.totalWater?.toInt() ?: 0) }
+
+    // PERBAIKAN DI SINI: Tambahkan 'f' untuk menandakan angka Float
+    val targetWater = consumption?.targetWater ?: 2000f
+
+    // Bandingkan juga dengan 0f untuk konsistensi, dan pastikan targetWater tidak 0 untuk pembagian
+    val waterIntakeProgress = if (targetWater > 0f) minOf(currentWater.toFloat() / targetWater, 1f) else 0f
+
     var showBottomSheet by remember { mutableStateOf(false) }
     var isReduceMode by remember { mutableStateOf(false) }
+
+    // --- Definisi warna dan gradient (tidak ada perubahan) ---
+    val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
+    val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
 
     Box(modifier = modifier
         .fillMaxSize()
         .background(backgroundGradient)
     ) {
+        if (userState is UserState.Loading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -138,7 +158,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Hi, User!",
+                    text = "Hi,  ${userProfile?.name?.split(" ")?.first() ?: "User"}!",
                     fontSize = 20.sp,
                     fontFamily = OpenSans,
                     fontWeight = FontWeight.Bold
@@ -184,7 +204,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                             .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Text(
-                            "Lose Weight", // todo: ganti ke goal user
+                            text = userProfile?.goal?.replace("_", " ")?.replaceFirstChar { it.titlecase(Locale.getDefault()) } ?: "Set Goal",
                             fontSize = 18.sp,
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold,
@@ -197,7 +217,11 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             Spacer(modifier = Modifier.height(10.dp))
 
             CalorieProgressBar(
-                // todo: insert parameternya disini nanti
+                currentCalories = currentCalories,
+                targetCalories = targetCalories,
+                protein = Pair(currentProtein, targetProtein),
+                fats = Pair(currentFat, targetFat),
+                carbs = Pair(currentCarbs, targetCarbs)
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
@@ -253,48 +277,33 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             Column(modifier = Modifier.fillMaxWidth()) {
                 MealLogCard(
                     type = "Breakfast",
-                    calories = breakfastCalories,
-                    protein = 50.1f, // todo: ganti ke total protein utk breakfast
-                    fat = 22.7f,     // todo: ganti ke total fat utk breakfast
-                    carbs = 38.4f,   // todo: ganti ke total carbs utk breakfast
-                    gradient = Brush.verticalGradient(
-                        colors = listOf(
-                            colorResource(R.color.blue_1),
-                            colorResource(R.color.blue_2)
-                        )
-                    ),
+                    calories = consumption?.breakfastCalories?.toFloat() ?: 0f,
+                    protein = consumption?.breakfastProteinGrams ?: 0f,
+                    fat = consumption?.breakfastFatGrams ?: 0f,
+                    carbs = consumption?.breakfastCarbsGrams ?: 0f,
+                    gradient = Brush.verticalGradient(colors = listOf(colorResource(R.color.blue_1), colorResource(R.color.blue_2))),
                     onLogClick = { navController.navigate("logmeal/breakfast") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 MealLogCard(
                     type = "Lunch",
-                    calories = lunchCalories,
-                    protein = 50.1f, // todo: ganti ke total protein utk lunch
-                    fat = 22.7f,     // todo: ganti ke total fat utk lunch
-                    carbs = 38.4f,   // todo: ganti ke total carbs utk lunch
-                    gradient = Brush.verticalGradient(
-                        colors = listOf(
-                            colorResource(R.color.yellow_1),
-                            colorResource(R.color.yellow_2)
-                        )
-                    ),
+                    calories = consumption?.lunchCalories?.toFloat() ?: 0f,
+                    protein = consumption?.lunchProteinGrams ?: 0f,
+                    fat = consumption?.lunchFatGrams ?: 0f,
+                    carbs = consumption?.lunchCarbsGrams ?: 0f,
+                    gradient = Brush.verticalGradient(colors = listOf(colorResource(R.color.yellow_1), colorResource(R.color.yellow_2))),
                     onLogClick = { navController.navigate("logmeal/lunch") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 MealLogCard(
                     type = "Dinner",
-                    calories = dinnerCalories,
-                    protein = 50.1f, // todo: ganti ke total protein utk dinner
-                    fat = 22.7f,     // todo: ganti ke total fat utk dinner
-                    carbs = 38.4f,   // todo: ganti ke total carbs utk dinner
-                    gradient = Brush.verticalGradient(
-                        colors = listOf(
-                            colorResource(R.color.pink_1),
-                            colorResource(R.color.pink_2)
-                        )
-                    ),
+                    calories = consumption?.dinnerCalories?.toFloat() ?: 0f,
+                    protein = consumption?.dinnerProteinGrams ?: 0f,
+                    fat = consumption?.dinnerFatGrams ?: 0f,
+                    carbs = consumption?.dinnerCarbsGrams ?: 0f,
+                    gradient = Brush.verticalGradient(colors = listOf(colorResource(R.color.pink_1), colorResource(R.color.pink_2))),
                     onLogClick = { navController.navigate("logmeal/dinner") },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -324,7 +333,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                 ) {
                     // Display current intake, target, and percentage
                     Text(
-                        "${currentIntake.value} / $targetIntake ml (${(waterIntakeProgress * 100).toInt()}%)",
+                        "${currentWater} / $targetWater ml (${(waterIntakeProgress * 100).toInt()}%)",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         fontFamily = OpenSans,
@@ -351,7 +360,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                             iconSize = 20.dp,
                             modifier = Modifier.weight(1f),
                             onClick = {
-                                currentIntake.value += 240
+                                currentWater = currentWater + 240
                             }
                         )
 
@@ -362,7 +371,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                             iconSize = 20.dp,
                             modifier = Modifier.weight(1f),
                             onClick = {
-                                currentIntake.value += 500
+                                currentWater = currentWater + 500
                             }
                         )
                     }
@@ -418,9 +427,9 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             onDismiss = { showBottomSheet = false },
             onConfirm = { amount ->
                 if (isReduceMode) {
-                    currentIntake.value = maxOf(0, currentIntake.value - amount)
+                    currentWater = maxOf(0, currentWater - amount)
                 } else {
-                    currentIntake.value += amount
+                    currentWater= currentWater + amount
                 }
                 showBottomSheet = false
             }
@@ -704,10 +713,10 @@ fun WaterIntakeBottomSheetContent(
 @Composable
 fun MealLogCard(
     type: String,
-    calories: MutableState<Int>?,
-    protein: Float = 0f,
-    fat: Float = 0f,
-    carbs: Float = 0f,
+    calories: Float,
+    protein: Float,
+    fat: Float,
+    carbs: Float,
     gradient: Brush,
     onLogClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -780,7 +789,7 @@ fun MealLogCard(
                     // Calories
                     NutritionItem(
                         label = "Calories",
-                        value = calories?.value?.toString() ?: "0",
+                        value = calories.toString(),
                         unit = "kcal",
                         modifier = Modifier.weight(1f)
                     )
@@ -855,8 +864,8 @@ fun NutritionItem(
 
 @Composable
 fun CalorieProgressBar(
-    currentCalories: Int = 1721, // default value
-    targetCalories: Int = 2213,
+    currentCalories: Float = 1721f, // default value
+    targetCalories: Float = 2213f,
     protein: Pair<Int, Int> = Pair(78, 90),
     fats: Pair<Int, Int> = Pair(45, 70),
     carbs: Pair<Int, Int> = Pair(95, 110),

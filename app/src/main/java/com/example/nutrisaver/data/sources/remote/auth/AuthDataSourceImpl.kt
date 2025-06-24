@@ -23,9 +23,8 @@ class AuthDataSourceImpl(
     }
 
     override suspend fun getUserProfile(idToken: String, userId: String): User {
-        val formattedToken = "Bearer $idToken"
         // Panggil webservice dengan kedua parameter
-        val userJson = webservice.getUserProfile(formattedToken, userId)
+        val userJson = webservice.getUserProfile(idToken, userId)
         return User.fromUserJson(userJson)
             ?: throw Exception("Gagal mem-parsing data profil user dari server.")
     }

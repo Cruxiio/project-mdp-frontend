@@ -22,17 +22,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,7 +37,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,17 +51,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
-import com.example.nutrisaver.AuthState
-import com.example.nutrisaver.AuthViewModel
+import com.example.nutrisaver.viewmodel.AuthState
+import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.UserViewModel
 import java.util.Locale
 
 @Composable
@@ -74,6 +69,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     authViewModel: AuthViewModel,
+    userViewModel: UserViewModel
 ) {
     Scaffold(
         bottomBar = {
@@ -83,7 +79,8 @@ fun ProfileScreen(
         ProfileContent(
             modifier = Modifier.padding(innerPadding),
             navController = navController,
-            authViewModel = authViewModel
+            authViewModel = authViewModel,
+            userViewModel = userViewModel
         )
     }
 }
@@ -93,17 +90,18 @@ fun ProfileScreen(
 fun ProfileContent(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    userViewModel: UserViewModel
 ) {
-    // --- 1. AMBIL DATA DARI VIEWMODEL ---
-    // Mengamati LiveData userProfile. Awalnya akan null.
-    val userProfile by authViewModel.userProfile.observeAsState()
+
+    val userProfile by userViewModel.userProfile.observeAsState()
     val authState by authViewModel.authState.observeAsState()
+    val userState by userViewModel.userState.observeAsState()
 
     // --- 2. PICU PENGAMBILAN DATA ---
     // LaunchedEffect akan memanggil fetchUserProfile() HANYA SEKALI saat layar pertama kali muncul.
     LaunchedEffect(key1 = Unit) {
-        authViewModel.fetchUserProfile()
+        userViewModel.fetchUserProfile()
     }
 
     // Navigasi ke halaman login jika user logout

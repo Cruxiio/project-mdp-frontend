@@ -2,6 +2,7 @@ package com.example.nutrisaver.data.sources.remote
 
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
+import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionJson
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -28,4 +29,7 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Path("userId") userId: String // <-- Parameter baru untuk mengisi {userId} di URL
     ): UserJson
+
+    @GET("api/consumption/today") // Sesuaikan jika path berbeda
+    suspend fun getTodaysConsumption(@Header("Authorization") token: String): DailyConsumptionJson
 }
