@@ -1049,10 +1049,19 @@ fun CalorieProgressBar(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         MacronutrientCard(
+            title = "Carbs",
+            current = carbs.first,
+            target = carbs.second,
+            color = colorResource(R.color.carbs),
+            animationPlayed = animationPlayed,
+            modifier = Modifier.weight(1f)
+        )
+
+        MacronutrientCard(
             title = "Protein",
             current = protein.first,
             target = protein.second,
-            color = Color(0xFF4CAF50),
+            color = colorResource(R.color.protein),
             animationPlayed = animationPlayed,
             modifier = Modifier.weight(1f)
         )
@@ -1061,16 +1070,7 @@ fun CalorieProgressBar(
             title = "Fat",
             current = fats.first,
             target = fats.second,
-            color = Color(0xFFFF5722),
-            animationPlayed = animationPlayed,
-            modifier = Modifier.weight(1f)
-        )
-
-        MacronutrientCard(
-            title = "Carbs",
-            current = carbs.first,
-            target = carbs.second,
-            color = Color(0xFFFFC107),
+            color = colorResource(R.color.fat),
             animationPlayed = animationPlayed,
             modifier = Modifier.weight(1f)
         )

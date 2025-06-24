@@ -452,19 +452,19 @@ fun DietRatioBar(
             modifier = Modifier
                 .weight(carbRatio / total)
                 .fillMaxHeight()
-                .background(colorResource(R.color.carbs)) // Light Blue for Carbs
+                .background(colorResource(R.color.carbs_light)) // Light Blue for Carbs
         )
         Box(
             modifier = Modifier
                 .weight(proteinRatio / total)
                 .fillMaxHeight()
-                .background(colorResource(R.color.protein)) // Light Green for Protein
+                .background(colorResource(R.color.protein_light)) // Light Green for Protein
         )
         Box(
             modifier = Modifier
                 .weight(fatRatio / total)
                 .fillMaxHeight()
-                .background(colorResource(R.color.fat)) // Light Orange for Fats
+                .background(colorResource(R.color.fat_light)) // Light Orange for Fats
         )
     }
 
