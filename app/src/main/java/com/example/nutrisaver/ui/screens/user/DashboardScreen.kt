@@ -1,14 +1,13 @@
 package com.example.nutrisaver.ui.screens.user
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import com.example.nutrisaver.ui.navbar.UserBottomNavBar
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -34,14 +32,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,21 +43,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
-import com.example.nutrisaver.ui.navbar.UserBottomNavBar
+import com.example.nutrisaver.ui.screens.user.dashboard.CalorieProgressSection
+import com.example.nutrisaver.ui.screens.user.dashboard.FoodStockExpirationSection
+import com.example.nutrisaver.ui.screens.user.dashboard.MealLogSection
+import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeBottomSheet
+import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeSection
+import com.example.nutrisaver.ui.screens.user.dashboard.WeightEntryDummy
+import com.example.nutrisaver.ui.screens.user.dashboard.WeightLogBottomSheet
+import com.example.nutrisaver.ui.screens.user.dashboard.WeightReportSection
+import com.example.nutrisaver.ui.screens.user.dashboard.generateSampleWeightData
 import com.example.nutrisaver.ui.theme.OpenSans
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorFilter
@@ -77,8 +73,6 @@ import com.example.nutrisaver.viewmodel.UserViewModel
 import kotlin.math.cos
 import kotlin.math.sin
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun DashboardScreen(navController: NavController, userViewModel: UserViewModel) {
@@ -91,6 +85,7 @@ fun DashboardScreen(navController: NavController, userViewModel: UserViewModel) 
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardContent(modifier: Modifier = Modifier, navController: NavController, userViewModel: UserViewModel) {
     // --- 1. AMBIL SEMUA DATA DARI VIEWMODEL ---
@@ -125,12 +120,35 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     // Bandingkan juga dengan 0f untuk konsistensi, dan pastikan targetWater tidak 0 untuk pembagian
     val waterIntakeProgress = if (targetWater > 0f) minOf(currentWater.toFloat() / targetWater, 1f) else 0f
 
-    var showBottomSheet by remember { mutableStateOf(false) }
-    var isReduceMode by remember { mutableStateOf(false) }
+//    var showBottomSheet by remember { mutableStateOf(false) }
+//    var isReduceMode by remember { mutableStateOf(false) }
 
     // --- Definisi warna dan gradient (tidak ada perubahan) ---
-    val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
-    val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
+//    val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
+//    val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
+    // todo: ganti ke water intake user
+    val currentIntake = remember { mutableStateOf(1000) }
+    val targetIntake = 2000
+    // Water intake progress should still cap at 1.0 for the LinearProgressIndicator
+    val waterIntakeProgress = minOf(currentIntake.value.toFloat() / targetIntake.toFloat(), 1f)
+    var showWaterIntakeBottomSheet by remember { mutableStateOf(false) }
+    var isReduceMode by remember { mutableStateOf(false) }
+
+    // State for weight data filtering
+    val allWeightData = remember { generateSampleWeightData() }
+    var selectedPeriod by remember { mutableStateOf("Monthly") } // Default period
+    var filteredWeightData by remember { mutableStateOf(emptyList<WeightEntryDummy>()) }
+    var showWeightLogBottomSheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedPeriod, allWeightData) {
+        val today = LocalDate.now()
+        filteredWeightData = when (selectedPeriod) {
+            "Weekly" -> allWeightData.filter { !it.date.isBefore(today.minusWeeks(1)) }
+            "Monthly" -> allWeightData.filter { !it.date.isBefore(today.minusMonths(1)) }
+            "Yearly" -> allWeightData.filter { !it.date.isBefore(today.minusYears(1)) }
+            else -> allWeightData // Fallback, e.g., show all if "All Time" is an option
+        }.sortedBy { it.date } // Ensure filtered data remains sorted
+    }
 
     Box(modifier = modifier
         .fillMaxSize()
@@ -227,7 +245,8 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
 
             Row(modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically) {
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
                     "Daily Meal Log",
                     fontSize = 18.sp,
@@ -237,16 +256,14 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
                     onClick = {
-                        // Todo: see history
+                        navController.navigate("loghistory")
                     },
                     contentPadding = PaddingValues(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
                     shape = CircleShape,
-                    modifier = Modifier
-                        .height(40.dp)
-                        .wrapContentWidth()
+                    modifier = Modifier.height(40.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -275,7 +292,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             Spacer(modifier = Modifier.height(12.dp))
 
             Column(modifier = Modifier.fillMaxWidth()) {
-                MealLogCard(
+                MealLogSection(
                     type = "Breakfast",
                     calories = consumption?.breakfastCalories?.toFloat() ?: 0f,
                     protein = consumption?.breakfastProteinGrams ?: 0f,
@@ -286,7 +303,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                MealLogCard(
+                MealLogSection(
                     type = "Lunch",
                     calories = consumption?.lunchCalories?.toFloat() ?: 0f,
                     protein = consumption?.lunchProteinGrams ?: 0f,
@@ -297,7 +314,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                MealLogCard(
+                MealLogSection(
                     type = "Dinner",
                     calories = consumption?.dinnerCalories?.toFloat() ?: 0f,
                     protein = consumption?.dinnerProteinGrams ?: 0f,
@@ -311,11 +328,20 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
 
-            Text(
-                "Water Intake",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = OpenSans,
+            WaterIntakeSection(
+                currentIntake = currentIntake,
+                targetIntake = targetIntake,
+                onAdd240ml = { currentIntake.value += 240 },
+                onAdd500ml = { currentIntake.value += 500 },
+                onReduceClick = {
+                    isReduceMode = true
+                    showWaterIntakeBottomSheet = true
+                },
+                onCustomClick = {
+                    isReduceMode = false
+                    showWaterIntakeBottomSheet = true
+                },
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -406,128 +432,52 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
 
-            Row(
+            WeightReportSection(
+                weightData = filteredWeightData, // Pass the filtered data to the chart
+                selectedPeriod = selectedPeriod,
+                onPeriodChange = { newPeriod -> selectedPeriod = newPeriod },
+                onLogWeightClick = {
+                    showWeightLogBottomSheet = true
+                },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Weight Report",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = OpenSans,
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
+            )
 
+            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
+
+            FoodStockExpirationSection(
+                onViewAllClick = {
+                    navController.navigate("foodstock") // Create this route for full food stock management
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 
-    if (showBottomSheet) {
+    if (showWaterIntakeBottomSheet) {
         WaterIntakeBottomSheet(
             isReduceMode = isReduceMode,
-            onDismiss = { showBottomSheet = false },
+            onDismiss = { showWaterIntakeBottomSheet = false },
             onConfirm = { amount ->
                 if (isReduceMode) {
                     currentWater = maxOf(0, currentWater - amount)
                 } else {
                     currentWater= currentWater + amount
                 }
-                showBottomSheet = false
+                showWaterIntakeBottomSheet = false
             }
         )
     }
-}
 
-@Composable
-fun WaterIntakeButton(
-    text: String,
-    icon: Painter,
-    iconSize: Dp = 20.dp,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent
-        ),
-        shape = CircleShape,
-        modifier = modifier
-            .height(40.dp)
-            .fillMaxWidth(),
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            colorResource(R.color.water_1),
-                            colorResource(R.color.water_2)
-                        )
-                    ),
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Image(
-                    painter = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(iconSize),
-                    colorFilter = ColorFilter.tint(Color.White)
-                )
-                Text(
-                    text = text,
-                    fontSize = 18.sp,
-                    fontFamily = OpenSans,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+    if (showWeightLogBottomSheet) {
+        WeightLogBottomSheet(
+            onDismiss = { showWeightLogBottomSheet = false },
+            onConfirm = { weight, unit, date ->
+                // TODO: Save weight to database
+                Log.d("WeightLogBottomSheet", "Weight: $weight, Unit: $unit, Date: $date")
+                // After saving, consider refreshing the weight data if it's stored locally
+                // For now, let's just dismiss
+                showWeightLogBottomSheet = false
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun WaterIntakeBottomSheet(
-    isReduceMode: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (Int) -> Unit
-) {
-    var quantity by remember { mutableStateOf(1) }
-    var unit by remember { mutableStateOf("ml") }
-
-    val bottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = bottomSheetState,
-        containerColor = Color.White,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-    ) {
-        WaterIntakeBottomSheetContent(
-            quantity = quantity,
-            onQuantityChange = { quantity = it },
-            unit = unit,
-            onUnitChange = { unit = it },
-            isReduceMode = isReduceMode,
-            onConfirm = {
-                val amountInMl = when (unit) {
-                    "L" -> quantity * 1000
-                    "cup" -> quantity * 240
-                    "oz" -> quantity * 30
-                    else -> quantity // ml
-                }
-                onConfirm(amountInMl)
-            },
-            onDismiss = onDismiss
         )
     }
 }

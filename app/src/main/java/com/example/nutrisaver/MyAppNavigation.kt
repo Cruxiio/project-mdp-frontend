@@ -15,7 +15,7 @@ import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.EditInformationScreen
 import com.example.nutrisaver.ui.screens.user.EditProfileScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
-import com.example.nutrisaver.ui.screens.user.HistoryMealLogScreen
+import com.example.nutrisaver.ui.screens.user.LogHistoryScreen
 import com.example.nutrisaver.ui.screens.user.LogMealScreen
 import com.example.nutrisaver.ui.screens.user.NotificationScreen
 import com.example.nutrisaver.ui.screens.user.ProfileScreen
@@ -67,7 +67,7 @@ fun MyAppNavigation(
                 LogMealScreen(navController = navController, mealType = mealType)
             }
             composable("loghistory") {
-                HistoryMealLogScreen(navController = navController)
+                LogHistoryScreen(navController = navController)
             }
             composable("foodstock") {
                 FoodStockScreen(navController = navController)

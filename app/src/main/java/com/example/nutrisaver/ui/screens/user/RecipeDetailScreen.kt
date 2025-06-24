@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,8 +14,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,14 +30,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -44,14 +47,106 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.nutrisaver.R
-import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
+
+// Data classes to match the JSON structure
+data class RecipeDetailDummy(
+    val id: Int,
+    val title: String,
+    val image: String,
+    val readyInMinutes: Int,
+    val servings: Int,
+    val vegetarian: Boolean,
+    val vegan: Boolean,
+    val glutenFree: Boolean,
+    val dairyFree: Boolean,
+    val veryHealthy: Boolean,
+    val cheap: Boolean,
+    val veryPopular: Boolean,
+    val sustainable: Boolean,
+    val lowFodmap: Boolean,
+    val nutrition: NutritionDummy,
+    val extendedIngredients: List<IngredientDummy>,
+    val instructions: String,
+    val summary: String
+)
+data class NutritionDummy(
+    val nutrients: List<NutrientDummy>,
+    val caloricBreakdown: CaloricBreakdownDummy
+)
+data class NutrientDummy(
+    val name: String,
+    val amount: Double,
+    val unit: String
+)
+data class CaloricBreakdownDummy(
+    val percentProtein: Double,
+    val percentFat: Double,
+    val percentCarbs: Double
+)
+data class IngredientDummy(
+    val id: Int,
+    val name: String,
+    val original: String,
+    val amount: Double,
+    val unit: String
+)
 
 @Composable
 fun RecipeDetailScreen(navController: NavController) {
+    // data sample dari json yang diambil, todo: nanti ganti ke data yang diambil
+    val sampleRecipe = RecipeDetailDummy(
+        id = 945221, // From JSON root: "id": 945221
+        title = "Peanut Butter Banana Oat Breakfast Cookies", // From JSON root: "title": "Watching What I Eat: Peanut Butter Banana Oat Breakfast Cookies with Carob / Chocolate Chips"
+        image = "https://img.spoonacular.com/recipes/945221-556x370.jpg", // From JSON root: "image": "https://img.spoonacular.com/recipes/945221-556x370.jpg"
+        readyInMinutes = 45, // From JSON root: "readyInMinutes": 45
+        servings = 16, // From JSON root: "servings": 16
+        vegetarian = false, // From JSON root: "vegetarian": false
+        vegan = false, // From JSON root: "vegan": false
+        glutenFree = true, // From JSON root: "glutenFree": true
+        dairyFree = true, // From JSON root: "dairyFree": true
+        veryHealthy = false, // From JSON root: "veryHealthy": false
+        cheap = false, // From JSON root: "cheap": false
+        veryPopular = true, // From JSON root: "veryPopular": true
+        sustainable = false, // From JSON root: "sustainable": false
+        lowFodmap = false, // From JSON root: "lowFodmap": false
+        nutrition = NutritionDummy(
+            nutrients = listOf(
+                // From JSON: nutrition.nutrients[0] where "name": "Calories", "amount": 103.19, "unit": "kcal"
+                NutrientDummy("Calories", 103.19, "kcal"),
+                // From JSON: nutrition.nutrients[10] where "name": "Protein", "amount": 3.67, "unit": "g"
+                NutrientDummy("Protein", 3.67, "g"),
+                // From JSON: nutrition.nutrients[1] where "name": "Fat", "amount": 5.38, "unit": "g"
+                NutrientDummy("Fat", 5.38, "g"),
+                // From JSON: nutrition.nutrients[3] where "name": "Carbohydrates", "amount": 11.25, "unit": "g"
+                NutrientDummy("Carbohydrates", 11.25, "g")
+            ),
+            // From JSON: nutrition.caloricBreakdown: "percentProtein": 13.58, "percentFat": 44.8, "percentCarbs": 41.62
+            caloricBreakdown = CaloricBreakdownDummy(13.58, 44.8, 41.62)
+        ),
+        extendedIngredients = listOf(
+            // From JSON: extendedIngredients[0]: "id": 9040, "name": "bananas", "original": "2 ripe bananas, mashed until smooth & creamy", "amount": 2.0, "unit": ""
+            IngredientDummy(9040, "bananas", "2 ripe bananas, mashed until smooth & creamy", 2.0, ""),
+            // From JSON: extendedIngredients[3]: "id": 10116098, "name": "creamy peanut butter", "original": "1/3 cup peanut butter - creamy or chunky", "amount": 0.33333334, "unit": "cup"
+            IngredientDummy(10116098, "creamy peanut butter", "1/3 cup peanut butter - creamy or chunky", 0.33, "cup"),
+            // From JSON: extendedIngredients[5]: "id": 8121, "name": "oatmeal", "original": "1 1/2 cups quick oatmeal - uncooked", "amount": 1.5, "unit": "cups"
+            IngredientDummy(8121, "oatmeal", "1 1/2 cups quick oatmeal - uncooked", 1.5, "cups")
+        ),
+        // From JSON: "instructions": "Preheat heat oven to 350 degrees.In a large bowl, mix mashed banana & peanut butter until completely combined..."
+        // OR from JSON: analyzedInstructions[0].steps[0].step for more detailed step-by-step instructions
+        instructions = "Preheat oven to 350 degrees. In a large bowl, mix mashed banana & peanut butter until completely combined...",
+        // From JSON root: "summary": "If you want to add more <b>gluten free and dairy free</b> recipes to your repertoire..."
+        summary = "If you want to add more gluten free and dairy free recipes to your repertoire, this might be a recipe you should try."
+    )
+
     Scaffold { innerPadding ->
-        RecipeDetailContent(modifier = Modifier.padding(innerPadding), navController)
+        RecipeDetailContent(
+            recipe = sampleRecipe,
+            modifier = Modifier.padding(innerPadding),
+            navController = navController
+        )
     }
 }
 
@@ -71,8 +166,7 @@ private fun TopBar(
             .padding(vertical = 12.dp, horizontal = 16.dp)
     ) {
         Row(
-            modifier = modifier
-                .fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBackClick) {
@@ -96,9 +190,13 @@ private fun TopBar(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RecipeDetailContent(modifier: Modifier = Modifier,
-                        navController: NavController) {
+private fun RecipeDetailContent(
+    recipe: RecipeDetailDummy, // todo: ganti ke tipe data aslinya
+    modifier: Modifier = Modifier,
+    navController: NavController
+) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
@@ -107,22 +205,26 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
             .background(backgroundGradient)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(top = 70.dp)
+                .padding(top = 70.dp, bottom = 80.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.default_food_image),
+            // Recipe Image
+            AsyncImage(
+                model = recipe.image,
                 contentDescription = "Recipe Image",
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f),
                 contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = R.drawable.default_food_image),
+                error = painterResource(id = R.drawable.default_food_image)
             )
 
             Column(
@@ -130,42 +232,184 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
                     .fillMaxSize()
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Recipe Title
                 Text(
-                    text = "Nasi Pecel", // todo: ganti ke nama makanan
-                    fontSize = 28.sp,
+                    text = recipe.title,
+                    fontSize = 24.sp,
                     fontFamily = OpenSans,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Recipe Information
-                Column(
+                // Basic Info Row
+                Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    InfoItem(
+                        icon = painterResource(R.drawable.fire_icon),
+                        label = "Calories",
+                        value = "${recipe.nutrition.nutrients.find { it.name == "Calories" }?.amount?.toInt() ?: 0} kcal"
+                    )
+                    InfoItem(
+                        icon = painterResource(R.drawable.time_icon_2),
+                        label = "Time",
+                        value = "${recipe.readyInMinutes} min"
+                    )
+                    InfoItem(
+                        icon = painterResource(R.drawable.group_icon),
+                        label = "Servings",
+                        value = "${recipe.servings}"
+                    )
+                }
+
+                // Nutrition Macros
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Nutrition per serving",
+                            fontSize = 16.sp,
+                            fontFamily = OpenSans,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            NutritionItem(
+                                label = "Protein",
+                                value = "${recipe.nutrition.nutrients.find { it.name == "Protein" }?.amount?.toInt() ?: 0}g",
+                                color = Color(0xFF4CAF50)
+                            )
+                            NutritionItem(
+                                label = "Fat",
+                                value = "${recipe.nutrition.nutrients.find { it.name == "Fat" }?.amount?.toInt() ?: 0}g",
+                                color = Color(0xFFFF9800)
+                            )
+                            NutritionItem(
+                                label = "Carbs",
+                                value = "${recipe.nutrition.nutrients.find { it.name == "Carbohydrates" }?.amount?.toInt() ?: 0}g",
+                                color = Color(0xFFF44336)
+                            )
+                        }
+                    }
+                }
+
+                // Dietary Tags
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Calories: 200 kal",
-                        fontSize = 16.sp,
-                        fontFamily = OpenSans,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    if (recipe.vegetarian) DietaryTag("Vegetarian")
+                    if (recipe.vegan) DietaryTag("Vegan")
+                    if (recipe.glutenFree) DietaryTag("Gluten Free")
+                    if (recipe.dairyFree) DietaryTag("Dairy Free")
+                    if (recipe.veryHealthy) DietaryTag("Healthy")
+                    if (recipe.cheap) DietaryTag("Cheap")
+                    if (recipe.veryPopular) DietaryTag("Very Popular")
+                    if (recipe.sustainable) DietaryTag("Sustainable")
+                    if (recipe.lowFodmap) DietaryTag("Low Fodmap")
+                }
+
+                // Ingredients Section
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Ingredients",
+                            fontSize = 18.sp,
+                            fontFamily = OpenSans,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        recipe.extendedIngredients.take(5).forEach { ingredient ->
+                            Text(
+                                text = "• ${ingredient.original}",
+                                fontSize = 14.sp,
+                                fontFamily = OpenSans,
+                                color = Color.Black,
+                                modifier = Modifier.padding(vertical = 2.dp)
+                            )
+                        }
+
+                        if (recipe.extendedIngredients.size > 5) {
+                            Text(
+                                text = "... and ${recipe.extendedIngredients.size - 5} more ingredients",
+                                fontSize = 12.sp,
+                                fontFamily = OpenSans,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Instructions Preview
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Instructions",
+                            fontSize = 18.sp,
+                            fontFamily = OpenSans,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = recipe.instructions.take(200) + if (recipe.instructions.length > 200) "..." else "",
+                            fontSize = 14.sp,
+                            fontFamily = OpenSans,
+                            color = Color.Black,
+                            lineHeight = 20.sp
+                        )
+                    }
                 }
             }
         }
+
         TopBar(
             onBackClick = { navController.popBackStack() },
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
         )
-        Box(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter)) {
+
+        // Create Recipe Button
+        Box(
+            modifier = Modifier
+                .padding(20.dp)
+                .align(Alignment.BottomCenter)
+        ) {
             Button(
                 onClick = {
                     navController.navigate("createrecipe")
@@ -186,8 +430,8 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Create Recipe",
-                        fontSize = 20.sp,
+                        text = "Create this Recipe",
+                        fontSize = 18.sp,
                         fontFamily = OpenSans,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
@@ -195,5 +439,89 @@ private fun RecipeDetailContent(modifier: Modifier = Modifier,
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun InfoItem(
+    icon: Painter,
+    label: String,
+    value: String
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .padding(bottom = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = icon,
+                contentDescription = label,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit,
+                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(colorResource(R.color.green))
+            )
+        }
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontFamily = OpenSans,
+            color = Color.Gray
+        )
+        Text(
+            text = value,
+            fontSize = 16.sp,
+            fontFamily = OpenSans,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+    }
+}
+
+@Composable
+private fun NutritionItem(
+    label: String,
+    value: String,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = value,
+            fontSize = 20.sp,
+            fontFamily = OpenSans,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontFamily = OpenSans,
+            color = Color.Gray
+        )
+    }
+}
+
+@Composable
+private fun DietaryTag(text: String) {
+    Box(
+        modifier = Modifier
+            .background(
+                colorResource(R.color.green),
+                RoundedCornerShape(16.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            fontFamily = OpenSans,
+            fontWeight = FontWeight.Medium,
+            color = Color.White
+        )
     }
 }

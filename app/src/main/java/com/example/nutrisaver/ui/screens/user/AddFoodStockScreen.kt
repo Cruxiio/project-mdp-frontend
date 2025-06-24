@@ -57,16 +57,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
-import com.example.nutrisaver.ui.screens.auth.convertMillisToDate
 import com.example.nutrisaver.ui.theme.OpenSans
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+// Helper function to convert milliseconds to a formatted date string for display
+private fun convertMillisToDateDisplay(millis: Long): String {
+    val date = Instant.ofEpochMilli(millis)
+        .atZone(ZoneId.of("Asia/Jakarta")) // Explicitly use Jakarta time zone for WIB
+        .toLocalDate()
+    return date.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault()))
+}
+
+// Helper function to convert LocalDate to milliseconds for DatePicker initial state
+private fun convertLocalDateToMillis(date: LocalDate): Long {
+    return date.atStartOfDay(ZoneId.of("Asia/Jakarta"))
+        .toInstant()
+        .toEpochMilli()
+}
+
 
 @Composable
 fun AddFoodStockScreen(navController: NavController) {
@@ -88,28 +110,37 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
+    val green = colorResource(id = R.color.green)
+    val greenTealDark = colorResource(id = R.color.green_teal_dark)
+    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    val foodOptions = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant")
-    var selectedFood by remember { mutableStateOf<String?>(null) }
+    val foodOptions = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant", "Milk", "Bread", "Rice", "Chicken")
+    var selectedFood by remember { mutableStateOf<String?>(null) } // todo: mutable state of string diganti dengan object
+
     var query by remember { mutableStateOf("") }
     val filteredOptions = foodOptions.filter {
         it.contains(query, ignoreCase = true)
     }
 
-    var quantity by remember { mutableStateOf(0) }
+    var quantityInput by remember { mutableStateOf("0") }
     val unitOptions = listOf("g", "pcs", "ml")
     var unitExpanded by remember { mutableStateOf(false) }
-    var unit by remember { mutableStateOf(unitOptions[0]) }
+    var selectedUnit by remember { mutableStateOf(unitOptions[0]) }
 
     var showDateModal by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
-    val expiredDate = datePickerState.selectedDateMillis?.let { convertMillisToDate(it) } ?: ""
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = convertLocalDateToMillis(LocalDate.now(ZoneId.of("Asia/Jakarta")))
+    )
+
+    // Derived state for display
+    val expiredDateDisplay = datePickerState.selectedDateMillis?.let { convertMillisToDateDisplay(it) } ?: ""
 
     var reminderEnabled by remember { mutableStateOf(false) }
-    val options = listOf("1 Month", "1 Week", "3 Days", "1 Day")
-    var selectedReminder by remember { mutableStateOf<String?>(null) }
+    val reminderOptions = listOf("1 Month", "1 Week", "3 Days", "1 Day")
+    var selectedReminderOption by remember { mutableStateOf<String?>(null) }
+
 
     Column(
         modifier = modifier
@@ -117,12 +148,11 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
             .background(backgroundGradient)
     ) {
         TopBar(onBackClick = { navController.popBackStack() })
-        Spacer(modifier = Modifier.height(16.dp))
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 32.dp, vertical = 8.dp)
+                .weight(1f) // Makes this column fill available space, pushing the button to bottom
+                .padding(horizontal = 24.dp, vertical = 16.dp) // Adjusted padding
         ) {
             Text(
                 "Food Name",
@@ -153,7 +183,7 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp)) // Increased spacing
 
             Text(
                 "Quantity (per unit)",
@@ -167,20 +197,25 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
-                    value = quantity.toString(),
+                    value = quantityInput,
                     onValueChange = { input ->
-                        quantity = input.filter { it.isDigit() }.toIntOrNull() ?: 0
+                        if (input.all { it.isDigit() } || input.isEmpty()) {
+                            quantityInput = input
+                        }
                     },
                     modifier = Modifier
                         .padding(end = 8.dp)
-                        .weight(2.5f),
+                        .weight(2.5f)
+                        .border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp)),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colorResource(R.color.black),
                         unfocusedTextColor = colorResource(R.color.black),
                         focusedContainerColor = colorResource(R.color.form_input),
-                        unfocusedContainerColor = colorResource(R.color.form_input)
+                        unfocusedContainerColor = colorResource(R.color.form_input),
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
                     ),
                     shape = RoundedCornerShape(10.dp)
                 )
@@ -190,19 +225,22 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     modifier = Modifier.weight(1f)
                 ) {
                     OutlinedTextField(
-                        value = unit,
+                        value = selectedUnit,
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = unitExpanded)
                         },
                         modifier = Modifier
-                            .menuAnchor(),
+                            .menuAnchor()
+                            .border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp)),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = colorResource(R.color.black),
                             unfocusedTextColor = colorResource(R.color.black),
                             focusedContainerColor = colorResource(R.color.form_input),
-                            unfocusedContainerColor = colorResource(R.color.form_input)
+                            unfocusedContainerColor = colorResource(R.color.form_input),
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
                         ),
                         shape = RoundedCornerShape(10.dp)
                     )
@@ -213,9 +251,9 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     ) {
                         unitOptions.forEach { selectionOption ->
                             DropdownMenuItem(
-                                text = { androidx.compose.material.Text(selectionOption) },
+                                text = { Text(selectionOption) },
                                 onClick = {
-                                    unit = selectionOption
+                                    selectedUnit = selectionOption
                                     unitExpanded = false
                                 }
                             )
@@ -224,7 +262,7 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 "Expired Date",
@@ -234,12 +272,13 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 fontWeight = FontWeight.Bold
             )
             OutlinedTextField(
-                value = if (expiredDate == "") "Select Date" else expiredDate,
+                value = if (expiredDateDisplay.isEmpty()) "Select Date" else expiredDateDisplay,
                 onValueChange = {},
                 readOnly = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showDateModal = true },
+                    .clickable { showDateModal = true }
+                    .border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp)),
                 trailingIcon = {
                     IconButton(onClick = { showDateModal = true }) {
                         Icon(
@@ -249,10 +288,12 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = if (expiredDate == "") Color.Gray else Color.Black,
-                    unfocusedTextColor = if (expiredDate == "") Color.Gray else Color.Black,
+                    focusedTextColor = if (expiredDateDisplay.isEmpty()) Color.Gray else Color.Black,
+                    unfocusedTextColor = if (expiredDateDisplay.isEmpty()) Color.Gray else Color.Black,
                     focusedContainerColor = colorResource(R.color.form_input),
-                    unfocusedContainerColor = colorResource(R.color.form_input)
+                    unfocusedContainerColor = colorResource(R.color.form_input),
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
                 ),
                 shape = RoundedCornerShape(10.dp)
             )
@@ -263,13 +304,14 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     confirmButton = {
                         TextButton(onClick = {
                             showDateModal = false
+                            // datePickerState.selectedDateMillis is automatically captured
                         }) {
-                            androidx.compose.material.Text("OK")
+                            Text("OK")
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showDateModal = false }) {
-                            androidx.compose.material.Text("Cancel")
+                            Text("Cancel")
                         }
                     }
                 ) {
@@ -277,8 +319,7 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -291,40 +332,65 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     modifier = Modifier.weight(1f))
                 Switch(
                     checked = reminderEnabled,
-                    onCheckedChange = {reminderEnabled =! reminderEnabled},
-                    colors = SwitchDefaults.colors(checkedThumbColor = colorResource(R.color.green))
+                    onCheckedChange = { reminderEnabled = it },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = colorResource(R.color.green),
+                        checkedTrackColor = colorResource(R.color.green).copy(alpha = 0.5f),
+                        uncheckedThumbColor = Color.Gray,
+                        uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+                    )
                 )
             }
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             if (reminderEnabled) {
-                Text("Remind Me:", fontWeight = FontWeight.Bold)
+                Text(
+                    "Remind Me:",
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
                 Column {
-                    options.forEach { option ->
+                    reminderOptions.forEach { option ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedReminder =
-                                        if (selectedReminder == option) null else option
+                                    selectedReminderOption = if (selectedReminderOption == option) null else option
                                 }
+                                .padding(vertical = 4.dp)
                         ) {
                             RadioButton(
-                                selected = selectedReminder == option,
-                                onClick = { if (selectedReminder == option) null else option },
+                                selected = selectedReminderOption == option,
+                                onClick = {
+                                    selectedReminderOption = option
+                                },
                                 colors = RadioButtonDefaults.colors(
                                     selectedColor = colorResource(R.color.green),
+                                    unselectedColor = Color.Gray
                                 )
                             )
-                            Text(option, modifier = Modifier.padding(start = 8.dp))
+                            Text(
+                                text = option,
+                                fontSize = 16.sp,
+                                fontFamily = OpenSans,
+                                color = Color.Black,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
                         }
                     }
                 }
             }
+            Spacer(modifier = Modifier.weight(1f)) // Pushes the button to the bottom
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
-                    // Todo: Add food stock
+                    // Todo: Add food stock logic here
+                    val finalQuantity = quantityInput.toIntOrNull() ?: 0
+                    // You can access selectedFood, finalQuantity, selectedUnit,
+                    // datePickerState.selectedDateMillis (or convert to LocalDate), reminderEnabled, selectedReminderOption here
+                    navController.popBackStack()
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(
@@ -340,10 +406,7 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                         .fillMaxSize()
                         .background(
                             Brush.horizontalGradient(
-                                listOf(
-                                    colorResource(R.color.green),
-                                    colorResource(R.color.green_teal_dark)
-                                )
+                                listOf(green, greenTealDark)
                             ), shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -441,44 +504,84 @@ private fun FoodSearchBottomSheet(
     sheetState: androidx.compose.material3.SheetState
 ) {
     ModalBottomSheet(
-        modifier = Modifier.fillMaxHeight(),
+        modifier = Modifier.fillMaxHeight(0.7f),
         sheetState = sheetState,
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        dragHandle = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(32.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color.Gray.copy(alpha = 0.4f))
+                )
+            }
+        }
     ) {
-        Column(Modifier.padding(16.dp)) {
-            TextField(
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
                 placeholder = { Text("Search...",
                     fontSize = 16.sp,
-                    fontFamily = OpenSans,) },
-                modifier = Modifier.fillMaxWidth(),
+                    fontFamily = OpenSans,
+                    color = Color.Gray) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(0.4.dp, Color.DarkGray, RoundedCornerShape(8.dp)),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = colorResource(R.color.form_input),
+                    unfocusedContainerColor = colorResource(R.color.form_input),
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                ),
+                shape = RoundedCornerShape(8.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn {
-                items(filteredOptions) { option ->
-                    val isSelected = option == selectedFood
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isSelected) colorResource(R.color.pastel_green2)
-                                else Color.Transparent
+            if (filteredOptions.isEmpty()) {
+                Text(
+                    text = "No results found.",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center,
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Light
+                )
+            } else {
+                LazyColumn {
+                    items(filteredOptions) { option ->
+                        val isSelected = option == selectedFood
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isSelected) colorResource(R.color.pastel_green2)
+                                    else Color.Transparent
+                                )
+                                .clickable { onSelectFood(option) }
+                                .padding(horizontal = 12.dp, vertical = 12.dp)
+                        ) {
+                            Text(
+                                text = option,
+                                fontSize = 16.sp,
+                                fontFamily = OpenSans,
+                                color = if (isSelected) colorResource(R.color.green_dark) else Color.Black,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                             )
-                            .clickable { onSelectFood(option) }
-                            .padding(horizontal = 12.dp, vertical = 12.dp)
-                    ) {
-                        Text(
-                            text = option,
-                            fontSize = 16.sp,
-                            fontFamily = OpenSans,
-                            color = if (isSelected) colorResource(R.color.green_dark) else Color.Black,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
+                        }
                     }
                 }
             }
@@ -486,4 +589,3 @@ private fun FoodSearchBottomSheet(
         }
     }
 }
-

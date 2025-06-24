@@ -298,9 +298,24 @@ fun DietRatioBar(carbRatio: Float, proteinRatio: Float, fatRatio: Float, modifie
             .clip(RoundedCornerShape(12.dp))
             .border(1.dp, colorResource(R.color.black), RoundedCornerShape(12.dp))
     ) {
-        Box(modifier = Modifier.weight(carbRatio / total).fillMaxHeight().background(colorResource(R.color.carbs)))
-        Box(modifier = Modifier.weight(proteinRatio / total).fillMaxHeight().background(colorResource(R.color.protein)))
-        Box(modifier = Modifier.weight(fatRatio / total).fillMaxHeight().background(colorResource(R.color.fat)))
+        Box(
+            modifier = Modifier
+                .weight(carbRatio / total)
+                .fillMaxHeight()
+                .background(colorResource(R.color.carbs_light)) // Light Blue for Carbs
+        )
+        Box(
+            modifier = Modifier
+                .weight(proteinRatio / total)
+                .fillMaxHeight()
+                .background(colorResource(R.color.protein_light)) // Light Green for Protein
+        )
+        Box(
+            modifier = Modifier
+                .weight(fatRatio / total)
+                .fillMaxHeight()
+                .background(colorResource(R.color.fat_light)) // Light Orange for Fats
+        )
     }
     Spacer(modifier = Modifier.height(8.dp))
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
