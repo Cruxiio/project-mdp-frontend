@@ -213,7 +213,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
                     onClick = {
-                        // Todo: see history
+                        navController.navigate("loghistory")
                     },
                     contentPadding = PaddingValues(),
                     colors = ButtonDefaults.buttonColors(

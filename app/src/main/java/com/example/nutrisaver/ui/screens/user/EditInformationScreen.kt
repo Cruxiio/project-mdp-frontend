@@ -65,8 +65,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.screens.auth.RatioInputField
-import com.example.nutrisaver.ui.screens.auth.convertMillisToDate
 import com.example.nutrisaver.ui.theme.OpenSans
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun EditInformationScreen(navController: NavController) {
@@ -116,6 +118,12 @@ private fun TopBar(
             )
         }
     }
+}
+
+// helper function to convert millis to date
+private fun convertMillisToDate(millis: Long): String {
+    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    return formatter.format(Date(millis))
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)

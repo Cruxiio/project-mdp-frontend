@@ -633,7 +633,7 @@ fun RegisterDetailScreen(
     }
 }
 
-fun convertMillisToDate(millis: Long): String {
+private fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
     return formatter.format(Date(millis))
 }
