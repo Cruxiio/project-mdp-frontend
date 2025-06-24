@@ -1,11 +1,14 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,19 +32,29 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +74,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,19 +82,41 @@ import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.TextAlign
-import kotlin.math.cos
-import kotlin.math.sin
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.math.cos
+import kotlin.math.sin
+
+// Updated data class for weight entries to use LocalDate
+data class WeightEntryDummy(
+    val weight: Float,
+    val date: LocalDate // Changed to LocalDate for easier filtering
+)
+
+// Sample data - replace with actual database queries
+fun generateSampleWeightData(): List<WeightEntryDummy> {
+    val today = LocalDate.now()
+    return listOf(
+        WeightEntryDummy(68.5f, today.minusWeeks(8)),
+        WeightEntryDummy(69.2f, today.minusWeeks(7)),
+        WeightEntryDummy(67.8f, today.minusWeeks(6)),
+        WeightEntryDummy(70.1f, today.minusWeeks(5)),
+        WeightEntryDummy(71.3f, today.minusWeeks(4)),
+        WeightEntryDummy(70.5f, today.minusWeeks(3)),
+        WeightEntryDummy(69.8f, today.minusWeeks(2)),
+        WeightEntryDummy(68.9f, today.minusWeeks(1)),
+        WeightEntryDummy(68.7f, today) // Today's weight
+    ).sortedBy { it.date } // Ensure data is sorted by date
+}
 
 @Composable
 fun DashboardScreen(navController: NavController) {
@@ -93,6 +129,7 @@ fun DashboardScreen(navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardContent(modifier: Modifier = Modifier, navController: NavController) {
     val background = colorResource(id = R.color.bg2_1)
@@ -112,8 +149,25 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     val targetIntake = 2000
     // Water intake progress should still cap at 1.0 for the LinearProgressIndicator
     val waterIntakeProgress = minOf(currentIntake.value.toFloat() / targetIntake.toFloat(), 1f)
-    var showBottomSheet by remember { mutableStateOf(false) }
+    var showWaterIntakeBottomSheet by remember { mutableStateOf(false) }
     var isReduceMode by remember { mutableStateOf(false) }
+
+    // State for weight data filtering
+    val allWeightData = remember { generateSampleWeightData() }
+    var selectedPeriod by remember { mutableStateOf("Monthly") } // Default period
+    var filteredWeightData by remember { mutableStateOf(emptyList<WeightEntryDummy>()) }
+    var showWeightLogBottomSheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedPeriod, allWeightData) {
+        val today = LocalDate.now()
+        filteredWeightData = when (selectedPeriod) {
+            "Weekly" -> allWeightData.filter { it.date.isAfter(today.minusWeeks(1)) || it.date.isEqual(today.minusWeeks(1)) }
+            "Monthly" -> allWeightData.filter { it.date.isAfter(today.minusMonths(1)) || it.date.isEqual(today.minusMonths(1)) }
+            "Yearly" -> allWeightData.filter { it.date.isAfter(today.minusYears(1)) || it.date.isEqual(today.minusYears(1)) }
+            else -> allWeightData // Fallback, e.g., show all if "All Time" is an option
+        }.sortedBy { it.date } // Ensure filtered data remains sorted
+    }
+
 
     Box(modifier = modifier
         .fillMaxSize()
@@ -302,15 +356,6 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
 
-            Text(
-                "Water Intake",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = OpenSans,
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -322,6 +367,13 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Text(
+                        "Water Intake",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = OpenSans,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     // Display current intake, target, and percentage
                     Text(
                         "${currentIntake.value} / $targetIntake ml (${(waterIntakeProgress * 100).toInt()}%)",
@@ -331,13 +383,15 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                         color = colorResource(R.color.water_3)
                     )
                     LinearProgressIndicator(
-                        progress = waterIntakeProgress, // This will still cap at 1.0 for visual consistency
+                        progress = {
+                            waterIntakeProgress // This will still cap at 1.0 for visual consistency
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(24.dp)
                             .clip(CircleShape),
                         color = colorResource(R.color.water_1),
-                        trackColor = Color.Gray.copy(alpha = 0.2f)
+                        trackColor = Color.Gray.copy(alpha = 0.2f),
                     )
                     // Action Buttons - Add (240ml, 500ml)
                     Row(
@@ -378,7 +432,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                             modifier = Modifier.weight(1f), // Make it take half width
                             onClick = {
                                 isReduceMode = true
-                                showBottomSheet = true
+                                showWaterIntakeBottomSheet = true
                             }
                         )
                         WaterIntakeButton(
@@ -388,7 +442,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                             modifier = Modifier.weight(1f), // Make it take half width
                             onClick = {
                                 isReduceMode = false
-                                showBottomSheet = true
+                                showWaterIntakeBottomSheet = true
                             }
                         )
                     }
@@ -397,32 +451,40 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
 
-            Row(
+            WeightReportCard(
+                weightData = filteredWeightData, // Pass the filtered data to the chart
+                selectedPeriod = selectedPeriod,
+                onPeriodChange = { newPeriod -> selectedPeriod = newPeriod },
+                onLogWeightClick = {
+                    showWeightLogBottomSheet = true
+                },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Weight Report",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = OpenSans,
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
-
+            )
         }
     }
 
-    if (showBottomSheet) {
+    if (showWaterIntakeBottomSheet) {
         WaterIntakeBottomSheet(
             isReduceMode = isReduceMode,
-            onDismiss = { showBottomSheet = false },
+            onDismiss = { showWaterIntakeBottomSheet = false },
             onConfirm = { amount ->
                 if (isReduceMode) {
                     currentIntake.value = maxOf(0, currentIntake.value - amount)
                 } else {
                     currentIntake.value += amount
                 }
-                showBottomSheet = false
+                showWaterIntakeBottomSheet = false
+            }
+        )
+    }
+
+    if (showWeightLogBottomSheet) {
+        WeightLogBottomSheet(
+            onDismiss = { showWeightLogBottomSheet = false },
+            onConfirm = { weight, unit, date ->
+                // TODO: Save weight to database
+                Log.d("WeightLogBottomSheet", "Weight: $weight, Unit: $unit, Date: $date")
+                showWeightLogBottomSheet = false
             }
         )
     }
@@ -430,10 +492,10 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
 @Composable
 fun WaterIntakeButton(
+    modifier: Modifier = Modifier,
     text: String,
     icon: Painter,
     iconSize: Dp = 20.dp,
-    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Button(
@@ -703,6 +765,7 @@ fun WaterIntakeBottomSheetContent(
 
 @Composable
 fun MealLogCard(
+    modifier: Modifier = Modifier,
     type: String,
     calories: MutableState<Int>?,
     protein: Float = 0f,
@@ -710,7 +773,6 @@ fun MealLogCard(
     carbs: Float = 0f,
     gradient: Brush,
     onLogClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -855,12 +917,12 @@ fun NutritionItem(
 
 @Composable
 fun CalorieProgressBar(
+    modifier: Modifier = Modifier,
     currentCalories: Int = 1721, // default value
     targetCalories: Int = 2213,
     protein: Pair<Int, Int> = Pair(78, 90),
     fats: Pair<Int, Int> = Pair(45, 70),
-    carbs: Pair<Int, Int> = Pair(95, 110),
-    modifier: Modifier = Modifier
+    carbs: Pair<Int, Int> = Pair(95, 110)
 ) {
     val currentDate = LocalDate.now()
     val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale("id", "ID")) // Corrected pattern for full year
@@ -1118,22 +1180,15 @@ fun MacronutrientCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Animated Progress indicator line
-            Box(
+            LinearProgressIndicator(
+                progress = { animatedProgress.coerceAtMost(1f) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(Color.Gray.copy(alpha = 0.2f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(fraction = animatedProgress.coerceAtMost(1f))
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(color)
-                )
-            }
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = color,
+                trackColor = Color.Gray.copy(alpha = 0.2f),
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -1145,5 +1200,675 @@ fun MacronutrientCard(
                 fontFamily = OpenSans
             )
         }
+    }
+}
+
+@SuppressLint("DefaultLocale")
+@Composable
+fun WeightReportCard(
+    modifier: Modifier = Modifier,
+    weightData: List<WeightEntryDummy> = generateSampleWeightData(), // todo: ganti ke tipe data aslinya, hapus default valuenya jg
+    selectedPeriod: String = "Monthly",
+    onPeriodChange: (String) -> Unit = {},
+    onLogWeightClick: () -> Unit = {},
+) {
+    val green = colorResource(id = R.color.green)
+    val greenTealDark = colorResource(id = R.color.green_teal_dark)
+    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
+
+    var expanded by remember { mutableStateOf(false) }
+    val periodOptions = listOf("Weekly", "Monthly", "Yearly")
+
+    val weightChange = if (weightData.size >= 2) {
+        val latestWeight = weightData.last().weight
+        val previousWeight = weightData.first().weight
+        latestWeight - previousWeight
+    } else 0f
+
+    val changeText = when {
+        weightChange > 0 -> {
+            val startDate = weightData.firstOrNull()?.date?.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")) ?: "start of period"
+            "Your weight increases by ${String.format("%.1f", weightChange)}kg from $startDate."
+        }
+        weightChange < 0 -> {
+            val startDate = weightData.firstOrNull()?.date?.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")) ?: "start of period"
+            "Your weight decreases by ${String.format("%.1f", kotlin.math.abs(weightChange))}kg from $startDate."
+        }
+        else -> "Your weight remains stable for the selected period."
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Your Weight Report",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = OpenSans,
+                    color = Color.Black
+                )
+
+                Box {
+                    Card(
+                        modifier = Modifier
+                            .clickable { expanded = !expanded }
+                            .padding(0.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = selectedPeriod,
+                                fontSize = 14.sp,
+                                fontFamily = OpenSans,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Dropdown",
+                                tint = Color.Gray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    // Dropdown Menu
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .background(
+                                Color.White,
+                                RoundedCornerShape(12.dp)
+                            )
+                    ) {
+                        periodOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = option,
+                                        fontFamily = OpenSans,
+                                        fontSize = 14.sp,
+                                        fontWeight = if (option == selectedPeriod) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (option == selectedPeriod) green else Color.Black
+                                    )
+                                },
+                                onClick = {
+                                    onPeriodChange(option) // Use the passed lambda
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Weight Chart with better alignment
+            WeightLineChart(
+                weightData = weightData, // Pass the filtered data from DashboardContent
+                selectedPeriod = selectedPeriod, // Pass selectedPeriod for X-axis formatting
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Summary Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(15.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = when {
+                        weightChange > 0 -> colorResource(R.color.yellow_1).copy(alpha = 0.3f)
+                        weightChange < 0 -> colorResource(R.color.green).copy(alpha = 0.3f)
+                        else -> Color.Gray.copy(alpha = 0.2f)
+                    }
+                )
+            ) {
+                Text(
+                    text = "Summary:",
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.padding(
+                        start = 16.dp,
+                        top = 16.dp,
+                        end = 16.dp
+                    )
+                )
+                Text(
+                    text = changeText,
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                    modifier = Modifier.padding(
+                        start = 16.dp,
+                        bottom = 16.dp,
+                        end = 16.dp
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Log Weight Button
+            Button(
+                onClick = onLogWeightClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues(0.dp),
+                shape = RoundedCornerShape(25.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(greenGradient, RoundedCornerShape(25.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Log Weight",
+                        fontSize = 18.sp,
+                        fontFamily = OpenSans,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@SuppressLint("DefaultLocale")
+@Composable
+fun WeightLineChart(
+    weightData: List<WeightEntryDummy>, // todo: ganti tipe datanya
+    selectedPeriod: String, // filternya berdasarkna
+    modifier: Modifier = Modifier
+) {
+    val chartColor = colorResource(id = R.color.water_1)
+
+    Canvas(modifier = modifier) {
+        if (weightData.isEmpty()) {
+            drawContext.canvas.nativeCanvas.drawText(
+                "No weight data available for this period.",
+                size.width / 2,
+                size.height / 2,
+                android.graphics.Paint().apply {
+                    color = android.graphics.Color.GRAY
+                    textSize = 14.sp.toPx()
+                    textAlign = android.graphics.Paint.Align.CENTER
+                }
+            )
+            return@Canvas
+        }
+
+        val padding = 40.dp.toPx()
+        val chartWidth = size.width - (padding * 2)
+        val chartHeight = size.height - (padding * 2)
+
+        // Find min and max weights for scaling
+        val minWeight = weightData.minOf { it.weight } - 2f
+        val maxWeight = weightData.maxOf { it.weight } + 2f
+        val weightRange = maxWeight - minWeight
+
+        // Draw grid lines
+        val gridLines = 4
+        for (i in 0..gridLines) {
+            val y = padding + (chartHeight * i / gridLines)
+            drawLine(
+                color = Color.Gray.copy(alpha = 0.2f),
+                start = Offset(padding, y),
+                end = Offset(size.width - padding, y),
+                strokeWidth = 1.dp.toPx()
+            )
+        }
+
+        // Calculate points
+        val points = weightData.mapIndexed { index, entry ->
+            val x = padding + (chartWidth * index / (weightData.size - 1).coerceAtLeast(1))
+            val y = padding + chartHeight - ((entry.weight - minWeight) / weightRange * chartHeight)
+            Offset(x, y)
+        }
+
+        // Draw line chart
+        if (points.size > 1) {
+            for (i in 0 until points.size - 1) {
+                drawLine(
+                    color = chartColor,
+                    start = points[i],
+                    end = points[i + 1],
+                    strokeWidth = 4.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+            }
+        }
+
+        // Draw points
+        points.forEach { point ->
+            // Outer circle (shadow effect)
+            drawCircle(
+                color = chartColor.copy(alpha = 0.3f),
+                radius = 8.dp.toPx(),
+                center = point
+            )
+            // Main circle
+            drawCircle(
+                color = chartColor,
+                radius = 6.dp.toPx(),
+                center = point
+            )
+            // Inner white circle
+            drawCircle(
+                color = Color.White,
+                radius = 3.dp.toPx(),
+                center = point
+            )
+        }
+
+        // Draw Y-axis labels (weights) with better positioning
+        for (i in 0..gridLines) {
+            val weight = minWeight + (weightRange * i / gridLines)
+            val y = padding + (chartHeight * (gridLines - i) / gridLines)
+
+            drawContext.canvas.nativeCanvas.drawText(
+                "${String.format("%.0f", weight)}kg",
+                padding - 15.dp.toPx(), // Position labels to the left of the chart area
+                y + 5.dp.toPx(),
+                android.graphics.Paint().apply {
+                    color = android.graphics.Color.GRAY
+                    textSize = 11.sp.toPx()
+                    isAntiAlias = true
+                    textAlign = android.graphics.Paint.Align.RIGHT
+                }
+            )
+        }
+
+        // Draw X-axis labels (dates)
+        val xAxisLabelFormatter = when (selectedPeriod) {
+            "Weekly" -> DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault()) // e.g., Jun 17
+            "Monthly" -> DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault()) // e.g., Jun 01, Jun 15
+            "Yearly" -> DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault()) // e.g., Jan 2024, Apr 2024
+            else -> DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault()) // Default
+        }
+
+        val maxLabels = 5 // Max number of labels to avoid crowding
+        val labelInterval = if (weightData.size > maxLabels) weightData.size / maxLabels else 1
+
+        weightData.forEachIndexed { index, entry ->
+            if (index % labelInterval == 0 || index == weightData.size - 1) { // Always show first and last, and spaced labels
+                val formattedDate = entry.date.format(xAxisLabelFormatter)
+
+                val x = padding + (chartWidth * index / (weightData.size - 1).coerceAtLeast(1))
+                val yOffset = if (index % 2 != 0 && weightData.size > maxLabels * 1.5) 15.dp.toPx() else 0f // Offset every other label if many
+                val textPaint = android.graphics.Paint().apply {
+                    color = android.graphics.Color.GRAY
+                    textSize = 10.sp.toPx()
+                    isAntiAlias = true
+                    textAlign = android.graphics.Paint.Align.CENTER
+                }
+
+                drawContext.canvas.nativeCanvas.drawText(
+                    formattedDate,
+                    x,
+                    size.height - 10.dp.toPx() + yOffset,
+                    textPaint
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WeightLogBottomSheet(
+    onDismiss: () -> Unit,
+    onConfirm: (Float, String, LocalDate) -> Unit // weight, unit, date
+) {
+    var weight by remember { mutableStateOf("") }
+    var unit by remember { mutableStateOf("kg") }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = bottomSheetState,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+    ) {
+        WeightLogBottomSheetContent(
+            weight = weight,
+            onWeightChange = { weight = it },
+            unit = unit,
+            onUnitChange = { unit = it },
+            selectedDate = selectedDate,
+            onDateChange = { selectedDate = it },
+            showDatePicker = showDatePicker,
+            onShowDatePicker = { showDatePicker = it },
+            onConfirm = {
+                val weightValue = weight.toFloatOrNull()
+                if (weightValue != null && weightValue > 0) {
+                    onConfirm(weightValue, unit, selectedDate)
+                }
+            },
+            onDismiss = onDismiss
+        )
+    }
+}
+
+@Composable
+fun WeightLogBottomSheetContent(
+    weight: String,
+    onWeightChange: (String) -> Unit,
+    unit: String,
+    onUnitChange: (String) -> Unit,
+    selectedDate: LocalDate,
+    onDateChange: (LocalDate) -> Unit,
+    showDatePicker: Boolean,
+    onShowDatePicker: (Boolean) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val green = colorResource(id = R.color.green)
+    val greenTealDark = colorResource(id = R.color.green_teal_dark)
+    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
+
+    val dateFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault())
+    val isValidWeight = weight.toFloatOrNull()?.let { it > 0 } ?: false
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // Title
+        Text(
+            text = "Log Your Weight",
+            fontSize = 20.sp,
+            fontFamily = OpenSans,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+
+        // Weight Input Section
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Current Weight",
+                fontSize = 16.sp,
+                fontFamily = OpenSans,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Weight Input Field
+                OutlinedTextField(
+                    value = weight,
+                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { newValue ->
+                        // Only allow numbers and decimal point
+                        if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
+                            onWeightChange(newValue)
+                        }
+                    },
+                    placeholder = {
+                        Text(
+                            text = "Enter weight",
+                            fontFamily = OpenSans,
+                            color = Color.Gray
+                        )
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = green,
+                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        fontSize = 16.sp,
+                        fontFamily = OpenSans,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+
+                // Unit Selector
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("kg", "lbs").forEach { unitOption ->
+                        Button(
+                            onClick = { onUnitChange(unitOption) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (unit == unitOption) green else Color.Gray.copy(alpha = 0.2f)
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = unitOption,
+                                color = if (unit == unitOption) Color.White else Color.Gray,
+                                fontSize = 14.sp,
+                                fontFamily = OpenSans,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Date Selection Section
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Date",
+                fontSize = 16.sp,
+                fontFamily = OpenSans,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onShowDatePicker(true) },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Gray.copy(alpha = 0.1f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = selectedDate.format(dateFormatter),
+                        fontSize = 16.sp,
+                        fontFamily = OpenSans,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                    Icon(
+                        painter = painterResource(id = R.drawable.calendar_icon), // Add calendar icon to your drawables
+                        contentDescription = "Select Date",
+                        tint = green,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+
+        // Weight Conversion Info (if using lbs)
+        if (unit == "lbs" && weight.isNotEmpty() && isValidWeight) {
+            val weightInKg = weight.toFloat() * 0.453592f
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(containerColor = green.copy(alpha = 0.1f))
+            ) {
+                Text(
+                    text = "≈ ${String.format("%.1f", weightInKg)} kg",
+                    fontSize = 14.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Medium,
+                    color = green,
+                    modifier = Modifier.padding(12.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Confirm Button
+        Button(
+            onClick = onConfirm,
+            enabled = isValidWeight,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            contentPadding = PaddingValues(0.dp),
+            shape = RoundedCornerShape(28.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        // Use the 'brush' parameter for the background modifier
+                        brush = if (isValidWeight) greenGradient else SolidColor(Color.Gray.copy(alpha = 0.3f)),
+                        shape = RoundedCornerShape(28.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Log Weight",
+                    fontSize = 18.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isValidWeight) Color.White else Color.Gray
+                )
+            }
+        }
+
+        // Cancel Button
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Cancel",
+                fontSize = 16.sp,
+                fontFamily = OpenSans,
+                color = Color.Gray
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    // Date Picker Dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            selectedDate = selectedDate,
+            onDateSelected = { date ->
+                onDateChange(date)
+                onShowDatePicker(false)
+            },
+            onDismiss = { onShowDatePicker(false) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerDialog(
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    )
+
+    androidx.compose.material3.DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val instant = java.time.Instant.ofEpochMilli(millis)
+                        val date = instant.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                        onDateSelected(date)
+                    }
+                }
+            ) {
+                Text(
+                    "OK",
+                    fontFamily = OpenSans,
+                    color = colorResource(R.color.green)
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    "Cancel",
+                    fontFamily = OpenSans,
+                    color = Color.Gray
+                )
+            }
+        }
+    ) {
+        DatePicker(
+            state = datePickerState,
+            colors = DatePickerDefaults.colors(
+                selectedDayContainerColor = colorResource(R.color.green),
+                todayDateBorderColor = colorResource(R.color.green)
+            )
+        )
     }
 }
