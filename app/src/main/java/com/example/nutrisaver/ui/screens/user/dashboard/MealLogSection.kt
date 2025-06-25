@@ -102,7 +102,7 @@ fun MealLogSection(
                     }
                 }
 
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Nutritional information row
                 Row(

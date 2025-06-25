@@ -55,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nutrisaver.R
+import com.example.nutrisaver.ui.screens.user.WeightEntryDummy
 import com.example.nutrisaver.ui.theme.OpenSans
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -65,7 +66,7 @@ import kotlin.math.abs
 @Composable
 fun WeightReportSection(
     modifier: Modifier = Modifier,
-    weightData: List<WeightEntryDummy>,
+    weightData: List<WeightEntryDummy>, // todo: ganti ke object aslinya setelah backend jadi
     selectedPeriod: String,
     onPeriodChange: (String) -> Unit,
     onLogWeightClick: () -> Unit,
@@ -83,6 +84,7 @@ fun WeightReportSection(
         latestWeight - previousWeight
     } else 0f
 
+    // summary textnya dibawah graph
     val changeText = when {
         weightChange > 0 -> {
             val startDate = weightData.firstOrNull()?.date?.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")) ?: "start of period"
@@ -266,7 +268,7 @@ fun WeightReportSection(
 @SuppressLint("DefaultLocale")
 @Composable
 fun WeightLineChart(
-    weightData: List<WeightEntryDummy>,
+    weightData: List<WeightEntryDummy>, // todo: ganti ke object aslinya setelah backend jadi
     selectedPeriod: String,
     modifier: Modifier = Modifier
 ) {
@@ -440,7 +442,7 @@ fun WeightLogBottomSheet(
     }
 }
 
-@SuppressLint("DefaultLocale")
+@SuppressLint("DefaultLocale", "WeekBasedYear")
 @Composable
 fun WeightLogBottomSheetContent(
     weight: String,
@@ -715,24 +717,4 @@ fun DatePickerDialog(
             )
         )
     }
-}
-
-data class WeightEntryDummy(
-    val weight: Float,
-    val date: LocalDate
-)
-
-fun generateSampleWeightData(): List<WeightEntryDummy> {
-    val today = LocalDate.now()
-    return listOf(
-        WeightEntryDummy(68.5f, today.minusWeeks(8)),
-        WeightEntryDummy(69.2f, today.minusWeeks(7)),
-        WeightEntryDummy(67.8f, today.minusWeeks(6)),
-        WeightEntryDummy(70.1f, today.minusWeeks(5)),
-        WeightEntryDummy(71.3f, today.minusWeeks(4)),
-        WeightEntryDummy(70.5f, today.minusWeeks(3)),
-        WeightEntryDummy(69.8f, today.minusWeeks(2)),
-        WeightEntryDummy(68.9f, today.minusWeeks(1)),
-        WeightEntryDummy(68.7f, today)
-    ).sortedBy { it.date }
 }

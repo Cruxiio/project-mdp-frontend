@@ -56,8 +56,8 @@ import com.example.nutrisaver.ui.theme.OpenSans
 @Composable
 fun WaterIntakeSection(
     modifier: Modifier = Modifier,
-    currentIntake: MutableState<Int>,
-    targetIntake: Int,
+    currentIntake: MutableState<Int>, // progress user saat ini
+    targetIntake: Int, // target water user atau maksimumnya
     onAdd240ml: () -> Unit,
     onAdd500ml: () -> Unit,
     onReduceClick: () -> Unit,
