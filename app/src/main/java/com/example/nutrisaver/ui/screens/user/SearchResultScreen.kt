@@ -96,15 +96,11 @@ private fun SearchResultContent(
     navController: NavController
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val itemResults = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig")
+    val itemResults = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig") // todo: ganti ke hasil search
 
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
-
-    val filterOptions = listOf("Stock Name", "Quantity", "Expired Date")
-    var filter by remember { mutableStateOf(filterOptions[0]) }
-    var filterExpanded by remember { mutableStateOf(false) }
 
     val filterTypeOptions = listOf("DESC", "ASC")
     var filterType by remember { mutableStateOf(filterTypeOptions[0]) }
@@ -118,36 +114,6 @@ private fun SearchResultContent(
             Column(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
             ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colorResource(R.color.black),
-                        unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.form_input),
-                        unfocusedContainerColor = colorResource(R.color.form_input)
-                    ),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search icon"
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear search"
-                                )
-                            }
-                        }
-                    },
-                    shape = RoundedCornerShape(10.dp)
-                )
-                Spacer(modifier = Modifier.padding(vertical = 5.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -155,46 +121,37 @@ private fun SearchResultContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
-                        ExposedDropdownMenuBox(
-                            expanded = filterExpanded,
-                            onExpandedChange = { filterExpanded = !filterExpanded }
-                        ) {
-                            OutlinedTextField(
-                                value = filter,
-                                onValueChange = {},
-                                readOnly = true,
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = filterExpanded)
-                                },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = colorResource(R.color.black),
-                                    unfocusedTextColor = colorResource(R.color.black),
-                                    focusedContainerColor = colorResource(R.color.form_input),
-                                    unfocusedContainerColor = colorResource(R.color.form_input)
-                                ),
-                                shape = RoundedCornerShape(10.dp)
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = filterExpanded,
-                                onDismissRequest = { filterExpanded = false }
-                            ) {
-                                filterOptions.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(option) },
-                                        onClick = {
-                                            filter = option
-                                            filterExpanded = false
-                                        }
-                                    )
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text("Search") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = colorResource(R.color.black),
+                                unfocusedTextColor = colorResource(R.color.black),
+                                focusedContainerColor = colorResource(R.color.form_input),
+                                unfocusedContainerColor = colorResource(R.color.form_input)
+                            ),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search icon"
+                                )
+                            },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { searchQuery = "" }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Clear search"
+                                        )
+                                    }
                                 }
-                            }
-                        }
+                            },
+                            shape = RoundedCornerShape(10.dp)
+                        )
                     }
-                    Box(modifier = Modifier.width(120.dp)) {
+                    Box(modifier = Modifier.width(110.dp)) {
                         ExposedDropdownMenuBox(
                             expanded = filterTypeExpanded,
                             onExpandedChange = { filterTypeExpanded = !filterTypeExpanded }
@@ -253,7 +210,7 @@ private fun SearchResultContent(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(itemResults) { item ->
-                        RecipeItem(navController)
+                        RecipeGridItem(navController)
                     }
                 }
             }
@@ -262,20 +219,19 @@ private fun SearchResultContent(
 }
 
 @Composable
-private fun RecipeItem(
-    navController: NavController
+private fun RecipeGridItem(
+    navController: NavController,
+    modifier: Modifier = Modifier
 ) {
     val item1 = colorResource(id = R.color.item2_1)
     val item2 = colorResource(id = R.color.item2_2)
     val itemGradient = Brush.verticalGradient(listOf(item1, item2))
+
     Box(
-        modifier = Modifier
-            .width(180.dp)
-            .height(220.dp)
+        modifier = modifier
             .background(itemGradient, shape = RoundedCornerShape(10.dp))
             .padding(15.dp)
             .clickable {
-                // todo: navigate ke recipe detail, passing juga itemnya
                 navController.navigate("recipedetail")
             }
     ) {
@@ -283,35 +239,22 @@ private fun RecipeItem(
             modifier = Modifier.fillMaxWidth()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.default_food_image), // todo: ganti ke gambar recipe
-                contentDescription = "deskripsi gambar recipe",
+                painter = painterResource(R.drawable.default_food_image), // todo: ganti ke link gambar aslinya
+                contentDescription = "Recipe image",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .width(150.dp)
                     .height(100.dp)
                     .padding(bottom = 8.dp)
                     .clip(RoundedCornerShape(10.dp)),
                 contentScale = ContentScale.Crop,
             )
             Text(
-                "Nama Recipe",
-                modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp),
+                "Nama Recipe", // todo: ganti ke nama recipe aslinya
+                modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontFamily = OpenSans,
                 fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Ready in: ",
-                modifier = Modifier.fillMaxWidth().padding(bottom = 3.dp),
-                fontSize = 16.sp,
-                fontFamily = OpenSans
-            )
-            Text(
-                "Calorie: ",
-                modifier = Modifier.fillMaxWidth(),
-                fontSize = 16.sp,
-                fontFamily = OpenSans
             )
         }
     }

@@ -58,10 +58,8 @@ import com.example.nutrisaver.ui.screens.user.dashboard.FoodStockExpirationSecti
 import com.example.nutrisaver.ui.screens.user.dashboard.MealLogSection
 import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeBottomSheet
 import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeSection
-import com.example.nutrisaver.ui.screens.user.dashboard.WeightEntryDummy
 import com.example.nutrisaver.ui.screens.user.dashboard.WeightLogBottomSheet
 import com.example.nutrisaver.ui.screens.user.dashboard.WeightReportSection
-import com.example.nutrisaver.ui.screens.user.dashboard.generateSampleWeightData
 import com.example.nutrisaver.ui.theme.OpenSans
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorFilter
@@ -73,6 +71,123 @@ import com.example.nutrisaver.viewmodel.UserViewModel
 import kotlin.math.cos
 import kotlin.math.sin
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+
+
+///// DUMMY DATA BUAT TAMPILAN ///////////////////////////////////////////
+// dummy data class buat tampilan weight entry
+// todo: nanti dihapus
+data class WeightEntryDummy(
+    val weight: Float,
+    val date: LocalDate
+)
+
+// Generate dummy weight data
+// todo: nanti dihapus
+fun generateSampleWeightData(): List<WeightEntryDummy> {
+    val today = LocalDate.now()
+    return listOf(
+        WeightEntryDummy(68.5f, today.minusWeeks(8)),
+        WeightEntryDummy(69.2f, today.minusWeeks(7)),
+        WeightEntryDummy(67.8f, today.minusWeeks(6)),
+        WeightEntryDummy(70.1f, today.minusWeeks(5)),
+        WeightEntryDummy(71.3f, today.minusWeeks(4)),
+        WeightEntryDummy(70.5f, today.minusWeeks(3)),
+        WeightEntryDummy(69.8f, today.minusWeeks(2)),
+        WeightEntryDummy(68.9f, today.minusWeeks(1)),
+        WeightEntryDummy(68.7f, today)
+    ).sortedBy { it.date }
+}
+
+// dummy data class for food stock items,
+// todo: nanti dihapus setelah backend
+data class FoodStockItemDummy(
+    val id: Int,
+    val name: String,
+    val imageUrl: String? = null, // For future use with actual images
+    val quantity: Float,
+    val unit: String, // kg, pcs, ml, etc.
+    val expiryDate: LocalDate,
+    val startRemindDate: LocalDate // 7 days before expiry
+) {
+    fun getDaysUntilExpiry(): Long {
+        return ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)
+    }
+
+    fun getExpiryStatus(): ExpiryStatus {
+        val daysUntilExpiry = getDaysUntilExpiry()
+        return when {
+            daysUntilExpiry < 0 -> ExpiryStatus.EXPIRED
+            daysUntilExpiry <= 3 -> ExpiryStatus.CRITICAL
+            daysUntilExpiry <= 7 -> ExpiryStatus.WARNING
+            else -> ExpiryStatus.SAFE
+        }
+    }
+}
+
+// status" buat food stock
+enum class ExpiryStatus {
+    EXPIRED, CRITICAL, WARNING, SAFE
+}
+
+// Generate dummy food stock data
+// todo: nanti hapus setelah backend
+fun generateDummyFoodStock(): List<FoodStockItemDummy> {
+    val today = LocalDate.now()
+    return listOf(
+        FoodStockItemDummy(
+            id = 1,
+            name = "Chicken Meat",
+            quantity = 2.5f,
+            unit = "kg",
+            expiryDate = today.plusDays(2),
+            startRemindDate = today.minusDays(5)
+        ),
+        FoodStockItemDummy(
+            id = 2,
+            name = "Fresh Milk",
+            quantity = 1.0f,
+            unit = "L",
+            expiryDate = today.plusDays(1),
+            startRemindDate = today.minusDays(6)
+        ),
+        FoodStockItemDummy(
+            id = 3,
+            name = "Bread",
+            quantity = 2.0f,
+            unit = "pcs",
+            expiryDate = today.plusDays(3),
+            startRemindDate = today.minusDays(4)
+        ),
+        FoodStockItemDummy(
+            id = 4,
+            name = "Yogurt",
+            quantity = 6.0f,
+            unit = "pcs",
+            expiryDate = today.plusDays(5),
+            startRemindDate = today.minusDays(2)
+        ),
+        FoodStockItemDummy(
+            id = 5,
+            name = "Ground Beef",
+            quantity = 1.2f,
+            unit = "kg",
+            expiryDate = today.plusDays(4),
+            startRemindDate = today.minusDays(3)
+        ),
+        FoodStockItemDummy(
+            id = 6,
+            name = "Eggs",
+            quantity = 12.0f,
+            unit = "pcs",
+            expiryDate = today.plusDays(7),
+            startRemindDate = today
+        )
+    ).filter { it.getDaysUntilExpiry() <= 7 } // Only show items expiring within 7 days
+        .sortedBy { it.expiryDate } // Sort by expiry date (most urgent first)
+}
+
+//////////////////////////////////////////////////////////////////
 
 @Composable
 fun DashboardScreen(navController: NavController, userViewModel: UserViewModel) {
@@ -139,6 +254,9 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     var selectedPeriod by remember { mutableStateOf("Monthly") } // Default period
     var filteredWeightData by remember { mutableStateOf(emptyList<WeightEntryDummy>()) }
     var showWeightLogBottomSheet by remember { mutableStateOf(false) }
+
+    // todo: nanti hapus setelah backend
+    val foodStockItems = remember { generateDummyFoodStock() }
 
     LaunchedEffect(selectedPeriod, allWeightData) {
         val today = LocalDate.now()
@@ -446,8 +564,15 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             FoodStockExpirationSection(
                 onViewAllClick = {
-                    navController.navigate("foodstock") // Create this route for full food stock management
+                    navController.navigate("foodstock") {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 },
+                foodStockItems = foodStockItems,
                 modifier = Modifier.fillMaxWidth()
             )
         }

@@ -61,6 +61,7 @@ import com.example.nutrisaver.ui.theme.OpenSans
 import java.time.format.TextStyle
 
 // data class dummy buat tampilan
+// todo: nanti dihapus setelah backend
 data class RecipeDummy(
     val id: Int,
     val name: String,
@@ -101,7 +102,7 @@ private fun RecipeContent(
     var searchQuery by remember { mutableStateOf("") }
     var currentPage by remember { mutableStateOf(1) }
     var showPageSelector by remember { mutableStateOf(false) }
-    var selectedFilter by remember { mutableStateOf("Foodstock") }
+    var selectedFilter by remember { mutableStateOf("Popularity") }
 
     val itemsPerPage = 6
     val totalPages = (allRecipes.size + itemsPerPage - 1) / itemsPerPage // todo: total pages
