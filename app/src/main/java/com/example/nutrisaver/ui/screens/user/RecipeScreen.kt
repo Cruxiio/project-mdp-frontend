@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -115,6 +117,7 @@ private fun RecipeContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+//                .scrollable(rememberScrollableState())
                 .padding(
                     top = 32.dp,
                     start = 32.dp,

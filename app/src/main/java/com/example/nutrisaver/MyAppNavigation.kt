@@ -23,6 +23,7 @@ import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
 import com.example.nutrisaver.ui.screens.user.RecipeScreen
 import com.example.nutrisaver.ui.screens.user.SearchResultScreen
 import com.example.nutrisaver.viewmodel.AuthViewModel
+import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
 @Composable
@@ -30,7 +31,8 @@ fun MyAppNavigation(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     authViewModel: AuthViewModel,
-    userViewModel: UserViewModel
+    userViewModel: UserViewModel,
+    foodStockViewModel: FoodStockViewModel
 ) {
     // buat nested navigation
     NavHost(navController = navController, startDestination = "auth") {
@@ -73,7 +75,7 @@ fun MyAppNavigation(
                 FoodStockScreen(navController = navController)
             }
             composable("addfoodstock") {
-                AddFoodStockScreen(navController = navController)
+                AddFoodStockScreen(navController = navController, foodStockViewModel = foodStockViewModel)
             }
             composable("recipe") {
                 RecipeScreen(navController = navController)

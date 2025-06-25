@@ -1,8 +1,13 @@
 package com.example.nutrisaver.data.sources.remote
 
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
+import com.example.nutrisaver.data.sources.remote.common.AddFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionJson
+import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
+import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllResponse
+import com.example.nutrisaver.data.sources.remote.common.IngredientJson
+import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -32,4 +37,16 @@ interface Webservice {
 
     @GET("api/consumption/today") // Sesuaikan jika path berbeda
     suspend fun getTodaysConsumption(@Header("Authorization") token: String): DailyConsumptionJson
+
+    @GET("api/ingredient/all")
+    suspend fun getAllIngredients(@Header("Authorization") token: String): IngredientGetAllResponse
+
+    @POST("api/foodstock/new") // Sesuaikan path jika berbeda
+    suspend fun addFoodStock(
+        @Header("Authorization") token: String,
+        @Body foodStock: NewFoodStockRequestJson
+    ): AddFoodStockResponseJson // Asumsi backend mengembalikan foodStock yang baru dibuat
+
+    @GET("api/foodstock/all") // Asumsi path-nya ini, sesuaikan jika perlu
+    suspend fun getAllFoodStock(@Header("Authorization") token: String): List<FoodStockJson>
 }

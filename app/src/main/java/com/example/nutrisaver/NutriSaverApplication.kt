@@ -11,14 +11,22 @@ import com.example.nutrisaver.data.repositories.CommonRepo
 import com.example.nutrisaver.data.repositories.CommonRepoImpl
 import com.example.nutrisaver.data.repositories.ConsumptionRepo
 import com.example.nutrisaver.data.repositories.ConsumptionRepoImpl
+import com.example.nutrisaver.data.repositories.FoodStockRepo
+import com.example.nutrisaver.data.repositories.FoodStockRepoImpl
+import com.example.nutrisaver.data.repositories.IngredientRepo
+import com.example.nutrisaver.data.repositories.IngredientRepoImpl
 import com.example.nutrisaver.data.sources.AppDatabase
 import com.example.nutrisaver.data.sources.local.CommonLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.ConsumptionLocalDataSourceImpl
+import com.example.nutrisaver.data.sources.local.FoodStockLocalDataSourceImpl
+import com.example.nutrisaver.data.sources.local.IngredientLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.auth.AuthLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.Webservice
 import com.example.nutrisaver.data.sources.remote.auth.AuthDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.CommonDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.ConsumptionDataSourceImpl
+import com.example.nutrisaver.data.sources.remote.common.FoodStockDataSourceImpl
+import com.example.nutrisaver.data.sources.remote.common.IngredientDataSourceImpl
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.Retrofit
@@ -31,6 +39,8 @@ class NutriSaverApplication : Application() {
     lateinit var commonRepo: CommonRepo
     lateinit var authRepo: AuthRepo
     lateinit var consumRepo : ConsumptionRepo
+    lateinit var ingredientRepo : IngredientRepo
+    lateinit var foodStockRepo : FoodStockRepo
 
     override fun onCreate() {
         super.onCreate()
@@ -43,6 +53,8 @@ class NutriSaverApplication : Application() {
         val authLocalDataSource = AuthLocalDataSourceImpl(database.userDao())
         val commonLocalDataSource = CommonLocalDataSourceImpl(database.allergenDao())
         val consumptionLocalDataSource = ConsumptionLocalDataSourceImpl(database.consumptionDao())
+        val ingredientLocalDataSource = IngredientLocalDataSourceImpl(database.ingredientDao())
+        val foodStockLocalDataSource = FoodStockLocalDataSourceImpl(database.foodStockDao())
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY // BODY akan menampilkan semua detail response
         }
@@ -65,6 +77,8 @@ class NutriSaverApplication : Application() {
         val authRemoteDataSource = AuthDataSourceImpl(retrofitService)
         val commonRemoteDataSource = CommonDataSourceImpl(retrofitService)
         val consumptionRemoteDataSource = ConsumptionDataSourceImpl(retrofitService)
+        val ingredientRemoteDataSource = IngredientDataSourceImpl(retrofitService)
+        val foodStockRemoteDataSource = FoodStockDataSourceImpl(retrofitService)
 
         // Inisialisasi Repositories dengan SEMUA dependensinya ===
         // Sekarang kita memberikan dependensi remote DAN lokal
@@ -79,6 +93,14 @@ class NutriSaverApplication : Application() {
         consumRepo = ConsumptionRepoImpl(
             consumpRemoteDataSource = consumptionRemoteDataSource,
             consumpLocalDataSource = consumptionLocalDataSource
+        )
+        ingredientRepo = IngredientRepoImpl(
+            ingredientLocalDataSource = ingredientLocalDataSource,
+            ingredientRemoteDataSource = ingredientRemoteDataSource
+        )
+        foodStockRepo = FoodStockRepoImpl(
+            foodRemoteDataSource = foodStockRemoteDataSource,
+            foodLocalDataSource = foodStockLocalDataSource
         )
 
     }

@@ -1,5 +1,6 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -48,7 +49,9 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -58,6 +61,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -66,8 +70,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.Ingredient
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.AddFoodStockState
+import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -91,7 +98,7 @@ private fun convertLocalDateToMillis(date: LocalDate): Long {
 
 
 @Composable
-fun AddFoodStockScreen(navController: NavController) {
+fun AddFoodStockScreen(navController: NavController, foodStockViewModel: FoodStockViewModel) {
     Scaffold(
         bottomBar = {
             UserBottomNavBar(navController = navController)
@@ -99,14 +106,15 @@ fun AddFoodStockScreen(navController: NavController) {
     ) { innerPadding ->
         AddFoodStockContent(
             modifier = Modifier.padding(innerPadding),
-            navController = navController
+            navController = navController,
+            foodStockViewModel = foodStockViewModel
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: NavController) {
+private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: NavController, foodStockViewModel: FoodStockViewModel) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
@@ -114,18 +122,45 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
+    val allIngredients by foodStockViewModel.allIngredients.observeAsState(emptyList())
+
+    // --- PICU PENGAMBILAN DATA ---
+    LaunchedEffect(key1 = Unit) {
+        foodStockViewModel.loadAllIngredients()
+    }
+
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val foodOptions = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant", "Milk", "Bread", "Rice", "Chicken")
-    var selectedFood by remember { mutableStateOf<String?>(null) } // todo: mutable state of string diganti dengan object
+    var selectedFood by remember { mutableStateOf<Ingredient?>(null) }
+
+    val addState by foodStockViewModel.addState.observeAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(addState) {
+        when (val state = addState) {
+            is AddFoodStockState.Success -> {
+                Toast.makeText(context, "Stok makanan berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
+                foodStockViewModel.onAddFinished() // Reset state
+                navController.popBackStack()
+            }
+            is AddFoodStockState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                foodStockViewModel.onAddFinished() // Reset state
+            }
+            else -> {} // Loading atau null
+        }
+    }
+
 
     var query by remember { mutableStateOf("") }
-    val filteredOptions = foodOptions.filter {
-        it.contains(query, ignoreCase = true)
+    // Filter list dinamis dari ViewModel
+    val filteredOptions = allIngredients.filter {
+        it.name.contains(query, ignoreCase = true)
     }
 
     var quantityInput by remember { mutableStateOf("0") }
-    val unitOptions = listOf("g", "pcs", "ml")
+    val unitOptions = listOf("gr", "pcs", "ml")
     var unitExpanded by remember { mutableStateOf(false) }
     var selectedUnit by remember { mutableStateOf(unitOptions[0]) }
 
@@ -163,7 +198,7 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
             )
 
             FoodSelector(
-                selectedFood = selectedFood,
+                selectedFood = selectedFood?.name, // Tampilkan nama dari objek yang dipilih
                 onClick = { showBottomSheet = true }
             )
 
@@ -171,10 +206,10 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 FoodSearchBottomSheet(
                     query = query,
                     onQueryChange = { query = it },
-                    filteredOptions = filteredOptions,
-                    selectedFood = selectedFood,
-                    onSelectFood = {
-                        selectedFood = it
+                    filteredOptions = filteredOptions, // Gunakan list yang sudah difilter
+                    selectedFood = selectedFood,      // Berikan objek Ingredient yang dipilih
+                    onSelectFood = { ingredient ->    // Terima objek Ingredient
+                        selectedFood = ingredient
                         showBottomSheet = false
                         query = ""
                     },
@@ -386,10 +421,35 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
-                    // Todo: Add food stock logic here
-                    val finalQuantity = quantityInput.toIntOrNull() ?: 0
-                    // You can access selectedFood, finalQuantity, selectedUnit,
-                    // datePickerState.selectedDateMillis (or convert to LocalDate), reminderEnabled, selectedReminderOption here
+                    val finalQuantity = quantityInput.toFloatOrNull() ?: 0f
+                    val finalSelectedFood = selectedFood
+
+                    // Validasi input
+                    if (finalSelectedFood == null) {
+                        Toast.makeText(context, "Pilih nama bahan makanan terlebih dahulu.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (finalQuantity <= 0f) {
+                        Toast.makeText(context, "Kuantitas harus lebih dari 0.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    val finalExpiredDate = datePickerState.selectedDateMillis?.let {
+                        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                    }
+
+                    val startRemindDate = datePickerState.selectedDateMillis?.let {
+                        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                    }
+
+                    // Panggil fungsi di ViewModel
+                    foodStockViewModel.addFoodStock(
+                        selectedIngredient = finalSelectedFood,
+                        quantity = finalQuantity,
+                        unit = selectedUnit,
+                        expiredDate = finalExpiredDate,
+                        startRemindDate = startRemindDate
+                    )
                     navController.popBackStack()
                 },
                 contentPadding = PaddingValues(),
@@ -497,9 +557,9 @@ private fun FoodSelector(selectedFood: String?, onClick: () -> Unit) {
 private fun FoodSearchBottomSheet(
     query: String,
     onQueryChange: (String) -> Unit,
-    filteredOptions: List<String>,
-    selectedFood: String?,
-    onSelectFood: (String) -> Unit,
+    filteredOptions: List<Ingredient>, // Terima List<Ingredient>
+    selectedFood: Ingredient?,         // Terima Ingredient?
+    onSelectFood: (Ingredient) -> Unit, // Callback dengan Ingredient
     onDismiss: () -> Unit,
     sheetState: androidx.compose.material3.SheetState
 ) {
@@ -575,7 +635,7 @@ private fun FoodSearchBottomSheet(
                                 .padding(horizontal = 12.dp, vertical = 12.dp)
                         ) {
                             Text(
-                                text = option,
+                                text = option.name,
                                 fontSize = 16.sp,
                                 fontFamily = OpenSans,
                                 color = if (isSelected) colorResource(R.color.green_dark) else Color.Black,
