@@ -94,6 +94,7 @@ class UserViewModel(
                 val token = firebaseUser.getIdToken(true).await().token ?: throw Exception("Token tidak valid")
 
                 // Panggil fungsi refresh dari repo, tidak perlu casting lagi
+                authRepo.getUserProfile(token, firebaseUser.uid).let { _userProfile.value = it }
                 consumptionRepo.refreshTodaysConsumption(token)
 
                 // Ambil juga profil user

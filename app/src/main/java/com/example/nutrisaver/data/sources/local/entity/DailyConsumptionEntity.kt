@@ -9,7 +9,6 @@ data class DailyConsumptionEntity(
     // 'date' adalah satu-satunya Primary Key, tidak ada lagi id dari server
     @PrimaryKey
     val date: String,
-
     val userId: Int,
     val totalCalories: Float,
     val totalProtein: Float,
@@ -72,8 +71,6 @@ data class DailyConsumptionEntity(
             return DailyConsumptionEntity(
                 date = daily.date, // Gunakan date sebagai Primary Key
                 userId = daily.userId,
-                // 'daily.id' dari server diabaikan dan tidak disimpan sama sekali
-                // ... semua field lainnya
                 totalCalories = daily.totalCalories,
                 totalProtein = daily.totalProtein,
                 totalFat = daily.totalFat,
