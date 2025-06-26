@@ -43,8 +43,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.nutrisaver.AuthState
-import com.example.nutrisaver.AuthViewModel
+import com.example.nutrisaver.viewmodel.AuthState
+import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.theme.OpenSans
 

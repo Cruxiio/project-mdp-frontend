@@ -1,13 +1,15 @@
 package com.example.nutrisaver.data.sources.remote.auth
 
+import com.example.nutrisaver.data.model.User
 import com.example.nutrisaver.data.sources.remote.Webservice
 
 class AuthDataSourceImpl(
     private val webservice: Webservice
 ): AuthDataSource {
     override suspend fun register(user: User): User {
-        val newUser = webservice.register(user.toUserJson())
-        return User.fromUserJson(newUser)
+        val newUserJson = webservice.register(user.toUserJson())
+        val mappedUser = User.fromUserJson(newUserJson)
+        return mappedUser ?: throw IllegalStateException("Gagal mem-parsing data user dari server setelah registrasi.")
     }
 
     override suspend fun getUserDetail(uuid: String): User {
@@ -18,5 +20,12 @@ class AuthDataSourceImpl(
         }
 
         return user
+    }
+
+    override suspend fun getUserProfile(idToken: String, userId: String): User {
+        // Panggil webservice dengan kedua parameter
+        val userJson = webservice.getUserProfile(idToken, userId)
+        return User.fromUserJson(userJson)
+            ?: throw Exception("Gagal mem-parsing data profil user dari server.")
     }
 }

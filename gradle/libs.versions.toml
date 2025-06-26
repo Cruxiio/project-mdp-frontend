@@ -26,6 +26,9 @@ credentialsPlayServicesAuth = "1.5.0-alpha05"
 googleid = "1.1.1"
 firebaseBom = "33.3.0"
 gmsGoogleServices = "4.4.2"
+roomCommonJvm = "2.7.2"
+roomRuntimeAndroid = "2.7.2"
+roomVersion = "2.7.2"
 
 [libraries]
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsPlayServicesAuth" }
@@ -62,6 +65,10 @@ moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlin" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomVersion" }
+androidx-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "roomVersion" }
+# TAMBAHKAN BARIS DI BAWAH INI
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

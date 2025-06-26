@@ -1,5 +1,7 @@
 package com.example.nutrisaver.data.sources.remote.common
 
+import com.example.nutrisaver.data.model.Allergen
+
 interface CommonDataSource {
-    suspend fun getAlergen(keyword:String): List<Alergen>
+    suspend fun getAllergen(keyword:String): List<Allergen>
 }
