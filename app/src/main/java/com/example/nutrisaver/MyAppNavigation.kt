@@ -6,6 +6,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import androidx.navigation.compose.rememberNavController
+import com.example.nutrisaver.ui.screens.admin.AllUserScreen
+import com.example.nutrisaver.ui.screens.admin.ApplicationScreen
+import com.example.nutrisaver.ui.screens.admin.HealthArticleScreen
 import com.example.nutrisaver.ui.screens.auth.LoginScreen
 import com.example.nutrisaver.ui.screens.auth.RegisterDetailScreen
 import com.example.nutrisaver.ui.screens.auth.RegisterScreen
@@ -108,8 +112,16 @@ fun MyAppNavigation(
             }
         }
 
-        navigation(startDestination = "splash", route = "admin") {
-
+        navigation(startDestination = "alluser", route = "admin") {
+            composable("alluser") {
+                AllUserScreen(navController = navController)
+            }
+            composable("application") {
+                ApplicationScreen(navController = navController)
+            }
+            composable("healtharticle") {
+                HealthArticleScreen(navController = navController)
+            }
         }
     }
 }

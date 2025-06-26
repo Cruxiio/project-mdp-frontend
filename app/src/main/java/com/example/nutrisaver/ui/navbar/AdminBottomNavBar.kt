@@ -27,14 +27,11 @@ import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.theme.OpenSans
 
 @Composable
-fun UserBottomNavBar(navController: NavController) {
+fun AdminBottomNavBar(navController: NavController) {
     val items = listOf(
-        UserBottomNavItem("dashboard", R.drawable.dashboard, "Dashboard"),
-        UserBottomNavItem("foodstock", R.drawable.foodstock, "Food Stock"),
-        UserBottomNavItem("recipe", R.drawable.recipe, "Recipes"),
-        UserBottomNavItem("profile", R.drawable.profile, "Profile"),
+        AdminBottomNavItem("alluser", R.drawable.profile, "Users", "admin"), // Add the graph route here
+        AdminBottomNavItem("application", R.drawable.dashboard, "Application", "admin") // Add the graph route here
     )
-    // Get the current route from the back stack entry
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     Row(
@@ -46,27 +43,24 @@ fun UserBottomNavBar(navController: NavController) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         items.forEach { item ->
-            // Determine if the current item is selected
             val isSelected = currentRoute == item.route
 
-            val textColor = if (isSelected) colorResource(R.color.green_dark) else Color.Black // Assuming you have a green for selected and another for unselected text
-            val iconTint = if (isSelected) colorResource(R.color.green_dark) else Color.Black // Assuming you have an icon tint for unselected
+            val textColor = if (isSelected) colorResource(R.color.green_dark) else Color.Black
+            val iconTint = if (isSelected) colorResource(R.color.green_dark) else Color.Black
 
             Column(
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable {
-                        // Avoid re-navigating if already on the selected tab
                         if (currentRoute != item.route) {
                             navController.navigate(item.route) {
-                                // Pop up to the start destination of the graph to avoid building up a large backstack
-                                // when re-selecting the same item.
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true // Save the state of the popped-up destination and its child destinations
+                                // Pop up to the start destination of the *admin graph*
+                                // This ensures you don't pop destinations from other top-level graphs (like 'user')
+                                popUpTo(item.graphRoute) { // Use the nested graph's route
+                                    saveState = true
+                                    inclusive = true // Pop the graph route itself if needed
                                 }
-                                // Avoid multiple copies of the same destination when re-selecting the same item
                                 launchSingleTop = true
-                                // Restore state when re-selecting a previously selected item
                                 restoreState = true
                             }
                         }
@@ -92,4 +86,10 @@ fun UserBottomNavBar(navController: NavController) {
     }
 }
 
-data class UserBottomNavItem(val route: String, val iconRes: Int, val label: String)
+// Update data class to include graphRoute
+data class AdminBottomNavItem(
+    val route: String,
+    val iconRes: Int,
+    val label: String,
+    val graphRoute: String // New field to specify the nested graph's route
+)

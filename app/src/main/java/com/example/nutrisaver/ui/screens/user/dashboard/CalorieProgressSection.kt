@@ -51,11 +51,11 @@ import kotlin.math.sin
 @Composable
 fun CalorieProgressSection(
     modifier: Modifier = Modifier,
-    currentCalories: Int = 1721, // default value
-    targetCalories: Int = 2213,
-    protein: Pair<Int, Int> = Pair(78, 90),
-    fats: Pair<Int, Int> = Pair(45, 70),
-    carbs: Pair<Int, Int> = Pair(95, 110)
+    currentCalories: Int = 1721, // todo: defaultnya dihapus nanti
+    targetCalories: Int = 2213, // todo: defaultnya dihapus nanti
+    protein: Pair<Int, Int> = Pair(78, 90), // todo: defaultnya dihapus nanti
+    fats: Pair<Int, Int> = Pair(45, 70), // todo: defaultnya dihapus nanti
+    carbs: Pair<Int, Int> = Pair(95, 110) // todo: defaultnya dihapus nanti
 ) {
     val currentDate = LocalDate.now()
     val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale("id", "ID"))

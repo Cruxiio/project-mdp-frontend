@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -246,6 +248,25 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                     FoodStockItem()
                 }
             }
+
+            if (filteredItems.isEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
+                ) {
+                    Text(
+                        text = "No food stock found matching your search",
+                        fontSize = 16.sp,
+                        fontFamily = OpenSans,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
         Box(
             modifier = Modifier
@@ -381,7 +402,7 @@ fun FoodStockItem() {
 }
 
 @Composable
-fun DeleteConfirmationDialog(
+private fun DeleteConfirmationDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     icon: ImageVector,

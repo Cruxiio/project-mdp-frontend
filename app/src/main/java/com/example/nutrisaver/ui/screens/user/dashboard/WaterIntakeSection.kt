@@ -58,6 +58,8 @@ fun WaterIntakeSection(
     modifier: Modifier = Modifier,
     currentIntake: Int,
     targetIntake: Int,
+    //currentIntake: MutableState<Int>, // progress user saat ini
+    //targetIntake: Int, // target water user atau maksimumnya
     onAdd240ml: () -> Unit,
     onAdd500ml: () -> Unit,
     onReduceClick: () -> Unit,
