@@ -1,8 +1,10 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,16 +52,20 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,8 +74,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.FoodStock
+import com.example.nutrisaver.data.model.Ingredient
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.AddFoodStockState
+import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.UpdateFoodStockState
+import com.google.gson.Gson
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -92,25 +104,38 @@ private fun convertLocalDateToMillis(date: LocalDate): Long {
 }
 
 @Composable
-fun AddFoodStockScreen(navController: NavController) {
+fun AddFoodStockScreen(navController: NavController, foodStockViewModel: FoodStockViewModel, foodStockJson: String? ) {
+    // Ubah JSON string menjadi objek FoodStock. Akan null jika ini mode "Add"
+    val foodStockToEdit = remember {
+        foodStockJson?.let { Gson().fromJson(it, FoodStock::class.java) }
+    }
+    val isEditMode = foodStockToEdit != null
+
     Scaffold(
         topBar = {
-            TopBar(onBackClick = { navController.popBackStack() })
+            TopBar(
+                title = if (isEditMode) "Edit Food Stock" else "Add Food Stock",
+                onBackClick = { navController.popBackStack() }
+            )
         },
         bottomBar = {
-            UserBottomNavBar(navController = navController)
+                UserBottomNavBar(navController = navController)
         }
     ) { innerPadding ->
         AddFoodStockContent(
             modifier = Modifier.padding(innerPadding),
-            navController = navController
+            navController = navController,
+            foodStockViewModel = foodStockViewModel,
+            foodStockToEdit = foodStockToEdit,
+            isEditMode = isEditMode
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: NavController) {
+private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: NavController, foodStockViewModel: FoodStockViewModel, foodStockToEdit: FoodStock?, // Terima objek yang bisa null
+                                isEditMode: Boolean) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
@@ -118,28 +143,87 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
-    var showBottomSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    val foodOptions = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant", "Milk", "Bread", "Rice", "Chicken")
-    var selectedFood by remember { mutableStateOf<String?>(null) }
-
-    var query by remember { mutableStateOf("") }
-    val filteredOptions = foodOptions.filter {
-        it.contains(query, ignoreCase = true)
+    val allIngredients by foodStockViewModel.allIngredients.observeAsState(emptyList())
+    LaunchedEffect(key1 = Unit) {
+        if (!isEditMode) { // Hanya load ingredients jika mode Add
+            foodStockViewModel.loadAllIngredients()
+        }
     }
 
-    var quantityInput by remember { mutableStateOf("0") }
-    val unitOptions = listOf("g", "pcs", "ml")
+    var selectedFood by remember { mutableStateOf(
+        if (isEditMode) {
+            val stock = foodStockToEdit!!
+            Ingredient(
+                id = 0, // Beri nilai default, karena data ini tidak ada di FoodStock
+                ingredient_id = stock.ingredientId, // Sesuai koreksi Anda
+                name = stock.name,
+                imageUrl = stock.imageUrl
+            )
+        }
+        else{
+            null
+        }
+    )}
+    var quantityInput by remember { mutableStateOf(if (isEditMode) foodStockToEdit!!.quantity.toString() else "0") }
+    var selectedUnit by remember { mutableStateOf(if (isEditMode) foodStockToEdit!!.unit else "gr") }
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = convertLocalDateToMillis(if (isEditMode) foodStockToEdit!!.expiredDate!! else LocalDate.now())
+    )
+    val expiredDateDisplay = datePickerState.selectedDateMillis?.let { convertMillisToDateDisplay(it) } ?: ""
+
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+
+    val addState by foodStockViewModel.addState.observeAsState()
+    val updateState by foodStockViewModel.updateState.observeAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(addState) {
+        // Hanya bereaksi jika state-nya ada (tidak null)
+        addState?.let { state ->
+            when (state) {
+                is AddFoodStockState.Success -> {
+                    Toast.makeText(context, "Stok makanan berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                }
+                is AddFoodStockState.Error -> {
+                    Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                }
+                is AddFoodStockState.Loading -> {
+                    // Mungkin tampilkan loading indicator jika perlu
+                }
+            }
+            // Setelah state selesai dipakai (ditampilkan), langsung bersihkan!
+            foodStockViewModel.onAddStateConsumed()
+        }
+    }
+
+    LaunchedEffect(updateState) {
+        when (val state = updateState) {
+            is UpdateFoodStockState.Success -> {
+                Toast.makeText(context, "Stok berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                foodStockViewModel.onUpdateFinished()
+                navController.popBackStack()
+            }
+            is UpdateFoodStockState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                foodStockViewModel.onUpdateFinished()
+            }
+            else -> {}
+        }
+    }
+
+    var query by remember { mutableStateOf("") }
+    // Filter list dinamis dari ViewModel
+    val filteredOptions = allIngredients.filter {
+        it.name.contains(query, ignoreCase = true)
+    }
+
+    val unitOptions = listOf("gr", "pcs", "ml")
     var unitExpanded by remember { mutableStateOf(false) }
-    var selectedUnit by remember { mutableStateOf(unitOptions[0]) }
 
     var showDateModal by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = convertLocalDateToMillis(LocalDate.now(ZoneId.of("Asia/Jakarta")))
-    )
-
-    // Derived state for display
-    val expiredDateDisplay = datePickerState.selectedDateMillis?.let { convertMillisToDateDisplay(it) } ?: ""
 
     var reminderEnabled by remember { mutableStateOf(false) }
     val reminderOptions = listOf("1 Month", "1 Week", "3 Days", "1 Day")
@@ -150,7 +234,6 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
             .fillMaxSize()
             .background(backgroundGradient)
     ) {
-        // Scrollable Content
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -165,12 +248,30 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 fontWeight = FontWeight.Bold
             )
 
-            FoodSelector(
-                selectedFood = selectedFood,
-                onClick = { showBottomSheet = true }
-            )
+            Box(modifier = Modifier.alpha(if (isEditMode) 0.5f else 1f)) {
+                FoodSelector(
+                    selectedFood = selectedFood?.name,
+                    onClick = { if (!isEditMode) showBottomSheet = true } // Hanya bisa diklik jika mode Add
+                )
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            if (showBottomSheet) {
+                FoodSearchBottomSheet(
+                    query = query,
+                    onQueryChange = { query = it },
+                    filteredOptions = filteredOptions, // Gunakan list yang sudah difilter
+                    selectedFood = selectedFood,      // Berikan objek Ingredient yang dipilih
+                    onSelectFood = { ingredient ->    // Terima objek Ingredient
+                        selectedFood = ingredient
+                        showBottomSheet = false
+                        query = ""
+                    },
+                    onDismiss = { showBottomSheet = false },
+                    sheetState = sheetState
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp)) // Increased spacing
 
             Text(
                 "Quantity (per unit)",
@@ -206,46 +307,47 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     ),
                     shape = RoundedCornerShape(10.dp)
                 )
-                ExposedDropdownMenuBox(
-                    expanded = unitExpanded,
-                    onExpandedChange = { unitExpanded = !unitExpanded },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    OutlinedTextField(
-                        value = selectedUnit,
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = unitExpanded)
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp)),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor = colorResource(R.color.black),
-                            focusedContainerColor = colorResource(R.color.form_input),
-                            unfocusedContainerColor = colorResource(R.color.form_input),
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = unitExpanded,
-                        onDismissRequest = { unitExpanded = false }
-                    ) {
-                        unitOptions.forEach { selectionOption ->
-                            DropdownMenuItem(
-                                text = { Text(selectionOption) },
-                                onClick = {
-                                    selectedUnit = selectionOption
-                                    unitExpanded = false
-                                }
+                Box(modifier = Modifier.weight(1f).alpha(if (isEditMode) 0.5f else 1f)) {
+                    ExposedDropdownMenuBox(
+                        expanded = if (isEditMode) false else unitExpanded, // Nonaktifkan dropdown
+                        onExpandedChange = { if (!isEditMode) unitExpanded = it }
+                    )   {
+                            OutlinedTextField(
+                                value = selectedUnit,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = unitExpanded)
+                                },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp)),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = colorResource(R.color.black),
+                                    unfocusedTextColor = colorResource(R.color.black),
+                                    focusedContainerColor = colorResource(R.color.form_input),
+                                    unfocusedContainerColor = colorResource(R.color.form_input),
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent,
+                                ),
+                                shape = RoundedCornerShape(10.dp)
                             )
+
+                            ExposedDropdownMenu(
+                                expanded = unitExpanded,
+                                onDismissRequest = { unitExpanded = false }
+                            ) {
+                                unitOptions.forEach { selectionOption ->
+                                    DropdownMenuItem(
+                                        text = { Text(selectionOption) },
+                                        onClick = {
+                                            selectedUnit = selectionOption
+                                            unitExpanded = false
+                                        }
+                                    )
+                                }
+                            }
                         }
-                    }
                 }
             }
 
@@ -258,32 +360,34 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 fontFamily = OpenSans,
                 fontWeight = FontWeight.Bold
             )
-            OutlinedTextField(
-                value = if (expiredDateDisplay.isEmpty()) "Select Date" else expiredDateDisplay,
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showDateModal = true }
-                    .border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp)),
-                trailingIcon = {
-                    IconButton(onClick = { showDateModal = true }) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "Select date"
-                        )
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = if (expiredDateDisplay.isEmpty()) Color.Gray else Color.Black,
-                    unfocusedTextColor = if (expiredDateDisplay.isEmpty()) Color.Gray else Color.Black,
-                    focusedContainerColor = colorResource(R.color.form_input),
-                    unfocusedContainerColor = colorResource(R.color.form_input),
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                ),
-                shape = RoundedCornerShape(10.dp)
-            )
+            Box(modifier = Modifier.alpha(if (isEditMode) 0.5f else 1f)) {
+                OutlinedTextField(
+                    value = if (expiredDateDisplay.isEmpty()) "Select Date" else expiredDateDisplay,
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDateModal = true }
+                        .border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp)),
+                    trailingIcon = {
+                        IconButton(onClick = { showDateModal = true }) {
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = "Select date"
+                            )
+                        }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = if (expiredDateDisplay.isEmpty()) Color.Gray else Color.Black,
+                        unfocusedTextColor = if (expiredDateDisplay.isEmpty()) Color.Gray else Color.Black,
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input),
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -363,11 +467,64 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
         ) {
             Button(
                 onClick = {
-                    // Todo: Add food stock logic here
-                    val finalQuantity = quantityInput.toIntOrNull() ?: 0
-                    // You can access selectedFood, finalQuantity, selectedUnit,
-                    // datePickerState.selectedDateMillis (or convert to LocalDate), reminderEnabled, selectedReminderOption here
-                    navController.popBackStack()
+                    val finalQuantity = quantityInput.toFloatOrNull()
+                    if (finalQuantity == null || finalQuantity <= 0f) {
+                        Toast.makeText(context, "Kuantitas tidak valid.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    val finalSelectedFood = selectedFood
+
+                    // Validasi input
+                    if (isEditMode) {
+                        foodStockViewModel.updateFoodStockQuantity(foodStockToEdit!!.id!!, finalQuantity)
+                    }
+                    else{
+                        if (finalSelectedFood == null) {
+                            Toast.makeText(context, "Pilih nama bahan makanan terlebih dahulu.", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        if (finalQuantity <= 0f) {
+                            Toast.makeText(context, "Kuantitas harus lebih dari 0.", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        val finalExpiredDate = datePickerState.selectedDateMillis?.let {
+                            Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                        }
+
+                        if (finalExpiredDate == null) {
+                            Toast.makeText(context, "Tanggal kedaluwarsa harus diisi.", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        // --- PERUBAHAN 2: Logika Kalkulasi startRemindDate ---
+                        val finalStartRemindDate: LocalDate? = if (reminderEnabled) {
+                            // Jika reminder diaktifkan, hitung berdasarkan pilihan
+                            when (selectedReminderOption) {
+                                "1 Day" -> finalExpiredDate.minusDays(1)
+                                "3 Days" -> finalExpiredDate.minusDays(3)
+                                "1 Week" -> finalExpiredDate.minusWeeks(1)
+                                "1 Month" -> finalExpiredDate.minusMonths(1)
+                                else -> {
+                                    // Jika opsi belum dipilih, bisa beri pesan error atau gunakan default
+                                    Toast.makeText(context, "Pilih durasi reminder.", Toast.LENGTH_SHORT).show()
+                                    return@Button // Hentikan proses jika opsi belum dipilih
+                                }
+                            }
+                        } else {
+                            // Jika reminder tidak aktif, kirim null agar backend yg menentukan
+                            null
+                        }
+
+                        // Panggil fungsi di ViewModel
+                        foodStockViewModel.addFoodStock(
+                            selectedIngredient = finalSelectedFood,
+                            quantity = finalQuantity,
+                            unit = selectedUnit,
+                            expiredDate = finalExpiredDate,
+                            startRemindDate = finalStartRemindDate
+                        )
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
@@ -389,7 +546,7 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Add Food Stock",
+                        text = if (isEditMode) "Save Changes" else "Add Food Stock",
                         fontSize = 18.sp,
                         fontFamily = OpenSans,
                         color = Color.White,
@@ -442,6 +599,7 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
 @Composable
 private fun TopBar(
     modifier: Modifier = Modifier,
+    title: String,
     onBackClick: () -> Unit = {}
 ) {
     val green = colorResource(id = R.color.green)
@@ -475,7 +633,7 @@ private fun TopBar(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = "Add Food Stock",
+                text = title,
                 fontSize = 20.sp,
                 fontFamily = OpenSans,
                 fontWeight = FontWeight.Bold,
@@ -516,9 +674,9 @@ private fun FoodSelector(selectedFood: String?, onClick: () -> Unit) {
 private fun FoodSearchBottomSheet(
     query: String,
     onQueryChange: (String) -> Unit,
-    filteredOptions: List<String>,
-    selectedFood: String?,
-    onSelectFood: (String) -> Unit,
+    filteredOptions: List<Ingredient>, // Terima List<Ingredient>
+    selectedFood: Ingredient?,         // Terima Ingredient?
+    onSelectFood: (Ingredient) -> Unit, // Callback dengan Ingredient
     onDismiss: () -> Unit,
     sheetState: androidx.compose.material3.SheetState
 ) {
@@ -594,7 +752,7 @@ private fun FoodSearchBottomSheet(
                                 .padding(horizontal = 12.dp, vertical = 12.dp)
                         ) {
                             Text(
-                                text = option,
+                                text = option.name,
                                 fontSize = 16.sp,
                                 fontFamily = OpenSans,
                                 color = if (isSelected) colorResource(R.color.green_dark) else Color.Black,

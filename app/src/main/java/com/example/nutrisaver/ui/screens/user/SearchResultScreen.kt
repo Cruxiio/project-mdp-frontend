@@ -69,7 +69,7 @@ fun SearchResultScreen(navController: NavController) {
 }
 
 @Composable
-private fun TopBar(
+fun TopBar(
     onBackClick: () -> Unit = {}
 ) {
     Row(

@@ -38,6 +38,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -81,6 +82,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 
@@ -201,7 +203,7 @@ fun generateDummyFoodStock(): List<FoodStockItemDummy> {
 //////////////////////////////////////////////////////////////////
 
 @Composable
-fun DashboardScreen(navController: NavController, userViewModel: UserViewModel) {
+fun DashboardScreen(navController: NavController, userViewModel: UserViewModel) { // Hanya butuh UserViewModel
     Scaffold(
         bottomBar = {
             UserBottomNavBar(navController = navController)
@@ -224,40 +226,33 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     }
 
     // --- 3. SIAPKAN VARIABEL UNTUK UI DENGAN NILAI DEFAULT ---
-    // Variabel ini akan otomatis ter-update saat 'consumption' dan 'userProfile' berubah
     val currentCalories = consumption?.totalCalories?.toFloat() ?: 0f
     val targetCalories = consumption?.targetCalories ?: 2000f
 
-    val currentProtein = consumption?.totalProtein?.toInt() ?: 0
-    val targetProtein = consumption?.targetProtein?.toInt() ?: 100
+    val currentProtein = consumption?.totalProtein?.toFloat() ?: 0f
+    val targetProtein = consumption?.targetProtein?.toFloat() ?: 100f
 
-    val currentFat = consumption?.totalFat?.toInt() ?: 0
-    val targetFat = consumption?.targetFat?.toInt() ?: 70
+    val currentFat = consumption?.totalFat?.toFloat() ?: 0f
+    val targetFat = consumption?.targetFat?.toFloat() ?: 70f
 
-    val currentCarbs = consumption?.totalCarbs?.toInt() ?: 0
-    val targetCarbs = consumption?.targetCarbs?.toInt() ?: 250
+    val currentCarbs = consumption?.totalCarbs?.toFloat() ?: 0f
+    val targetCarbs = consumption?.targetCarbs?.toFloat() ?: 250f
 
+    // State untuk water intake, diambil dari ViewModel dan bisa diubah di UI
     var currentWater by remember(consumption) { mutableStateOf(consumption?.totalWater?.toInt() ?: 0) }
-
-    // PERBAIKAN DI SINI: Tambahkan 'f' untuk menandakan angka Float
-    val targetWater = consumption?.targetWater ?: 2000f
-
-    // Bandingkan juga dengan 0f untuk konsistensi, dan pastikan targetWater tidak 0 untuk pembagian
+    val targetWater = consumption?.targetWater?.toInt() ?: 2000
     val waterIntakeProgress = if (targetWater > 0f) minOf(currentWater.toFloat() / targetWater, 1f) else 0f
-
+    var showWaterIntakeBottomSheet by remember { mutableStateOf(false) }
+    var isReduceMode by remember { mutableStateOf(false) }
+  
     // --- Definisi warna dan gradient (tidak ada perubahan) ---
     val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
     val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
-    // todo: ganti ke water intake user
-    val currentIntake = remember { mutableStateOf(1000) }
-    val targetIntake = 2000
-    var showWaterIntakeBottomSheet by remember { mutableStateOf(false) }
-    var isReduceMode by remember { mutableStateOf(false) }
 
-    // State for weight data filtering
+    // --- State untuk data berat badan ---
     val allWeightData = remember { generateSampleWeightData() }
-    var selectedPeriod by remember { mutableStateOf("Monthly") } // Default period
-    var filteredWeightData by remember { mutableStateOf(emptyList<WeightEntryDummy>()) } // todo: ganti ke object WeightEntry dari backend
+    var selectedPeriod by remember { mutableStateOf("Monthly") }
+    var filteredWeightData by remember { mutableStateOf(emptyList<WeightEntryDummy>()) }
     var showWeightLogBottomSheet by remember { mutableStateOf(false) }
 
     // todo: nanti ganti codingannya sama function viewmodelnya setelah backend
@@ -270,8 +265,8 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             "Weekly" -> allWeightData.filter { !it.date.isBefore(today.minusWeeks(1)) }
             "Monthly" -> allWeightData.filter { !it.date.isBefore(today.minusMonths(1)) }
             "Yearly" -> allWeightData.filter { !it.date.isBefore(today.minusYears(1)) }
-            else -> allWeightData // Fallback, e.g., show all if "All Time" is an option
-        }.sortedBy { it.date } // Ensure filtered data remains sorted
+            else -> allWeightData
+        }.sortedBy { it.date }
     }
 
     Box(modifier = modifier
@@ -362,11 +357,11 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             Spacer(modifier = Modifier.height(10.dp))
 
             CalorieProgressBar(
-                currentCalories = currentCalories,
+                currentCalories = consumption?.totalCalories ?: 0f,
                 targetCalories = targetCalories,
-                protein = Pair(currentProtein, targetProtein),
-                fats = Pair(currentFat, targetFat),
-                carbs = Pair(currentCarbs, targetCarbs)
+                protein = Pair(consumption?.totalProtein ?: 0f, targetProtein),
+                fats = Pair(consumption?.totalFat ?: 0f, targetFat),
+                carbs = Pair(consumption?.totalCarbs ?: 0f, targetCarbs)
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
@@ -456,10 +451,10 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
 
             WaterIntakeSection(
-                currentIntake = currentIntake,
-                targetIntake = targetIntake,
-                onAdd240ml = { currentIntake.value += 240 },
-                onAdd500ml = { currentIntake.value += 500 },
+                currentIntake = currentWater,
+                targetIntake = targetWater,
+                onAdd240ml = { currentWater += 240 },
+                onAdd500ml = { currentWater += 500 },
                 onReduceClick = {
                     isReduceMode = true
                     showWaterIntakeBottomSheet = true
@@ -472,90 +467,6 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             )
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Display current intake, target, and percentage
-                    Text(
-                        "${currentWater} / $targetWater ml (${(waterIntakeProgress * 100).toInt()}%)",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        fontFamily = OpenSans,
-                        color = colorResource(R.color.water_3)
-                    )
-                    androidx.compose.material3.LinearProgressIndicator(
-                        progress = waterIntakeProgress, // This will still cap at 1.0 for visual consistency
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(24.dp)
-                            .clip(CircleShape),
-                        color = colorResource(R.color.water_1),
-                        trackColor = Color.Gray.copy(alpha = 0.2f)
-                    )
-                    // Action Buttons - Add (240ml, 500ml)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // 240ml Button - now adds without limit
-                        WaterIntakeButton(
-                            text = "240 ml",
-                            icon = painterResource(R.drawable.glass_icon),
-                            iconSize = 20.dp,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                currentWater = currentWater + 240
-                            }
-                        )
-
-                        // 500ml Button - now adds without limit
-                        WaterIntakeButton(
-                            text = "500 ml",
-                            icon = painterResource(R.drawable.bottle_icon),
-                            iconSize = 20.dp,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                currentWater = currentWater + 500
-                            }
-                        )
-                    }
-                    // Action Buttons - Custom and Reduce
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        WaterIntakeButton(
-                            text = "Reduce",
-                            icon = painterResource(id = R.drawable.ic_remove), // Assuming you have an ic_remove drawable
-                            iconSize = 28.dp,
-                            modifier = Modifier.weight(1f), // Make it take half width
-                            onClick = {
-                                isReduceMode = true
-                                showWaterIntakeBottomSheet = true
-                            }
-                        )
-                        WaterIntakeButton(
-                            text = "Custom",
-                            icon = rememberVectorPainter(Icons.Default.Add),
-                            iconSize = 28.dp,
-                            modifier = Modifier.weight(1f), // Make it take half width
-                            onClick = {
-                                isReduceMode = false
-                                showWaterIntakeBottomSheet = true
-                            }
-                        )
-                    }
-                }
-            }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
 
@@ -819,96 +730,36 @@ fun MealLogCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(gradient)
-                .padding(16.dp)
+            modifier = Modifier.fillMaxSize().background(gradient).padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(
-                            when (type.lowercase()) {
-                                "breakfast" -> R.drawable.breakfast_icon
-                                "lunch" -> R.drawable.lunch_icon
-                                "dinner" -> R.drawable.dinner_icon
-                                else -> R.drawable.breakfast_icon
-                            }
-                        ),
+                        painter = painterResource( when (type.lowercase()) {
+                            "breakfast" -> R.drawable.breakfast_icon
+                            "lunch" -> R.drawable.lunch_icon
+                            "dinner" -> R.drawable.dinner_icon
+                            else -> R.drawable.breakfast_icon
+                        }),
                         contentDescription = "$type icon",
                         modifier = Modifier.size(32.dp),
                         tint = Color.Black
                     )
-                    // Meal type text
-                    Text(
-                        text = type,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        fontFamily = OpenSans,
-                        modifier = Modifier.weight(1f).padding(start = 12.dp)
-                    )
-
-                    // Plus button
-                    IconButton(
-                        onClick = onLogClick,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.White, CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add $type",
-                            tint = Color.Black,
-                            modifier = Modifier.size(24.dp)
-                        )
+                    Text(text = type, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black, fontFamily = OpenSans, modifier = Modifier.weight(1f).padding(start = 12.dp))
+                    IconButton(onClick = onLogClick, modifier = Modifier.size(40.dp).background(Color.White, CircleShape)) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add $type", tint = Color.Black, modifier = Modifier.size(24.dp))
                     }
                 }
-
                 Spacer(modifier = Modifier.height(10.dp))
-
-                // Nutritional information row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // Calories
-                    NutritionItem(
-                        label = "Calories",
-                        value = calories.toString(),
-                        unit = "kcal",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Protein
-                    NutritionItem(
-                        label = "Protein",
-                        value = protein.toString(),
-                        unit = "gram",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Fat
-                    NutritionItem(
-                        label = "Fat",
-                        value = fat.toString(),
-                        unit = "gram",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Carbs
-                    NutritionItem(
-                        label = "Carbs",
-                        value = carbs.toString(),
-                        unit = "gram",
-                        modifier = Modifier.weight(1f)
-                    )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    NutritionItem(label = "Calories", value = calories.toInt().toString(), unit = "kcal")
+                    NutritionItem(label = "Protein", value = String.format("%.1f", protein), unit = "g")
+                    NutritionItem(label = "Fat", value = String.format("%.1f", fat), unit = "g")
+                    NutritionItem(label = "Carbs", value = String.format("%.1f", carbs), unit = "g")
                 }
             }
         }
@@ -956,19 +807,23 @@ fun NutritionItem(
 
 @Composable
 fun CalorieProgressBar(
-    currentCalories: Float = 1721f, // default value
-    targetCalories: Float = 2213f,
-    protein: Pair<Int, Int> = Pair(78, 90),
-    fats: Pair<Int, Int> = Pair(45, 70),
-    carbs: Pair<Int, Int> = Pair(95, 110),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentCalories: Float,
+    targetCalories: Float,
+    protein: Pair<Float, Float>,
+    fats: Pair<Float, Float>,
+    carbs: Pair<Float, Float>
 ) {
     val currentDate = LocalDate.now()
     val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", Locale("id", "ID")) // Corrected pattern for full year
     val formattedDate = currentDate.format(formatter)
 
     // Calculate progress - this was missing!
-    val progress = currentCalories.toFloat() / targetCalories.toFloat()
+    val progress = if (targetCalories > 0f) {
+        (currentCalories / targetCalories).coerceIn(0f, 1f)
+    } else {
+        0f // Jika target 0, progress juga 0
+    }
 
     // Progress Display with Animation and Responsiveness
     var animationPlayed by remember { mutableStateOf(false) }
@@ -1181,14 +1036,21 @@ fun CalorieProgressBar(
 @Composable
 fun MacronutrientCard(
     title: String,
-    current: Int,
-    target: Int,
+    current: Float,
+    target: Float,
     color: Color,
     animationPlayed: Boolean,
     modifier: Modifier = Modifier
 ) {
+
+    val progress = if (target > 0f) {
+        (current / target).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+
     val animatedProgress by animateFloatAsState(
-        targetValue = if (animationPlayed) (current.toFloat() / target.toFloat()) else 0f,
+        targetValue  = if (animationPlayed) progress else 0f,
         animationSpec = tween(durationMillis = 1000, delayMillis = 200),
         label = "macro_progress"
     )

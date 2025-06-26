@@ -56,14 +56,20 @@ import com.example.nutrisaver.ui.theme.OpenSans
 @Composable
 fun WaterIntakeSection(
     modifier: Modifier = Modifier,
-    currentIntake: MutableState<Int>, // progress user saat ini
-    targetIntake: Int, // target water user atau maksimumnya
+    currentIntake: Int,
+    targetIntake: Int,
+    //currentIntake: MutableState<Int>, // progress user saat ini
+    //targetIntake: Int, // target water user atau maksimumnya
     onAdd240ml: () -> Unit,
     onAdd500ml: () -> Unit,
     onReduceClick: () -> Unit,
     onCustomClick: () -> Unit
 ) {
-    val waterIntakeProgress = minOf(currentIntake.value.toFloat() / targetIntake.toFloat(), 1f)
+    val waterIntakeProgress = if (targetIntake > 0) {
+        minOf(currentIntake.toFloat() / targetIntake.toFloat(), 1f)
+    } else {
+        0f
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -85,7 +91,7 @@ fun WaterIntakeSection(
             )
             // Display current intake, target, and percentage
             Text(
-                "${currentIntake.value} / $targetIntake ml (${(waterIntakeProgress * 100).toInt()}%)",
+                text = "$currentIntake / $targetIntake ml (${(waterIntakeProgress * 100).toInt()}%)",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 fontFamily = OpenSans,
