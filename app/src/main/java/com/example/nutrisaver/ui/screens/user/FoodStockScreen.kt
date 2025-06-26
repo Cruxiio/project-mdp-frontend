@@ -1,5 +1,6 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -44,7 +46,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,40 +68,53 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.FoodStock
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.FoodStockListState
+import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.google.gson.Gson
+import java.time.format.DateTimeFormatter
 
 @Composable
-fun FoodStockScreen(navController: NavController) {
+fun FoodStockScreen(navController: NavController, foodStockViewModel: FoodStockViewModel) {
     Scaffold(
         bottomBar = {
             UserBottomNavBar(navController = navController)
         }
     ) { innerPadding ->
-        FoodStockContent(modifier = Modifier.padding(innerPadding), navController)
+        FoodStockContent(modifier = Modifier.padding(innerPadding), navController, foodStockViewModel)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController) {
+fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController, foodStockViewModel: FoodStockViewModel) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
 
-    var searchQuery by remember { mutableStateOf("") }
-    val allItems = listOf("tes") // nanti diisi dengan data dari database
-    val filteredItems = allItems.filter {
-        it.contains(searchQuery, ignoreCase = true)
+    LaunchedEffect(Unit) {
+        foodStockViewModel.loadFoodStock()
     }
 
-    val filterOptions = listOf("Stock Name", "Quantity", "Expired Date")
-    var filter by remember { mutableStateOf(filterOptions[0]) }
-    var filterExpanded by remember { mutableStateOf(false) }
+    // 2. Amati perubahan state dari ViewModel
+    val foodStockState by foodStockViewModel.foodStocks.observeAsState()
 
-    val filterTypeOptions = listOf("DESC", "ASC")
-    var filterType by remember { mutableStateOf(filterTypeOptions[0]) }
+    var searchQuery by remember { mutableStateOf("") }
+    val filterOptions = listOf("Stock Name", "Quantity", "Expired Date")
+    var selectedFilter by remember { mutableStateOf(filterOptions[0]) }
+    val filterTypeOptions = listOf("ASC", "DESC")
+    var selectedFilterType by remember { mutableStateOf(filterTypeOptions[1]) } // Default Descending
+
+    // State untuk filter yang SUDAH DITERAPKAN
+    var appliedSearchQuery by remember { mutableStateOf("") }
+    var appliedFilter by remember { mutableStateOf(filterOptions[0]) }
+    var appliedFilterType by remember { mutableStateOf(filterTypeOptions[1]) }
+
+    var filterExpanded by remember { mutableStateOf(false) }
     var filterTypeExpanded by remember { mutableStateOf(false) }
 
     val green = colorResource(id = R.color.green)
@@ -163,7 +180,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                         onExpandedChange = { filterExpanded = !filterExpanded }
                     ) {
                         OutlinedTextField(
-                            value = filter,
+                            value = selectedFilter,
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = {
@@ -189,7 +206,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                                 DropdownMenuItem(
                                     text = { Text(option) },
                                     onClick = {
-                                        filter = option
+                                        selectedFilter = option
                                         filterExpanded = false
                                     }
                                 )
@@ -203,7 +220,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                         onExpandedChange = { filterTypeExpanded = !filterTypeExpanded }
                     ) {
                         OutlinedTextField(
-                            value = filterType,
+                            value = selectedFilterType,
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = {
@@ -229,7 +246,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                                 DropdownMenuItem(
                                     text = { Text(option) },
                                     onClick = {
-                                        filterType = option
+                                        selectedFilterType = option
                                         filterTypeExpanded = false
                                     }
                                 )
@@ -243,28 +260,95 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
             HorizontalDivider(thickness = 2.dp)
             Spacer(modifier = Modifier.height(15.dp))
 
-            LazyColumn {
-                items(filteredItems) { item ->
-                    FoodStockItem()
+            when (val state = foodStockState) {
+                is FoodStockListState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
+                is FoodStockListState.Success -> {
+                    val allStocks = state.data
 
-            if (filteredItems.isEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
-                ) {
-                    Text(
-                        text = "No food stock found matching your search",
-                        fontSize = 16.sp,
-                        fontFamily = OpenSans,
-                        color = Color.Gray,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        textAlign = TextAlign.Center
-                    )
+                    // Terapkan filter dan sort di sini
+                    val displayedItems = remember(allStocks, searchQuery, selectedFilter, selectedFilterType) {
+                        val filtered = if (searchQuery.isBlank()) {
+                            allStocks
+                        } else {
+                            allStocks.filter {
+                                it.name.contains(searchQuery, ignoreCase = true)
+                            }
+                        }
+
+                        val isAscending = selectedFilterType == "ASC"
+
+                        when (selectedFilter) {
+                            "Stock Name" -> if (isAscending) filtered.sortedBy { it.name } else filtered.sortedByDescending { it.name }
+                            "Quantity" -> if (isAscending) filtered.sortedBy { it.quantity } else filtered.sortedByDescending { it.quantity }
+                            "Expired Date" -> if (isAscending) filtered.sortedBy { it.expiredDate } else filtered.sortedByDescending { it.expiredDate }
+                            else -> filtered
+                        }
+                    }
+
+                    if (displayedItems.isEmpty()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
+                        ) {
+                            Text(
+                                text = if (searchQuery.isBlank()) "You have no food stock yet." else "No food stock found matching your search.",
+                                fontSize = 16.sp,
+                                fontFamily = OpenSans,
+                                color = Color.Gray,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    } else {
+                        LazyColumn {
+                            items(displayedItems, key = { it.id!! }) { item ->
+                                FoodStockItem(
+                                    foodStock = item,
+                                    onDeleteClicked = {
+                                        foodStockViewModel.deleteFoodStock(item.id!!)
+                                        println("Delete requested for item ID: ${item.id}")
+                                    },
+                                    onEditClicked = {
+                                        // 1. Ubah objek 'item' menjadi string JSON
+                                        val foodStockJson = Gson().toJson(item)
+                                        // 2. Encode string JSON agar aman untuk URL
+                                        val encodedJson = Uri.encode(foodStockJson)
+                                        // 3. Panggil navigate dengan route baru dan argumennya
+                                        navController.navigate("add_food_stock_screen?foodStockJson=$encodedJson")
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                is FoodStockListState.Error -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f))
+                    ) {
+                        Text(
+                            text = state.message,
+                            color = Color.Red.copy(alpha = 0.8f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                null -> {
+                    // State awal, bisa tampilkan loading juga
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
             }
         }
@@ -281,7 +365,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
             ) {
                 LargeFloatingActionButton(
                     onClick = {
-                        navController.navigate("addfoodstock")
+                        navController.navigate("add_food_stock_screen")
                     },
                     shape = CircleShape,
                     containerColor = Color.Transparent, // keep it transparent
@@ -296,25 +380,31 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
 }
 
 @Composable
-fun FoodStockItem() {
+fun FoodStockItem(foodStock: FoodStock, onDeleteClicked: () -> Unit,  onEditClicked: () -> Unit) {
     val item1 = colorResource(id = R.color.item_1)
     val item2 = colorResource(id = R.color.item_2)
     val itemGradient = Brush.verticalGradient(listOf(item1, item2))
 
-    val openAlertDialog = remember { mutableStateOf(false) }
+    var openAlertDialog by remember { mutableStateOf(false) }
+
+    if (openAlertDialog) {
+        DeleteConfirmationDialog(
+            onDismiss = { openAlertDialog = false },
+            onConfirm = {
+                onDeleteClicked()
+                openAlertDialog = false
+            },
+            icon = Icons.Default.Warning
+        )
+    }
 
     Box(
-        modifier = Modifier
-            .padding(bottom = 8.dp) //
+        modifier = Modifier.padding(bottom = 8.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(
-                    elevation = 5.dp,
-                    shape = RoundedCornerShape(10.dp),
-                    clip = false
-                )
+                .shadow(elevation = 5.dp, shape = RoundedCornerShape(10.dp), clip = false)
                 .background(itemGradient, shape = RoundedCornerShape(10.dp))
         ) {
             Row(
@@ -324,9 +414,11 @@ fun FoodStockItem() {
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.default_food_image), // todo: ganti ke gambar recipe
-                    contentDescription = "deskripsi gambar foodstock",
+                AsyncImage(
+                    model = foodStock.imageUrl,
+                    contentDescription = foodStock.name,
+                    placeholder = painterResource(id = R.drawable.default_food_image),
+                    error = painterResource(id = R.drawable.default_food_image),
                     modifier = Modifier
                         .width(70.dp)
                         .height(70.dp)
@@ -337,20 +429,23 @@ fun FoodStockItem() {
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        "Nama Stock", // TODO: nama stock
+                        foodStock.name,
                         fontFamily = OpenSans,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
                     )
                     Text(
-                        "Stock: 20 kg", // TODO: quantity dan satuan stock
+                        text = "Stock: ${foodStock.quantity} ${foodStock.unit}",
                         fontFamily = OpenSans,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = Color.DarkGray
                     )
                     Text(
-                        "Expired Date: 10/10/2020", // TODO: expired date
+                        text = "Expired: ${foodStock.expiredDate?.format(DateTimeFormatter.ofPattern("dd MMM yyyy")) ?: "N/A"}",
                         fontFamily = OpenSans,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = Color.DarkGray
                     )
                 }
                 Column(
@@ -361,13 +456,13 @@ fun FoodStockItem() {
                             .size(32.dp)
                             .clip(RoundedCornerShape(5.dp))
                             .background(colorResource(R.color.yellow))
-                            .clickable { /* TODO: logika edit stock */ },
+                            .clickable { onEditClicked() },
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.edit),
                             contentDescription = "Edit Button",
-                            modifier = Modifier.size(18.dp) // smaller icon
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                     Box(
@@ -375,7 +470,7 @@ fun FoodStockItem() {
                             .size(32.dp)
                             .clip(RoundedCornerShape(5.dp))
                             .background(colorResource(R.color.red_light))
-                            .clickable { openAlertDialog.value = true },
+                            .clickable { openAlertDialog = true },
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
@@ -387,17 +482,6 @@ fun FoodStockItem() {
                 }
             }
         }
-    }
-
-    if (openAlertDialog.value) {
-        DeleteConfirmationDialog(
-            onDismiss = { openAlertDialog.value = false },
-            onConfirm = {
-                openAlertDialog.value = false
-                println("Confirmation registered") // todo: tambahkan logika delete item
-            },
-            icon = Icons.Default.Warning
-        )
     }
 }
 

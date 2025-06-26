@@ -33,3 +33,15 @@ data class AddFoodStockResponseJson(
     @Json(name = "message") val message: String?,
     @Json(name = "foodStock") val foodStock: FoodStockJson?
 )
+
+@JsonClass(generateAdapter = true)
+data class UpdateFoodStockRequestJson(
+    @Json(name = "quantity") val quantity: Float
+)
+
+// Responsnya tetap sama seperti Add, jadi kita bisa pakai lagi
+@JsonClass(generateAdapter = true)
+data class UpdateFoodStockResponseJson(
+    @Json(name = "message") val message: String?,
+    @Json(name = "foodStock") val foodStock: FoodStockJson?
+)

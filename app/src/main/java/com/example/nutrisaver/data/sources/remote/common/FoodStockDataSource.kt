@@ -20,6 +20,8 @@ interface FoodStockDataSource {
      * @return List dari FoodStock.
      */
     suspend fun getAllFoodStock(token: String): List<FoodStock>
+    suspend fun deleteFoodStock(token: String, id: Int)
+    suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock
 }
 
 /**
@@ -57,13 +59,43 @@ class FoodStockDataSourceImpl(
     override suspend fun getAllFoodStock(token: String): List<FoodStock> {
         try {
             val formattedToken = "Bearer $token"
-            // Panggil endpoint get all food stock (Anda perlu menambahkannya di Webservice.kt)
-            val response = webservice.getAllFoodStock(formattedToken)
 
-            // Mapping dari List<FoodStockJson> ke List<FoodStock>
-            return response.mapNotNull { FoodStock.fromStockJson(it) }
+            // Panggil endpoint yang sekarang langsung mengembalikan List
+            val jsonList = webservice.getAllFoodStock(formattedToken) // <-- Ini sudah langsung List<FoodStockJson>
+
+            // Langsung mapping seperti biasa
+            return jsonList.mapNotNull { FoodStock.fromStockJson(it) }
+
         } catch (e: Exception) {
             Log.e("FoodStockRemoteDS", "Failed to get all food stock", e)
+            throw e
+        }
+    }
+
+    override suspend fun deleteFoodStock(token: String, id: Int) {
+        try {
+            val formattedToken = "Bearer $token"
+            val response = webservice.deleteFoodStock(formattedToken, id)
+            if (!response.isSuccessful) {
+                // Jika server merespons dengan error (misal: 404 Not Found)
+                throw Exception("Failed to delete food stock on server. Code: ${response.code()}")
+            }
+            // Jika berhasil, tidak perlu melakukan apa-apa lagi di sini.
+        } catch (e: Exception) {
+            Log.e("FoodStockRemoteDS", "Failed to delete food stock", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock {
+        try {
+            val formattedToken = "Bearer $token"
+            val requestJson = UpdateFoodStockRequestJson(quantity = quantity)
+            val responseWrapper = webservice.updateFoodStock(formattedToken, id, requestJson)
+            return FoodStock.fromStockJson(responseWrapper.foodStock)
+                ?: throw Exception("Invalid data received after updating.")
+        } catch (e: Exception) {
+            Log.e("FoodStockRemoteDS", "Failed to update food stock", e)
             throw e
         }
     }

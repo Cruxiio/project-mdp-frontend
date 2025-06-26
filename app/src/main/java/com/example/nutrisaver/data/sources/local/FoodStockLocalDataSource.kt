@@ -12,6 +12,7 @@ interface FoodStockLocalDataSource {
     suspend fun insertOrUpdate(foodStock: FoodStock)
     suspend fun insertAll(foodStocks: List<FoodStock>)
     suspend fun clearAll()
+    suspend fun deleteById(id: Int)
 }
 
 class FoodStockLocalDataSourceImpl(
@@ -46,5 +47,9 @@ class FoodStockLocalDataSourceImpl(
     override suspend fun clearAll() {
         foodStockDao.clearAll()
         Log.d("FoodStockLocalDS", "Cleared all food stocks from local DB.")
+    }
+
+    override suspend fun deleteById(id: Int) {
+        foodStockDao.deleteById(id)
     }
 }

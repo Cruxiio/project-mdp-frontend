@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.first
 interface FoodStockRepo {
     suspend fun getFoodStock(token: String): List<FoodStock>
     suspend fun addFoodStock(token: String, foodStock: FoodStock)
+    suspend fun deleteFoodStock(token: String, id: Int)
+    suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock
 }
 
 class FoodStockRepoImpl(
@@ -20,25 +22,21 @@ class FoodStockRepoImpl(
 ) : FoodStockRepo {
 
     override suspend fun getFoodStock(token: String): List<FoodStock> {
-        // --- PERBAIKAN DI BAGIAN INI ---
+        try {
+            // Selalu coba ambil data terbaru dari remote
+            Log.d("FoodStockRepo", "Fetching fresh data from remote...")
+            val remoteStock = foodRemoteDataSource.getAllFoodStock(token)
 
-        // 1. Ambil data pertama dari Flow<List<FoodStock>> yang disediakan oleh LocalDataSource.
-        //    Tidak perlu mapping lagi di sini, karena sudah dilakukan di dalam LocalDataSource.
-        val localStock = foodLocalDataSource.getAllFoodStock().first()
-
-        // 2. Logika cache diperbaiki menjadi isNotEmpty()
-        if (localStock.isNotEmpty()) {
-            Log.d("FoodStockRepo", "Returning ${localStock.size} items from local cache.")
-            return localStock
-        }
-
-        // Jika cache kosong, lanjutkan ke remote
-        Log.d("FoodStockRepo", "Local cache is empty. Fetching from remote.")
-        val remoteStock = foodRemoteDataSource.getAllFoodStock(token)
-        if (remoteStock.isNotEmpty()) {
+            // Hapus data lama dan masukkan data baru untuk sinkronisasi
+            foodLocalDataSource.clearAll()
             foodLocalDataSource.insertAll(remoteStock)
+
+            return remoteStock
+        } catch (e: Exception) {
+            // Jika gagal (misal: tidak ada internet), tampilkan data dari lokal sebagai fallback
+            Log.e("FoodStockRepo", "Failed to fetch from remote. Returning local data.", e)
+            return foodLocalDataSource.getAllFoodStock().first()
         }
-        return remoteStock
     }
 
     override suspend fun addFoodStock(token: String, foodStock: FoodStock) {
@@ -50,5 +48,25 @@ class FoodStockRepoImpl(
             Log.e("FoodStockRepo", "Failed to add food stock in repo", e)
             throw e
         }
+    }
+
+    override suspend fun deleteFoodStock(token: String, id: Int) {
+        try {
+            // Hapus dari remote dulu
+            foodRemoteDataSource.deleteFoodStock(token, id)
+            // Jika remote berhasil, hapus dari cache lokal
+            foodLocalDataSource.deleteById(id)
+            Log.d("FoodStockRepo", "Successfully deleted food stock with ID: $id")
+        } catch (e: Exception) {
+            Log.e("FoodStockRepo", "Failed to delete food stock in repo", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock {
+        val updatedStock = foodRemoteDataSource.updateFoodStockQuantity(token, id, quantity)
+        // Update cache lokal dengan data baru dari server
+        foodLocalDataSource.insertOrUpdate(updatedStock)
+        return updatedStock
     }
 }

@@ -1,12 +1,15 @@
 package com.example.nutrisaver
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.nutrisaver.ui.screens.admin.AllUserScreen
 import com.example.nutrisaver.ui.screens.admin.ApplicationScreen
 import com.example.nutrisaver.ui.screens.admin.HealthArticleScreen
@@ -76,10 +79,26 @@ fun MyAppNavigation(
                 LogHistoryScreen(navController = navController)
             }
             composable("foodstock") {
-                FoodStockScreen(navController = navController)
+                FoodStockScreen(navController = navController, foodStockViewModel = foodStockViewModel)
             }
-            composable("addfoodstock") {
-                AddFoodStockScreen(navController = navController, foodStockViewModel = foodStockViewModel)
+            composable(
+                // 1. Definisikan route dengan argumen opsional 'foodStockJson'
+                route = "add_food_stock_screen?foodStockJson={foodStockJson}",
+                arguments = listOf(navArgument("foodStockJson") {
+                    type = NavType.StringType
+                    nullable = true // Tandai bahwa argumen ini boleh null (untuk mode Add)
+                    defaultValue = null
+                })
+            ) { backStackEntry ->
+                // 2. Ambil argumen dari backStackEntry
+                val foodStockJson = backStackEntry.arguments?.getString("foodStockJson")
+
+                // 3. Kirim argumen ke AddFoodStockScreen
+                AddFoodStockScreen(
+                    navController = navController,
+                    foodStockViewModel = foodStockViewModel,
+                    foodStockJson = foodStockJson?.let { Uri.decode(it) } // Decode URL-encoded string
+                )
             }
             composable("recipe") {
                 RecipeScreen(navController = navController)

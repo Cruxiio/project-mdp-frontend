@@ -2,6 +2,7 @@ package com.example.nutrisaver.data.model
 
 import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
 import java.time.LocalDate
+import java.time.OffsetDateTime // <-- Tambahkan import ini
 import java.time.format.DateTimeFormatter
 
 data class FoodStock(
@@ -16,12 +17,27 @@ data class FoodStock(
     val startRemindDate: LocalDate?
 ){
     companion object {
-        // PERBAIKAN: Buat fungsi mapper 'fromJson'
-        // Ini akan menggantikan 'fromStock' yang error.
         fun fromStockJson(json: FoodStockJson?): FoodStock? {
             if (json?.id == null || json.userId == null || json.name == null) {
                 return null // Return null jika data wajib tidak ada
             }
+
+            // PERBAIKAN: Gunakan OffsetDateTime untuk parsing format tanggal dari server,
+            // lalu konversi ke LocalDate.
+//            val expiredDate = json.expiredDate?.let {
+//                OffsetDateTime.parse(it).toLocalDate()
+//            }
+//            val startRemindDate = json.startRemindDate?.let {
+//                OffsetDateTime.parse(it).toLocalDate()
+//            }
+//
+            val expiredDate = json.expiredDate?.let {
+                LocalDate.parse(it)
+            }
+            val startRemindDate = json.startRemindDate?.let {
+                LocalDate.parse(it)
+            }
+
             return FoodStock(
                 id = json.id,
                 userId = json.userId,
@@ -30,11 +46,9 @@ data class FoodStock(
                 imageUrl = json.image,
                 quantity = json.quantity ?: 0f,
                 unit = json.unit ?: "",
-                expiredDate = json.expiredDate?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) },
-                startRemindDate = json.startRemindDate?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) }
+                expiredDate = expiredDate,
+                startRemindDate = startRemindDate
             )
         }
     }
 }
-
-

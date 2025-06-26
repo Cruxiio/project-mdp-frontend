@@ -8,10 +8,15 @@ import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
 import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.IngredientJson
 import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
+import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
+import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
+import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -47,6 +52,20 @@ interface Webservice {
         @Body foodStock: NewFoodStockRequestJson
     ): AddFoodStockResponseJson // Asumsi backend mengembalikan foodStock yang baru dibuat
 
-    @GET("api/foodstock/all") // Asumsi path-nya ini, sesuaikan jika perlu
+    @GET("api/foodstock/stock") // Asumsi path-nya ini, sesuaikan jika perlu
     suspend fun getAllFoodStock(@Header("Authorization") token: String): List<FoodStockJson>
+
+    @DELETE("api/foodstock/delete/{id}")
+    suspend fun deleteFoodStock(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int
+    ): Response<Unit> // Gunakan Response<Unit> karena kita hanya butuh status sukses/gagal
+
+    @PUT("api/foodstock/update/{id}")
+    suspend fun updateFoodStock(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int,
+        @Body request: UpdateFoodStockRequestJson // <-- Gunakan request yang baru
+    ): UpdateFoodStockResponseJson
+
 }

@@ -21,4 +21,7 @@ interface FoodStockDao {
 
     @Query("DELETE FROM food_stock")
     suspend fun clearAll()
+
+    @Query("DELETE FROM food_stock WHERE id = :id")
+    suspend fun deleteById(id: Int)
 }
