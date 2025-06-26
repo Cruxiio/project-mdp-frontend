@@ -144,7 +144,7 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
             .background(backgroundGradient)
     ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp, vertical = 8.dp)
         ) {
