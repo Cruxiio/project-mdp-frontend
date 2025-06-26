@@ -50,7 +50,7 @@ class AuthViewModel(
         } else {
             _authState.value = AuthState.Unauthenticated
         }
-//        getAlergen("")
+        getAlergen("")
     }
 
     // ======================== common repo func ==========================

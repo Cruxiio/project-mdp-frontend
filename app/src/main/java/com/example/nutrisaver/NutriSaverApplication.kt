@@ -60,7 +60,7 @@ class NutriSaverApplication : Application() {
         val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         val retrofit = Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl("http://192.168.0.111:3000/")
+            .baseUrl("http://10.0.2.2:3000/")
             .client(okHttpClient)// Pastikan IP ini benar untuk emulator Anda
             .build()
 
