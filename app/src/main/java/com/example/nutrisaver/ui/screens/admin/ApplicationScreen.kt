@@ -71,7 +71,7 @@ fun ApplicationContent(
             Spacer(Modifier.height(20.dp))
             Button(
                 onClick = {
-                    navController.navigate("healtharticle")
+                    navController.navigate("adminhealtharticle")
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(

@@ -19,9 +19,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material.Switch
@@ -101,7 +103,6 @@ private fun convertLocalDateToMillis(date: LocalDate): Long {
         .toEpochMilli()
 }
 
-
 @Composable
 fun AddFoodStockScreen(navController: NavController, foodStockViewModel: FoodStockViewModel, foodStockJson: String? ) {
     // Ubah JSON string menjadi objek FoodStock. Akan null jika ini mode "Add"
@@ -111,6 +112,9 @@ fun AddFoodStockScreen(navController: NavController, foodStockViewModel: FoodSto
     val isEditMode = foodStockToEdit != null
 
     Scaffold(
+        topBar = {
+            TopBar(onBackClick = { navController.popBackStack() })
+        },
         bottomBar = {
             if (!isEditMode) { // Hanya tampilkan bottom bar di mode Add
                 UserBottomNavBar(navController = navController)
@@ -219,12 +223,12 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
     val reminderOptions = listOf("1 Month", "1 Week", "3 Days", "1 Day")
     var selectedReminderOption by remember { mutableStateOf<String?>(null) }
 
-
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(backgroundGradient)
     ) {
+        // Scrollable Content
         TopBar(
             title = if (isEditMode) "Edit Food Stock" else "Add Food Stock",
             onBackClick = { navController.popBackStack() }
@@ -232,9 +236,8 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxWidth()
-                .weight(1f) // Makes this column fill available space, pushing the button to bottom
-                .padding(horizontal = 24.dp, vertical = 16.dp) // Adjusted padding
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             Text(
                 "Food Name",
@@ -385,27 +388,6 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                 )
             }
 
-            if (showDateModal) {
-                DatePickerDialog(
-                    onDismissRequest = { showDateModal = false },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showDateModal = false
-                            // datePickerState.selectedDateMillis is automatically captured
-                        }) {
-                            Text("OK")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDateModal = false }) {
-                            Text("Cancel")
-                        }
-                    }
-                ) {
-                    DatePicker(state = datePickerState)
-                }
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
@@ -428,7 +410,9 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     )
                 )
             }
+
             Spacer(modifier = Modifier.height(10.dp))
+
             if (reminderEnabled) {
                 Text(
                     "Remind Me:",
@@ -469,8 +453,17 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                     }
                 }
             }
-            Spacer(modifier = Modifier.weight(1f)) // Pushes the button to the bottom
-            Spacer(modifier = Modifier.height(20.dp))
+
+            // Add extra space at the bottom to ensure content doesn't get hidden behind the button
+            Spacer(modifier = Modifier.height(80.dp))
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp) // Outer padding from screen edges
+        ) {
             Button(
                 onClick = {
                     val finalQuantity = quantityInput.toFloatOrNull()
@@ -533,23 +526,23 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                         navController.popBackStack()
                     }
                 },
-                contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
                 ),
+                contentPadding = PaddingValues(0.dp),
                 shape = CircleShape,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .background(
                             Brush.horizontalGradient(
                                 listOf(green, greenTealDark)
-                            ), shape = CircleShape
-                        ),
+                            ),
+                            shape = CircleShape
+                        )
+                        .padding(vertical = 10.dp), // Internal padding for button content
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -560,6 +553,44 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+        }
+
+        // Bottom Sheet and Date Modal
+        if (showBottomSheet) {
+            FoodSearchBottomSheet(
+                query = query,
+                onQueryChange = { query = it },
+                filteredOptions = filteredOptions,
+                selectedFood = selectedFood,
+                onSelectFood = {
+                    selectedFood = it
+                    showBottomSheet = false
+                    query = ""
+                },
+                onDismiss = { showBottomSheet = false },
+                sheetState = sheetState
+            )
+        }
+
+        if (showDateModal) {
+            DatePickerDialog(
+                onDismissRequest = { showDateModal = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDateModal = false
+                        // datePickerState.selectedDateMillis is automatically captured
+                    }) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDateModal = false }) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
             }
         }
     }
@@ -579,7 +610,12 @@ private fun TopBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(greenGradient)
-            .padding(vertical = 12.dp, horizontal = 16.dp)
+            .padding(
+                top = 32.dp,
+                bottom = 16.dp,
+                start = 16.dp,
+                end = 16.dp
+            )
     ) {
         Row(
             modifier = modifier
@@ -606,7 +642,6 @@ private fun TopBar(
         }
     }
 }
-
 
 @Composable
 private fun FoodSelector(selectedFood: String?, onClick: () -> Unit) {
@@ -727,7 +762,6 @@ private fun FoodSearchBottomSheet(
                     }
                 }
             }
-
         }
     }
 }

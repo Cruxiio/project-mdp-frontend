@@ -190,7 +190,7 @@ fun AllUserContent(
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Filter Dropdowns
             Row(

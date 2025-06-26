@@ -62,7 +62,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
+import com.example.nutrisaver.ui.screens.admin.generateDummyHealthArticles
+import com.example.nutrisaver.ui.screens.user.dashboard.CalorieProgressSection
 import com.example.nutrisaver.ui.screens.user.dashboard.FoodStockExpirationSection
+import com.example.nutrisaver.ui.screens.user.dashboard.HealthArticleSection
 import com.example.nutrisaver.ui.screens.user.dashboard.MealLogSection
 import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeBottomSheet
 import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeSection
@@ -210,7 +213,6 @@ fun DashboardScreen(navController: NavController, userViewModel: UserViewModel) 
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardContent(modifier: Modifier = Modifier, navController: NavController, userViewModel: UserViewModel) {
     // --- 1. AMBIL SEMUA DATA DARI VIEWMODEL ---
@@ -241,6 +243,15 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     val targetWater = consumption?.targetWater?.toInt() ?: 2000
     val waterIntakeProgress = if (targetWater > 0f) minOf(currentWater.toFloat() / targetWater, 1f) else 0f
 
+//    var showBottomSheet by remember { mutableStateOf(false) }
+//    var isReduceMode by remember { mutableStateOf(false) }
+
+    // --- Definisi warna dan gradient (tidak ada perubahan) ---
+//    val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
+//    val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
+    // todo: ganti ke water intake user
+    val currentIntake = remember { mutableStateOf(1000) }
+    val targetIntake = 2000
     var showWaterIntakeBottomSheet by remember { mutableStateOf(false) }
     var isReduceMode by remember { mutableStateOf(false) }
 
@@ -254,8 +265,9 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     var filteredWeightData by remember { mutableStateOf(emptyList<WeightEntryDummy>()) }
     var showWeightLogBottomSheet by remember { mutableStateOf(false) }
 
-    // todo: nanti hapus setelah backend
+    // todo: nanti ganti codingannya sama function viewmodelnya setelah backend
     val foodStockItems = remember { generateDummyFoodStock() }
+    val healthArticleItems = remember { generateDummyHealthArticles() }
 
     LaunchedEffect(selectedPeriod, allWeightData) {
         val today = LocalDate.now()
@@ -294,9 +306,11 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             ) {
                 Text(
                     text = "Hi,  ${userProfile?.name?.split(" ")?.first() ?: "User"}!",
-                    fontSize = 20.sp,
+                    fontSize = 28.sp,
                     fontFamily = OpenSans,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    letterSpacing = (-0.5).sp
                 )
                 IconButton(onClick = {
                     navController.navigate("notification")
@@ -490,6 +504,14 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                 },
                 foodStockItems = foodStockItems,
                 modifier = Modifier.fillMaxWidth()
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
+
+            HealthArticleSection(
+                modifier = Modifier.fillMaxWidth(),
+                healthArticleItems = healthArticleItems,
+                navController = navController
             )
         }
     }
