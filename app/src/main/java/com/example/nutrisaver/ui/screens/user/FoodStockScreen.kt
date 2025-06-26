@@ -49,6 +49,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -70,6 +71,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.nutrisaver.R
@@ -99,8 +103,18 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
 
-    LaunchedEffect(Unit) {
-        foodStockViewModel.loadFoodStock()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Perintah ini akan selalu dijalankan setiap kali layar kembali aktif
+                foodStockViewModel.loadFoodStock()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     // 2. Amati perubahan state dari ViewModel
@@ -178,9 +192,12 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Dropdown untuk Filter Berdasarkan (Stock Name, etc.)
                 Box(modifier = Modifier.weight(1f)) {
+                    @OptIn(ExperimentalMaterial3Api::class)
                     ExposedDropdownMenuBox(
                         expanded = filterExpanded,
                         onExpandedChange = { filterExpanded = !filterExpanded }
@@ -196,21 +213,18 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                                 .menuAnchor()
                                 .fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = colorResource(R.color.black),
-                                unfocusedTextColor = colorResource(R.color.black),
+                                focusedBorderColor = green,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
                                 focusedContainerColor = colorResource(R.color.form_input),
                                 unfocusedContainerColor = colorResource(R.color.form_input)
                             ),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            shape = RoundedCornerShape(10.dp),
+                        )
+                        ExposedDropdownMenu(
+                            expanded = filterExpanded,
+                            onDismissRequest = { filterExpanded = false }
                         ) {
                             filterOptions.forEach { option ->
                                 DropdownMenuItem(
@@ -224,7 +238,10 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                         }
                     }
                 }
+
+                // Dropdown untuk Tipe Filter (ASC/DESC)
                 Box(modifier = Modifier.width(120.dp)) {
+                    @OptIn(ExperimentalMaterial3Api::class)
                     ExposedDropdownMenuBox(
                         expanded = filterTypeExpanded,
                         onExpandedChange = { filterTypeExpanded = !filterTypeExpanded }
@@ -240,79 +257,35 @@ fun FoodStockContent(modifier: Modifier = Modifier, navController: NavController
                                 .menuAnchor()
                                 .fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = colorResource(R.color.black),
-                                unfocusedTextColor = colorResource(R.color.black),
+                                focusedBorderColor = green,
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
                                 focusedContainerColor = colorResource(R.color.form_input),
                                 unfocusedContainerColor = colorResource(R.color.form_input)
                             ),
                             shape = RoundedCornerShape(10.dp)
                         )
-
-                // Order Dropdown
-                Box(modifier = Modifier.weight(0.7f)) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { filterTypeExpanded = !filterTypeExpanded }
-                            .border(
-                                width = 0.4.dp,
-                                color = Color.Gray.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(10.dp)
-                            ),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        ExposedDropdownMenu(
+                            expanded = filterTypeExpanded,
+                            onDismissRequest = { filterTypeExpanded = false }
                         ) {
                             filterTypeOptions.forEach { option ->
                                 DropdownMenuItem(
-                                    text = { Text(option) },
+                                    text = {
+                                        Text(
+                                            text = option,
+                                            fontFamily = OpenSans,
+                                            color = if (option == selectedFilterType) green else Color.Black,
+                                            fontWeight = if (option == selectedFilterType) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
                                     onClick = {
                                         selectedFilterType = option
                                         filterTypeExpanded = false
                                     }
                                 )
                             }
-                            Text(
-                                text = filterType,
-                                fontSize = 14.sp,
-                                fontFamily = OpenSans,
-                                color = Color.Black
-                            )
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Dropdown",
-                                tint = Color.Gray
-                            )
-                        }
-                    }
-
-                    DropdownMenu(
-                        expanded = filterTypeExpanded,
-                        onDismissRequest = { filterTypeExpanded = false },
-                        modifier = Modifier.background(colorResource(R.color.form_input))
-                    ) {
-                        filterTypeOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = option,
-                                        fontFamily = OpenSans,
-                                        color = if (option == filterType) green else Color.Black,
-                                        fontWeight = if (option == filterType) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                },
-                                onClick = {
-                                    filterType = option
-                                    filterTypeExpanded = false
-                                }
-                            )
                         }
                     }
                 }

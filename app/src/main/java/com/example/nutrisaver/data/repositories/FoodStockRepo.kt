@@ -3,12 +3,10 @@ package com.example.nutrisaver.data.repositories
 import android.util.Log
 import com.example.nutrisaver.data.model.FoodStock
 import com.example.nutrisaver.data.sources.local.FoodStockLocalDataSource
-import com.example.nutrisaver.data.sources.remote.Webservice
 import com.example.nutrisaver.data.sources.remote.common.FoodStockDataSource
-import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
 import kotlinx.coroutines.flow.first
 
-
+// ... (interface FoodStockRepo tetap sama) ...
 interface FoodStockRepo {
     suspend fun getFoodStock(token: String): List<FoodStock>
     suspend fun addFoodStock(token: String, foodStock: FoodStock)
@@ -16,57 +14,65 @@ interface FoodStockRepo {
     suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock
 }
 
+
 class FoodStockRepoImpl(
     private val foodRemoteDataSource: FoodStockDataSource,
     private val foodLocalDataSource: FoodStockLocalDataSource
 ) : FoodStockRepo {
 
-    override suspend fun getFoodStock(token: String): List<FoodStock> {
-        try {
-            // Selalu coba ambil data terbaru dari remote
-            Log.d("FoodStockRepo", "Fetching fresh data from remote...")
-            val remoteStock = foodRemoteDataSource.getAllFoodStock(token)
+    private val TAG = "DataFlow-Repository" // Tag untuk Logcat
 
-            // Hapus data lama dan masukkan data baru untuk sinkronisasi
+    override suspend fun getFoodStock(token: String): List<FoodStock> {
+        Log.d(TAG, "getFoodStock: Proses dimulai di Repository.")
+        try {
+            Log.d(TAG, "getFoodStock: Mencoba mengambil data dari REMOTE...")
+            val remoteStock = foodRemoteDataSource.getAllFoodStock(token)
+            Log.d(TAG, "getFoodStock: BERHASIL mengambil dari REMOTE. Jumlah item: ${remoteStock.size}")
+
+            Log.d(TAG, "getFoodStock: Membersihkan cache lokal (clearAll)...")
             foodLocalDataSource.clearAll()
+
+            Log.d(TAG, "getFoodStock: Memasukkan data baru ke cache lokal (insertAll)...")
             foodLocalDataSource.insertAll(remoteStock)
 
             return remoteStock
         } catch (e: Exception) {
-            // Jika gagal (misal: tidak ada internet), tampilkan data dari lokal sebagai fallback
-            Log.e("FoodStockRepo", "Failed to fetch from remote. Returning local data.", e)
-            return foodLocalDataSource.getAllFoodStock().first()
+            Log.e(TAG, "getFoodStock: GAGAL mengambil dari REMOTE. Mengambil dari cache LOKAL sebagai fallback.", e)
+            val localData = foodLocalDataSource.getAllFoodStock().first()
+            Log.d(TAG, "getFoodStock: Mengembalikan data dari LOKAL. Jumlah item: ${localData.size}")
+            return localData
         }
     }
 
     override suspend fun addFoodStock(token: String, foodStock: FoodStock) {
+        Log.d(TAG, "addFoodStock: Menambah stok di Repository.")
         try {
             val newStockFromRemote = foodRemoteDataSource.addFoodStock(token, foodStock)
             foodLocalDataSource.insertOrUpdate(newStockFromRemote)
-            Log.d("FoodStockRepo", "Successfully added and cached food stock: ${newStockFromRemote.name}")
+            Log.d(TAG, "addFoodStock: BERHASIL menambah di remote dan mengupdate cache lokal untuk: ${newStockFromRemote.name}")
         } catch (e: Exception) {
-            Log.e("FoodStockRepo", "Failed to add food stock in repo", e)
+            Log.e(TAG, "addFoodStock: GAGAL menambah stok di repo.", e)
             throw e
         }
     }
 
     override suspend fun deleteFoodStock(token: String, id: Int) {
+        Log.d(TAG, "deleteFoodStock: Menghapus stok di Repository untuk ID: $id.")
         try {
-            // Hapus dari remote dulu
             foodRemoteDataSource.deleteFoodStock(token, id)
-            // Jika remote berhasil, hapus dari cache lokal
             foodLocalDataSource.deleteById(id)
-            Log.d("FoodStockRepo", "Successfully deleted food stock with ID: $id")
+            Log.d(TAG, "deleteFoodStock: BERHASIL menghapus dari remote dan lokal.")
         } catch (e: Exception) {
-            Log.e("FoodStockRepo", "Failed to delete food stock in repo", e)
+            Log.e(TAG, "deleteFoodStock: GAGAL menghapus stok di repo.", e)
             throw e
         }
     }
 
     override suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock {
+        Log.d(TAG, "updateFoodStockQuantity: Mengupdate stok di Repository untuk ID: $id.")
         val updatedStock = foodRemoteDataSource.updateFoodStockQuantity(token, id, quantity)
-        // Update cache lokal dengan data baru dari server
         foodLocalDataSource.insertOrUpdate(updatedStock)
+        Log.d(TAG, "updateFoodStockQuantity: BERHASIL mengupdate di remote dan lokal.")
         return updatedStock
     }
 }

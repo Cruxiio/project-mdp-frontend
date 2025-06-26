@@ -46,11 +46,11 @@ interface Webservice {
     @GET("api/ingredient/all")
     suspend fun getAllIngredients(@Header("Authorization") token: String): IngredientGetAllResponse
 
-    @POST("api/foodstock/new") // Sesuaikan path jika berbeda
+    @POST("api/foodstock/new")
     suspend fun addFoodStock(
         @Header("Authorization") token: String,
         @Body foodStock: NewFoodStockRequestJson
-    ): AddFoodStockResponseJson // Asumsi backend mengembalikan foodStock yang baru dibuat
+    ): Response<AddFoodStockResponseJson>
 
     @GET("api/foodstock/stock") // Asumsi path-nya ini, sesuaikan jika perlu
     suspend fun getAllFoodStock(@Header("Authorization") token: String): List<FoodStockJson>

@@ -3,6 +3,7 @@ package com.example.nutrisaver.data.sources.remote.common
 import android.util.Log
 import com.example.nutrisaver.data.model.FoodStock
 import com.example.nutrisaver.data.sources.remote.Webservice
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 interface FoodStockDataSource {
@@ -31,28 +32,40 @@ class FoodStockDataSourceImpl(
     private val webservice: Webservice
 ) : FoodStockDataSource {
 
-    override suspend fun addFoodStock(token: String, newFoodStock: FoodStock): FoodStock {
-        try {
-            val formattedToken = "Bearer $token"
-            val requestJson = NewFoodStockRequestJson(
-                ingredientId = newFoodStock.ingredientId,
-                quantity = newFoodStock.quantity,
-                unit = newFoodStock.unit,
-                expiredDate = newFoodStock.expiredDate?.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                startRemindDate = newFoodStock.startRemindDate?.format(DateTimeFormatter.ISO_LOCAL_DATE)
+    override suspend fun addFoodStock(token: String, foodStock: FoodStock): FoodStock {
+        // 1. Buat request body dari domain model
+        val requestBody = NewFoodStockRequestJson(
+            ingredientId = foodStock.ingredientId,
+            quantity = foodStock.quantity,
+            unit = foodStock.unit,
+            expiredDate = foodStock.expiredDate?.toString(),
+            startRemindDate = foodStock.startRemindDate?.toString()
+        )
+
+        // 2. Panggil webservice dengan format "Bearer <spasi> token"
+        // PASTIKAN BENTUKNYA SEPERTI INI
+        val response = webservice.addFoodStock("Bearer $token", requestBody)
+
+        // 3. Cek respons
+        if (response.isSuccessful && response.body() != null) {
+            val responseBody = response.body()!!
+            val receivedItemJson = responseBody.foodStock
+
+            // Proses Mapping...
+            return FoodStock(
+                id = receivedItemJson.id,
+                userId = foodStock.userId,
+                ingredientId = foodStock.ingredientId,
+                name = receivedItemJson.name,
+                imageUrl = receivedItemJson.imageUrl,
+                quantity = receivedItemJson.quantity.toFloatOrNull() ?: 0f,
+                unit = receivedItemJson.unit,
+                expiredDate = receivedItemJson.expiredDate?.let { LocalDate.parse(it) },
+                startRemindDate = receivedItemJson.startRemindDate?.let { LocalDate.parse(it) }
             )
-
-            val responseWrapper = webservice.addFoodStock(formattedToken, requestJson)
-
-            // =================================================================
-            // PERBAIKAN: Panggil fungsi 'fromJson' yang sudah benar namanya
-            // =================================================================
-            return FoodStock.fromStockJson(responseWrapper.foodStock)
-                ?: throw Exception("Invalid data received from server after adding food stock.")
-
-        } catch (e: Exception) {
-            Log.e("FoodStockRemoteDS", "Failed to add food stock", e)
-            throw e
+        } else {
+            // Jika jaringan gagal atau server error (seperti 401)
+            throw Exception("Gagal menambah stok. Kode: ${response.code()} - ${response.message()}")
         }
     }
 

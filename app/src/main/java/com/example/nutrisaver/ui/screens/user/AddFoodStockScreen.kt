@@ -113,12 +113,13 @@ fun AddFoodStockScreen(navController: NavController, foodStockViewModel: FoodSto
 
     Scaffold(
         topBar = {
-            TopBar(onBackClick = { navController.popBackStack() })
+            TopBar(
+                title = if (isEditMode) "Edit Food Stock" else "Add Food Stock",
+                onBackClick = { navController.popBackStack() }
+            )
         },
         bottomBar = {
-            if (!isEditMode) { // Hanya tampilkan bottom bar di mode Add
                 UserBottomNavBar(navController = navController)
-            }
         }
     ) { innerPadding ->
         AddFoodStockContent(
@@ -179,17 +180,22 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
     val context = LocalContext.current
 
     LaunchedEffect(addState) {
-        when (val state = addState) {
-            is AddFoodStockState.Success -> {
-                Toast.makeText(context, "Stok makanan berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
-                foodStockViewModel.onAddFinished() // Reset state
-                navController.popBackStack()
+        // Hanya bereaksi jika state-nya ada (tidak null)
+        addState?.let { state ->
+            when (state) {
+                is AddFoodStockState.Success -> {
+                    Toast.makeText(context, "Stok makanan berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                }
+                is AddFoodStockState.Error -> {
+                    Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                }
+                is AddFoodStockState.Loading -> {
+                    // Mungkin tampilkan loading indicator jika perlu
+                }
             }
-            is AddFoodStockState.Error -> {
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
-                foodStockViewModel.onAddFinished() // Reset state
-            }
-            else -> {} // Loading atau null
+            // Setelah state selesai dipakai (ditampilkan), langsung bersihkan!
+            foodStockViewModel.onAddStateConsumed()
         }
     }
 
@@ -228,11 +234,6 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
             .fillMaxSize()
             .background(backgroundGradient)
     ) {
-        // Scrollable Content
-        TopBar(
-            title = if (isEditMode) "Edit Food Stock" else "Add Food Stock",
-            onBackClick = { navController.popBackStack() }
-        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -523,7 +524,6 @@ private fun AddFoodStockContent(modifier: Modifier = Modifier, navController: Na
                             expiredDate = finalExpiredDate,
                             startRemindDate = finalStartRemindDate
                         )
-                        navController.popBackStack()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -633,7 +633,7 @@ private fun TopBar(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = "Add Food Stock",
+                text = title,
                 fontSize = 20.sp,
                 fontFamily = OpenSans,
                 fontWeight = FontWeight.Bold,

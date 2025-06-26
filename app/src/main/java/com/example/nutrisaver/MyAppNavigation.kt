@@ -10,9 +10,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.nutrisaver.ui.screens.admin.AdminHealthArticleScreen
 import com.example.nutrisaver.ui.screens.admin.AllUserScreen
 import com.example.nutrisaver.ui.screens.admin.ApplicationScreen
-import com.example.nutrisaver.ui.screens.admin.HealthArticleScreen
+//import com.example.nutrisaver.ui.screens.admin.HealthArticleScreen
 import com.example.nutrisaver.ui.screens.auth.LoginScreen
 import com.example.nutrisaver.ui.screens.auth.RegisterDetailScreen
 import com.example.nutrisaver.ui.screens.auth.RegisterScreen

@@ -27,11 +27,22 @@ data class FoodStockJson(
     @Json(name = "start_remind_date") val startRemindDate: String?
 )
 
-// 3. Untuk menampung seluruh respons dari API addFoodStock
+@JsonClass(generateAdapter = true)
+data class FoodStockResponseItemJson(
+    @Json(name = "id") val id: Int,
+    @Json(name = "name") val name: String,
+    @Json(name = "image") val imageUrl: String?,
+    @Json(name = "quantity") val quantity: String, // <<-- KUNCI: Didefinisikan sebagai String
+    @Json(name = "unit") val unit: String,
+    @Json(name = "expired_date") val expiredDate: String?, // <<-- KUNCI: Didefinisikan sebagai String
+    @Json(name = "start_remind_date") val startRemindDate: String?
+)
+
+// Class ini mewakili struktur JSON lengkap dari respons endpoint "new"
 @JsonClass(generateAdapter = true)
 data class AddFoodStockResponseJson(
-    @Json(name = "message") val message: String?,
-    @Json(name = "foodStock") val foodStock: FoodStockJson?
+    @Json(name = "message") val message: String,
+    @Json(name = "foodStock") val foodStock: FoodStockResponseItemJson
 )
 
 @JsonClass(generateAdapter = true)

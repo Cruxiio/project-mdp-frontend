@@ -1,5 +1,6 @@
 package com.example.nutrisaver.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,18 +15,15 @@ import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 
 sealed class AddFoodStockState {
-    object Idle : AddFoodStockState() // State awal
     object Loading : AddFoodStockState()
     object Success : AddFoodStockState()
     data class Error(val message: String) : AddFoodStockState()
 }
-
 sealed class FoodStockListState {
     object Loading : FoodStockListState()
     data class Success(val data: List<FoodStock>) : FoodStockListState()
     data class Error(val message: String) : FoodStockListState()
 }
-
 sealed class UpdateFoodStockState {
     object Idle : UpdateFoodStockState()
     object Loading : UpdateFoodStockState()
@@ -33,18 +31,21 @@ sealed class UpdateFoodStockState {
     data class Error(val message: String) : UpdateFoodStockState()
 }
 
+
 class FoodStockViewModel(
     private val ingredientRepo: IngredientRepo,
     private val foodStockRepo: FoodStockRepo
 ) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val TAG = "DataFlow-ViewModel"
 
     private val _allIngredients = MutableLiveData<List<Ingredient>>()
     val allIngredients: LiveData<List<Ingredient>> = _allIngredients
 
-    private val _addState = MutableLiveData<AddFoodStockState>(AddFoodStockState.Idle)
-    val addState: LiveData<AddFoodStockState> = _addState
+    // State sudah benar bisa null
+    private val _addState = MutableLiveData<AddFoodStockState?>(null)
+    val addState: LiveData<AddFoodStockState?> = _addState
 
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
@@ -61,19 +62,14 @@ class FoodStockViewModel(
     fun loadAllIngredients() {
         viewModelScope.launch {
             try {
-                // Ambil token dari user yang sedang login
                 val firebaseUser = auth.currentUser
                 val token = firebaseUser?.getIdToken(true)?.await()?.token
-
                 if (token == null) {
                     _error.postValue("Sesi tidak valid. Silakan login kembali.")
                     return@launch
                 }
-
-                // Panggil repository dengan token
                 val ingredients = ingredientRepo.getIngredients(token)
                 _allIngredients.postValue(ingredients)
-
             } catch (e: Exception) {
                 _error.postValue("Gagal memuat bahan makanan: ${e.message}")
             }
@@ -85,35 +81,18 @@ class FoodStockViewModel(
         quantity: Float,
         unit: String,
         expiredDate: LocalDate?,
-        startRemindDate: LocalDate? // Bisa null, backend akan menghitungnya
+        startRemindDate: LocalDate?
     ) {
-        _addState.value = AddFoodStockState.Loading // Set state menjadi loading
+        _addState.value = AddFoodStockState.Loading
         viewModelScope.launch {
             try {
                 val token = auth.currentUser?.getIdToken(true)?.await()?.token
-                val userId = auth.currentUser?.uid
-                if (token == null || userId == null) {
-                    throw Exception("Sesi tidak valid. Silakan login kembali.")
-                }
+                if (token == null) throw Exception("Sesi tidak valid.")
 
-                // Buat objek FoodStock dari input UI
-                val newFoodStock = FoodStock(
-                    id = null,
-                    userId = 0, // Backend akan menggunakan ID dari token, ini bisa diabaikan
-                    ingredientId = selectedIngredient.id,
-                    name = selectedIngredient.name,
-                    imageUrl = selectedIngredient.imageUrl,
-                    quantity = quantity,
-                    unit = unit,
-                    expiredDate = expiredDate,
-                    startRemindDate = startRemindDate
-                )
-
-                // Panggil repository untuk mengirim data ke backend
+                val newFoodStock = FoodStock(id = null, userId = 0, ingredientId = selectedIngredient.id, name = selectedIngredient.name, imageUrl = selectedIngredient.imageUrl, quantity = quantity, unit = unit, expiredDate = expiredDate, startRemindDate = startRemindDate)
                 foodStockRepo.addFoodStock(token, newFoodStock)
-
                 _addState.value = AddFoodStockState.Success
-
+                loadFoodStock()
             } catch (e: Exception) {
                 _addState.value = AddFoodStockState.Error(e.message ?: "Gagal menambahkan stok makanan.")
             }
@@ -121,19 +100,16 @@ class FoodStockViewModel(
     }
 
     fun loadFoodStock() {
-        _foodStocks.value = FoodStockListState.Loading // Set state ke loading
+        _foodStocks.value = FoodStockListState.Loading
         viewModelScope.launch {
             try {
                 val token = auth.currentUser?.getIdToken(true)?.await()?.token
                 if (token == null) {
-                    _foodStocks.postValue(FoodStockListState.Error("Sesi tidak valid. Silakan login kembali."))
+                    _foodStocks.postValue(FoodStockListState.Error("Sesi tidak valid."))
                     return@launch
                 }
-
-                // Panggil repository untuk mendapatkan data
                 val stocks = foodStockRepo.getFoodStock(token)
                 _foodStocks.postValue(FoodStockListState.Success(stocks))
-
             } catch (e: Exception) {
                 _foodStocks.postValue(FoodStockListState.Error(e.message ?: "Gagal memuat data stok."))
             }
@@ -144,18 +120,9 @@ class FoodStockViewModel(
         viewModelScope.launch {
             try {
                 val token = auth.currentUser?.getIdToken(true)?.await()?.token
-                if (token == null) {
-                    _error.postValue("Sesi tidak valid.")
-                    return@launch
-                }
-
-                // Panggil repository untuk menghapus
+                if (token == null) throw Exception("Sesi tidak valid.")
                 foodStockRepo.deleteFoodStock(token, id)
-
-                // PENTING: Refresh daftar setelah berhasil menghapus.
-                // Cara paling mudah adalah memuat ulang semua data.
                 loadFoodStock()
-
             } catch (e: Exception) {
                 _error.postValue("Gagal menghapus stok: ${e.message}")
             }
@@ -168,22 +135,21 @@ class FoodStockViewModel(
             try {
                 val token = auth.currentUser?.getIdToken(true)?.await()?.token
                 if (token == null) throw Exception("Sesi tidak valid.")
-
                 foodStockRepo.updateFoodStockQuantity(token, id, quantity)
                 _updateState.postValue(UpdateFoodStockState.Success)
+                loadFoodStock()
             } catch (e: Exception) {
                 _updateState.postValue(UpdateFoodStockState.Error(e.message ?: "Gagal update stok."))
             }
         }
     }
 
-    // Fungsi untuk mereset state update
     fun onUpdateFinished() {
         _updateState.value = UpdateFoodStockState.Idle
     }
 
-    // Fungsi untuk mereset state setelah navigasi atau menampilkan pesan
-    fun onAddFinished() {
-        _addState.value = AddFoodStockState.Idle
+    // INI YANG DIPERBAIKI: Mengganti onAddFinished
+    fun onAddStateConsumed() {
+        _addState.value = null
     }
 }
