@@ -190,7 +190,6 @@ fun DashboardScreen(navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardContent(modifier: Modifier = Modifier, navController: NavController) {
     val background = colorResource(id = R.color.bg2_1)
@@ -255,9 +254,11 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             ) {
                 Text(
                     text = "Hi, User!",
-                    fontSize = 20.sp,
+                    fontSize = 28.sp,
                     fontFamily = OpenSans,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    letterSpacing = (-0.5).sp
                 )
                 IconButton(onClick = {
                     navController.navigate("notification")

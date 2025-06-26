@@ -3,6 +3,7 @@ package com.example.nutrisaver.ui.screens.user
 import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,8 +23,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -44,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -124,70 +130,88 @@ private fun SearchResultContent(
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            placeholder = { Text("Search") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = colorResource(R.color.black),
-                                unfocusedTextColor = colorResource(R.color.black),
-                                focusedContainerColor = colorResource(R.color.form_input),
-                                unfocusedContainerColor = colorResource(R.color.form_input)
-                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(colorResource(R.color.form_input), RoundedCornerShape(10.dp)), // Corrected background
+                            placeholder = {
+                                Text(
+                                    text = "Search",
+                                    fontFamily = OpenSans,
+                                    color = Color.Gray
+                                )
+                            },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Search,
-                                    contentDescription = "Search icon"
+                                    contentDescription = "Search",
+                                    tint = Color.Gray
                                 )
                             },
-                            trailingIcon = {
-                                if (searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { searchQuery = "" }) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Clear search"
-                                        )
-                                    }
-                                }
-                            },
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = colorResource(R.color.green),
+                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
+                            ),
+                            singleLine = true
                         )
                     }
-                    Box(modifier = Modifier.width(110.dp)) {
-                        ExposedDropdownMenuBox(
-                            expanded = filterTypeExpanded,
-                            onExpandedChange = { filterTypeExpanded = !filterTypeExpanded }
-                        ) {
-                            OutlinedTextField(
-                                value = filterType,
-                                onValueChange = {},
-                                readOnly = true,
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = filterTypeExpanded)
-                                },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = colorResource(R.color.black),
-                                    unfocusedTextColor = colorResource(R.color.black),
-                                    focusedContainerColor = colorResource(R.color.form_input),
-                                    unfocusedContainerColor = colorResource(R.color.form_input)
+                    Box(modifier = Modifier.weight(0.5f)) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { filterTypeExpanded = !filterTypeExpanded }
+                                .border(
+                                    width = 0.5.dp,
+                                    color = Color.Gray.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(10.dp)
                                 ),
-                                shape = RoundedCornerShape(10.dp)
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = filterTypeExpanded,
-                                onDismissRequest = { filterTypeExpanded = false }
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(containerColor = colorResource(R.color.form_input)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                filterTypeOptions.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(option) },
-                                        onClick = {
-                                            filterType = option
-                                            filterTypeExpanded = false
-                                        }
-                                    )
-                                }
+                                Text(
+                                    text = filterType,
+                                    fontSize = 14.sp,
+                                    fontFamily = OpenSans,
+                                    color = Color.Black
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Dropdown",
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = filterTypeExpanded,
+                            onDismissRequest = { filterTypeExpanded = false },
+                            modifier = Modifier.background(colorResource(R.color.form_input))
+                        ) {
+                            filterTypeOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = option,
+                                            fontFamily = OpenSans,
+                                            color = if (option == filterType) colorResource(R.color.green) else Color.Black,
+                                            fontWeight = if (option == filterType) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    onClick = {
+                                        filterType = option
+                                        filterTypeExpanded = false
+                                    }
+                                )
                             }
                         }
                     }

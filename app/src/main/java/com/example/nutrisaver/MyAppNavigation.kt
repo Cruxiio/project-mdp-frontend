@@ -18,6 +18,7 @@ import com.example.nutrisaver.ui.screens.user.CreateRecipeScreen
 import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.EditInformationScreen
 import com.example.nutrisaver.ui.screens.user.EditProfileScreen
+import com.example.nutrisaver.ui.screens.user.FavoriteRecipeScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
 import com.example.nutrisaver.ui.screens.user.LogHistoryScreen
 import com.example.nutrisaver.ui.screens.user.LogMealScreen
@@ -82,6 +83,9 @@ fun MyAppNavigation(
             }
             composable("recipe") {
                 RecipeScreen(navController = navController)
+            }
+            composable("favoriterecipe") {
+                FavoriteRecipeScreen(navController = navController)
             }
             composable("searchresults") {
                 SearchResultScreen(navController = navController)

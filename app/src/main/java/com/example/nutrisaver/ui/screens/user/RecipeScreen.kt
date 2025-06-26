@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,16 +18,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +40,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -88,6 +95,12 @@ private fun RecipeContent(
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
+    val greenGradient1 = Brush.horizontalGradient(
+        listOf(
+            colorResource(R.color.green),
+            colorResource(R.color.green_teal_dark)
+        )
+    )
 
     // Sample data - todo: replace with actual data
     val allRecipes = remember {
@@ -116,6 +129,7 @@ private fun RecipeContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(
                     top = 32.dp,
                     start = 32.dp,
@@ -123,12 +137,51 @@ private fun RecipeContent(
                     bottom = 16.dp
                 )
         ) {
-            Text(
-                "Recipes",
-                fontSize = 24.sp,
-                fontFamily = OpenSans,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Enhanced Title
+                Text(
+                    text = "Recipes",
+                    fontSize = 28.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    letterSpacing = (-0.5).sp
+                )
+
+                // Sleek Favorite Button
+                Surface(
+                    onClick = { navController.navigate("favoriterecipe") },
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White,
+                    shadowElevation = 4.dp,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.FavoriteBorder,
+                            contentDescription = "Favorite Recipes",
+                            tint = colorResource(R.color.green),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "My Favorites",
+                            fontSize = 14.sp,
+                            fontFamily = OpenSans,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colorResource(R.color.green)
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(15.dp))
 
             // Search Row
@@ -140,45 +193,31 @@ private fun RecipeContent(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = {
-                        Text(
-                            "Search",
-                            fontSize = 14.sp,
-                            fontFamily = OpenSans,
-                            color = Color.Gray
-                        ) },
                     modifier = Modifier
                         .weight(3f)
-                        .border(1.dp, Color.Gray, CircleShape),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = colorResource(R.color.form_input),
-                        unfocusedContainerColor = colorResource(R.color.form_input),
-                        disabledContainerColor = colorResource(R.color.form_input).copy(alpha = 0.5f), // Lighter background for disabled
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
-                        disabledBorderColor = Color.Transparent, // Border handled by .border modifier
-                        disabledTextColor = Color.DarkGray // Lighter text for disabled
-                    ),
+                        .background(colorResource(R.color.form_input), CircleShape),
+                    placeholder = {
+                        Text(
+                            text = "Search",
+                            fontFamily = OpenSans,
+                            color = Color.Gray
+                        )
+                    },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search icon",
-                            modifier = Modifier.size(20.dp) // Adjusted icon size
+                            contentDescription = "Search",
+                            tint = Color.Gray
                         )
                     },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }, modifier = Modifier.size(24.dp)) { // Adjusted IconButton size
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear search",
-                                    modifier = Modifier.size(20.dp) // Adjusted icon size
-                                )
-                            }
-                        }
-                    },
                     shape = CircleShape,
-                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp) // Reduced text size
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorResource(R.color.green),
+                        unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                    ),
+                    singleLine = true
                 )
                 Button(
                     onClick = {
@@ -194,14 +233,7 @@ private fun RecipeContent(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        colorResource(R.color.green),
-                                        colorResource(R.color.green_teal_dark)
-                                    )
-                                ), shape = CircleShape
-                            ),
+                            .background(greenGradient1, shape = CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -215,7 +247,7 @@ private fun RecipeContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(15.dp))
 
             Text(
                 "Filter Recommended Recipes By:",
