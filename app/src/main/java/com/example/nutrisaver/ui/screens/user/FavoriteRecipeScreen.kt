@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -285,7 +286,7 @@ private fun FavoriteRecipeContent(
                 text = "${filteredRecipes.size} favorite recipe${if (filteredRecipes.size != 1) "s" else ""}",
                 fontSize = 16.sp,
                 fontFamily = OpenSans,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -369,7 +370,7 @@ private fun FavoriteRecipeCard(
                     ) {
                         Text(
                             text = "VEGAN",
-                            fontSize = 10.sp,
+                            fontSize = 14.sp,
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -382,7 +383,7 @@ private fun FavoriteRecipeCard(
                     onClick = { showRemoveDialog = true },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                        .padding(14.dp)
                         .size(40.dp)
                         .background(
                             Color.White.copy(alpha = 0.9f),
@@ -437,22 +438,22 @@ private fun FavoriteRecipeCard(
                     NutritionChip(
                         label = "Cal",
                         value = "${recipe.calories.toInt()}",
-                        color = Color(0xFFFF6B6B)
-                    )
-                    NutritionChip(
-                        label = "Protein",
-                        value = "${recipe.protein.toInt()}g",
-                        color = Color(0xFF4ECDC4)
-                    )
-                    NutritionChip(
-                        label = "Fat",
-                        value = "${recipe.fat.toInt()}g",
-                        color = Color(0xFFFFE66D)
+                        color = colorResource(R.color.green)
                     )
                     NutritionChip(
                         label = "Carbs",
                         value = "${recipe.carbs.toInt()}g",
-                        color = Color(0xFF95E1D3)
+                        color = colorResource(R.color.carbs)
+                    )
+                    NutritionChip(
+                        label = "Protein",
+                        value = "${recipe.protein.toInt()}g",
+                        color = colorResource(R.color.protein)
+                    )
+                    NutritionChip(
+                        label = "Fat",
+                        value = "${recipe.fat.toInt()}g",
+                        color = colorResource(R.color.fat)
                     )
                 }
             }
@@ -473,7 +474,8 @@ private fun FavoriteRecipeCard(
             text = {
                 Text(
                     text = "Are you sure you want to remove \"${recipe.title}\" from your favorites?",
-                    fontFamily = OpenSans
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Normal
                 )
             },
             confirmButton = {
@@ -482,9 +484,9 @@ private fun FavoriteRecipeCard(
                         onRemoveFromFavorites()
                         showRemoveDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.delete_confirm))
                 ) {
-                    Text("Remove", color = Color.White, fontFamily = OpenSans)
+                    Text("Remove", color = Color.White, fontFamily = OpenSans, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -512,7 +514,7 @@ private fun NutritionChip(
         ) {
             Text(
                 text = value,
-                fontSize = 12.sp,
+                fontSize = 16.sp,
                 fontFamily = OpenSans,
                 fontWeight = FontWeight.Bold,
                 color = color
@@ -520,7 +522,7 @@ private fun NutritionChip(
         }
         Text(
             text = label,
-            fontSize = 10.sp,
+            fontSize = 14.sp,
             fontFamily = OpenSans,
             color = Color.Gray,
             modifier = Modifier.padding(top = 2.dp)

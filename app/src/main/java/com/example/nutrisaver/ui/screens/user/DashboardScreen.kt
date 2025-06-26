@@ -27,6 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
@@ -34,7 +35,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,7 +63,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.screens.admin.generateDummyHealthArticles
-import com.example.nutrisaver.ui.screens.user.dashboard.CalorieProgressSection
 import com.example.nutrisaver.ui.screens.user.dashboard.FoodStockExpirationSection
 import com.example.nutrisaver.ui.screens.user.dashboard.HealthArticleSection
 import com.example.nutrisaver.ui.screens.user.dashboard.MealLogSection
@@ -85,7 +84,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.time.temporal.ChronoUnit
-
 
 ///// DUMMY DATA BUAT TAMPILAN ///////////////////////////////////////////
 // dummy data class buat tampilan weight entry
@@ -242,20 +240,10 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     var currentWater by remember(consumption) { mutableStateOf(consumption?.totalWater?.toInt() ?: 0) }
     val targetWater = consumption?.targetWater?.toInt() ?: 2000
     val waterIntakeProgress = if (targetWater > 0f) minOf(currentWater.toFloat() / targetWater, 1f) else 0f
-
-//    var showBottomSheet by remember { mutableStateOf(false) }
-//    var isReduceMode by remember { mutableStateOf(false) }
-
-    // --- Definisi warna dan gradient (tidak ada perubahan) ---
-//    val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
-//    val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
-    // todo: ganti ke water intake user
-    val currentIntake = remember { mutableStateOf(1000) }
-    val targetIntake = 2000
     var showWaterIntakeBottomSheet by remember { mutableStateOf(false) }
     var isReduceMode by remember { mutableStateOf(false) }
-
-    // --- Definisi warna dan gradient ---
+  
+    // --- Definisi warna dan gradient (tidak ada perubahan) ---
     val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
     val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
 

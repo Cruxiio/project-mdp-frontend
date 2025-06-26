@@ -20,9 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -36,7 +34,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,60 +53,49 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.User
 import com.example.nutrisaver.ui.navbar.AdminBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
-
-// Dummy user data class
-// todo: hapus nanti
-data class UserDataDummy(
-    val id: Int,
-    val name: String,
-    val username: String,
-    val age: Int,
-    val password: String
-)
-
-// Generate dummy users
-// todo: hapus nanti
-fun generateDummyUsers(): List<UserDataDummy> {
-    return listOf(
-        UserDataDummy(1, "John Doe", "john_doe", 25, "pass123"),
-        UserDataDummy(2, "Jane Smith", "jane_smith", 30, "securepwd"),
-        UserDataDummy(3, "Mike Johnson", "mike_j", 22, "mikeyrocks"),
-        UserDataDummy(4, "Sarah Wilson", "sarah_w", 28, "sarahs_pass"),
-        UserDataDummy(5, "David Brown", "david_brown", 35, "dbrown_pwd"),
-        UserDataDummy(6, "Lisa Davis", "lisa_d", 27, "lisa_secret"),
-        UserDataDummy(7, "Tom Anderson", "tom_a", 31, "anderson_1"),
-        UserDataDummy(8, "Emily Taylor", "emily_t", 24, "emily_code"),
-        UserDataDummy(9, "Chris Martin", "chris_m", 29, "coldplay_fan"),
-        UserDataDummy(10, "Anna Garcia", "anna_g", 26, "garcia_anna")
-    )
-}
+import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 
 @Composable
-fun AllUserScreen(navController: NavController) {
+fun AllUserScreen(
+    navController: NavController,
+    adminUsersViewModel: AdminUsersViewModel
+) {
+    LaunchedEffect(Unit) {
+        adminUsersViewModel.init() // ambil semua user dari database
+    }
+
     Scaffold(
         bottomBar = {
             AdminBottomNavBar(navController = navController)
         }
     ) { innerPadding ->
-        AllUserContent(modifier = Modifier.padding(innerPadding), navController)
+        AllUserContent(
+            modifier = Modifier.padding(innerPadding),
+            navController,
+            adminUsersViewModel
+        )
     }
 }
 
 @Composable
 fun AllUserContent(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    adminUsersViewModel: AdminUsersViewModel
 ) {
+    val allUsers by adminUsersViewModel.allUsers.observeAsState(emptyList())
+
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
-    val green = colorResource(id = R.color.green)
-    val greenTealDark = colorResource(id = R.color.green_teal_dark)
-    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
     val openDeleteConfirmDialog = remember { mutableStateOf(false) }
+
+    // state buat user utk delete
+    var userToDelete by remember { mutableStateOf<User?>(null) }
 
     // State for search and filters
     var searchQuery by remember { mutableStateOf("") }
@@ -115,27 +104,31 @@ fun AllUserContent(
     var showSortByDropdown by remember { mutableStateOf(false) }
     var showOrderDropdown by remember { mutableStateOf(false) }
 
-    val allUsers = remember { generateDummyUsers() }
-
-    // Filter and sort users based on search and filters
-    val filteredAndSortedUsers = remember(searchQuery, selectedSortBy, selectedOrder, allUsers) { // Add allUsers to the keys
+    // Filter and sort users based on search and filters (updated to include email search)
+    val filteredAndSortedUsers = remember(searchQuery, selectedSortBy, selectedOrder, allUsers) {
         val filtered = if (searchQuery.isBlank()) {
             allUsers
         } else {
             allUsers.filter { user ->
-                user.name.contains(searchQuery, ignoreCase = true) ||
-                        user.username.contains(searchQuery, ignoreCase = true)
+                // Ensure 'user' itself is not null before accessing its properties
+                // If user is null, it won't match, so it's effectively filtered out
+                user?.let { actualUser ->
+                    actualUser.name.contains(searchQuery, ignoreCase = true) ||
+                            actualUser.username.contains(searchQuery, ignoreCase = true) ||
+                            actualUser.email.contains(searchQuery, ignoreCase = true)
+                } ?: false // If 'user' is null, the predicate is false (don't include it)
             }
         }
 
         val sorted = when (selectedSortBy) {
-            "Name" -> if (selectedOrder == "ASC") filtered.sortedBy { it.name } else filtered.sortedByDescending { it.name }
-            "Age" -> if (selectedOrder == "ASC") filtered.sortedBy { it.age } else filtered.sortedByDescending { it.age }
-            "Username" -> if (selectedOrder == "ASC") filtered.sortedBy { it.username } else filtered.sortedByDescending { it.username }
+            "Name" -> if (selectedOrder == "ASC") filtered.sortedBy { it?.name } else filtered.sortedByDescending { it?.name }
+            "Username" -> if (selectedOrder == "ASC") filtered.sortedBy { it?.username } else filtered.sortedByDescending { it?.username }
+            "Email" -> if (selectedOrder == "ASC") filtered.sortedBy { it?.email } else filtered.sortedByDescending { it?.email }
             else -> filtered
         }
         sorted
     }
+    Log.d("UserListDebug !!!!!", "Filtered and sorted user list size: ${filteredAndSortedUsers.size}")
 
     Box(
         modifier = modifier
@@ -165,7 +158,7 @@ fun AllUserContent(
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(25.dp)), // Corrected background
+                    .background(Color.White, RoundedCornerShape(25.dp)),
                 placeholder = {
                     Text(
                         text = "Search",
@@ -182,7 +175,7 @@ fun AllUserContent(
                 },
                 shape = RoundedCornerShape(25.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = green,
+                    focusedBorderColor = colorResource(R.color.green),
                     unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black
@@ -197,7 +190,7 @@ fun AllUserContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Sort By Dropdown
+                // Sort By Dropdown (updated to include Email option)
                 Box(modifier = Modifier.weight(1f)) {
                     Card(
                         modifier = Modifier
@@ -233,13 +226,13 @@ fun AllUserContent(
                         onDismissRequest = { showSortByDropdown = false },
                         modifier = Modifier.background(Color.White)
                     ) {
-                        listOf("Name", "Age", "Username").forEach { option ->
+                        listOf("Name", "Username", "Email").forEach { option ->
                             DropdownMenuItem(
                                 text = {
                                     Text(
                                         text = option,
                                         fontFamily = OpenSans,
-                                        color = if (option == selectedSortBy) green else Color.Black,
+                                        color = if (option == selectedSortBy) colorResource(R.color.green) else Color.Black,
                                         fontWeight = if (option == selectedSortBy) FontWeight.Bold else FontWeight.Normal
                                     )
                                 },
@@ -294,7 +287,7 @@ fun AllUserContent(
                                     Text(
                                         text = option,
                                         fontFamily = OpenSans,
-                                        color = if (option == selectedOrder) green else Color.Black,
+                                        color = if (option == selectedOrder) colorResource(R.color.green) else Color.Black,
                                         fontWeight = if (option == selectedOrder) FontWeight.Bold else FontWeight.Normal
                                     )
                                 },
@@ -312,17 +305,16 @@ fun AllUserContent(
 
             // User List
             filteredAndSortedUsers.forEach { user ->
-                UserCard(
-                    user = user,
-                    onViewClick = {
-                        // todo: Handle view user details
-                        // navController.navigate("user_details/${user.id}")
-                    },
-                    onDeleteClick = {
-                        // todo: Handle delete user
-                        openDeleteConfirmDialog.value = true
-                    }
-                )
+                user?.let { // Safely unwrap nullable user
+                    UserCard(
+                        user = it, // Pass the non-null User object
+                        onDeleteClick = {
+                            // 2. Set the user to be deleted and open the dialog
+                            userToDelete = it
+                            openDeleteConfirmDialog.value = true
+                        }
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
@@ -333,7 +325,7 @@ fun AllUserContent(
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
                 ) {
                     Text(
-                        text = "No users found matching your search criteria",
+                        text = "No users found",
                         fontSize = 16.sp,
                         fontFamily = OpenSans,
                         color = Color.Gray,
@@ -349,11 +341,20 @@ fun AllUserContent(
 
     if (openDeleteConfirmDialog.value) {
         DeleteConfirmationDialog(
-            onDismiss = { openDeleteConfirmDialog.value = false },
+            onDismiss = {
+                openDeleteConfirmDialog.value = false
+                userToDelete = null
+            },
             onConfirm = {
                 openDeleteConfirmDialog.value = false
-                Log.d("user deleted", "user deleted")
-                // todo: tambahkan logika delete item
+                // Perform the delete action
+                userToDelete?.let { user ->
+                    user.id?.let { id -> // user.id can be null because _allUsers is MutableLiveData<List<User?>>
+                        adminUsersViewModel.deleteUser(id)
+                    }
+                }
+                // Clear userToDelete immediately after initiating the action
+                userToDelete = null
             },
             icon = Icons.Default.Warning
         )
@@ -362,17 +363,13 @@ fun AllUserContent(
 
 @Composable
 fun UserCard(
-    user: UserDataDummy, // todo: ganti ke object user setelah backend jadi
-    onViewClick: () -> Unit,
+    user: User,
     onDeleteClick: () -> Unit
 ) {
     val itemGradient = Brush.verticalGradient(listOf(
         colorResource(R.color.item_1),
         colorResource(R.color.item_2))
     )
-
-    // State to toggle password visibility
-    var showPassword by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -406,37 +403,19 @@ fun UserCard(
                     color = Color.Black
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                // Password display based on toggle state
+                // Email display (replaced password)
                 Text(
-                    text = "Password: ${if (showPassword) user.password else "********"}",
+                    text = "Email: ${user.email}",
                     fontSize = 14.sp,
                     fontFamily = OpenSans,
                     color = Color.Black
                 )
             }
 
-            // Action Buttons
+            // Action Buttons (removed password toggle button)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(15.dp)
             ) {
-                // Toggle Password Visibility Button
-                IconButton(
-                    onClick = { showPassword = !showPassword }, // Toggle the state
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            color = if (showPassword) Color.Blue.copy(alpha = 0.8f) else Color.Yellow.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                ) {
-                    Icon(
-                        imageVector = if (showPassword) Icons.Outlined.Lock else Icons.Default.Lock,
-                        contentDescription = if (showPassword) "Hide Password" else "Show Password",
-                        tint = if (showPassword) Color.White else Color.Black, // White tint for blue background, black for yellow
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
                 // Delete Button
                 IconButton(
                     onClick = onDeleteClick,
@@ -459,7 +438,6 @@ fun UserCard(
     }
 }
 
-
 @Composable
 private fun DeleteConfirmationDialog(
     onDismiss: () -> Unit,
@@ -471,10 +449,10 @@ private fun DeleteConfirmationDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = colorResource(R.color.bg2_1),
+                    color = colorResource(R.color.form_input),
                     shape = RoundedCornerShape(16.dp)
                 )
-                .padding(16.dp)
+                .padding(24.dp)
         ) {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically,
@@ -483,12 +461,17 @@ private fun DeleteConfirmationDialog(
                         imageVector = icon,
                         contentDescription = null,
                         tint = colorResource(R.color.delete_confirm),
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(28.dp)
                     )
-                    Text("Delete User?", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Delete User?", fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Are you sure you want to delete this user?")
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    "Are you sure you want to delete this user?",
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    color = Color.DarkGray
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth(),

@@ -23,10 +23,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -531,10 +529,10 @@ private fun DeleteConfirmationDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = colorResource(R.color.bg2_1),
+                    color = colorResource(R.color.form_input),
                     shape = RoundedCornerShape(16.dp)
                 )
-                .padding(16.dp)
+                .padding(24.dp)
         ) {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically,
@@ -543,12 +541,17 @@ private fun DeleteConfirmationDialog(
                         imageVector = icon,
                         contentDescription = null,
                         tint = colorResource(R.color.delete_confirm),
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(28.dp)
                     )
-                    Text("Delete Stock?", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Delete Stock?", fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Are you sure you want to delete this item?")
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    "Are you sure you want to delete this item?",
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    color = Color.DarkGray
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth(),
