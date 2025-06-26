@@ -1,7 +1,7 @@
 package com.example.nutrisaver.data.repositories
 
-import com.example.nutrisaver.data.sources.remote.common.Alergen
+import com.example.nutrisaver.data.model.Allergen
 
 interface CommonRepo {
-    suspend fun getAlergen(keyword:String): List<Alergen>
+    suspend fun getAllergen(keyword:String): List<Allergen>
 }

@@ -63,6 +63,9 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.runtime.android)
+    kapt(libs.androidx.room.compiler)
 //    implementation(libs.androidx.navigation.compose.jvmstubs)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -83,7 +86,7 @@ dependencies {
     implementation (libs.retrofit) // Retrofit library
     implementation (libs.converter.gson) // Gson converter for Retrofit
     implementation (libs.converter.moshi)
-
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     // Moshi dependencies
     implementation (libs.moshi)
     implementation (libs.moshi.kotlin)
