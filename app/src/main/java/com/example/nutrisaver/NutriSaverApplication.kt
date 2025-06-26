@@ -3,6 +3,8 @@ package com.example.nutrisaver
 //import com.example.nutrisaver.Build
 
 import android.app.Application
+import com.example.nutrisaver.data.repositories.AdminRepo
+import com.example.nutrisaver.data.repositories.AdminRepoImpl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import com.example.nutrisaver.data.repositories.AuthRepo
@@ -22,6 +24,8 @@ import com.example.nutrisaver.data.sources.local.FoodStockLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.IngredientLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.auth.AuthLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.Webservice
+import com.example.nutrisaver.data.sources.remote.admin.AdminDataSource
+import com.example.nutrisaver.data.sources.remote.admin.AdminDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.auth.AuthDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.CommonDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.ConsumptionDataSourceImpl
@@ -41,6 +45,7 @@ class NutriSaverApplication : Application() {
     lateinit var consumRepo : ConsumptionRepo
     lateinit var ingredientRepo : IngredientRepo
     lateinit var foodStockRepo : FoodStockRepo
+    lateinit var adminRepo: AdminRepo
 
     override fun onCreate() {
         super.onCreate()
@@ -79,6 +84,7 @@ class NutriSaverApplication : Application() {
         val consumptionRemoteDataSource = ConsumptionDataSourceImpl(retrofitService)
         val ingredientRemoteDataSource = IngredientDataSourceImpl(retrofitService)
         val foodStockRemoteDataSource = FoodStockDataSourceImpl(retrofitService)
+        val adminDataSource = AdminDataSourceImpl(retrofitService)
 
         // Inisialisasi Repositories dengan SEMUA dependensinya ===
         // Sekarang kita memberikan dependensi remote DAN lokal
@@ -102,6 +108,8 @@ class NutriSaverApplication : Application() {
             foodRemoteDataSource = foodStockRemoteDataSource,
             foodLocalDataSource = foodStockLocalDataSource
         )
-
+        adminRepo = AdminRepoImpl(
+            adminDataSource = adminDataSource
+        )
     }
 }

@@ -68,4 +68,10 @@ interface Webservice {
         @Body request: UpdateFoodStockRequestJson // <-- Gunakan request yang baru
     ): UpdateFoodStockResponseJson
 
+    //===========================================================================
+    // admin api
+    @GET("api/admin/users")
+    suspend fun getUsers(): List<UserJson>
+    @DELETE("api/admin/users/{userId}")
+    suspend fun deleteUser(@Path("userId") userId: String)
 }

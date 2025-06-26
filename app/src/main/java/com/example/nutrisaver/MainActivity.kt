@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.nutrisaver.ui.theme.NutriSaverTheme
+import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
@@ -25,7 +26,14 @@ class MainActivity : ComponentActivity() {
                 val authViewModel: AuthViewModel = viewModel(factory=factory)
                 val userViewModel: UserViewModel = viewModel(factory=factory)
                 val foodStockViewModel : FoodStockViewModel = viewModel(factory=factory)
-                MyAppNavigation(navController = navController, authViewModel = authViewModel, userViewModel = userViewModel, foodStockViewModel = foodStockViewModel)
+                val adminUsersViewModel: AdminUsersViewModel = viewModel(factory=factory)
+
+                MyAppNavigation(
+                    navController = navController,
+                    authViewModel = authViewModel,
+                    userViewModel = userViewModel,
+                    adminUsersViewModel = adminUsersViewModel
+                
             }
         }
     }

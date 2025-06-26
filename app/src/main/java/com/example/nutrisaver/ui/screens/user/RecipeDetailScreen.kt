@@ -23,6 +23,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -34,6 +36,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -98,46 +104,35 @@ data class IngredientDummy(
 fun RecipeDetailScreen(navController: NavController) {
     // data sample dari json yang diambil, todo: nanti ganti ke data yang diambil
     val sampleRecipe = RecipeDetailDummy(
-        id = 945221, // From JSON root: "id": 945221
-        title = "Peanut Butter Banana Oat Breakfast Cookies", // From JSON root: "title": "Watching What I Eat: Peanut Butter Banana Oat Breakfast Cookies with Carob / Chocolate Chips"
-        image = "https://img.spoonacular.com/recipes/945221-556x370.jpg", // From JSON root: "image": "https://img.spoonacular.com/recipes/945221-556x370.jpg"
-        readyInMinutes = 45, // From JSON root: "readyInMinutes": 45
-        servings = 16, // From JSON root: "servings": 16
-        vegetarian = false, // From JSON root: "vegetarian": false
-        vegan = false, // From JSON root: "vegan": false
-        glutenFree = true, // From JSON root: "glutenFree": true
-        dairyFree = true, // From JSON root: "dairyFree": true
-        veryHealthy = false, // From JSON root: "veryHealthy": false
-        cheap = false, // From JSON root: "cheap": false
-        veryPopular = true, // From JSON root: "veryPopular": true
-        sustainable = false, // From JSON root: "sustainable": false
-        lowFodmap = false, // From JSON root: "lowFodmap": false
+        id = 945221,
+        title = "Peanut Butter Banana Oat Breakfast Cookies",
+        image = "https://img.spoonacular.com/recipes/945221-556x370.jpg",
+        readyInMinutes = 45,
+        servings = 16,
+        vegetarian = false,
+        vegan = false,
+        glutenFree = true,
+        dairyFree = true,
+        veryHealthy = false,
+        cheap = false,
+        veryPopular = true,
+        sustainable = false,
+        lowFodmap = false,
         nutrition = NutritionDummy(
             nutrients = listOf(
-                // From JSON: nutrition.nutrients[0] where "name": "Calories", "amount": 103.19, "unit": "kcal"
                 NutrientDummy("Calories", 103.19, "kcal"),
-                // From JSON: nutrition.nutrients[10] where "name": "Protein", "amount": 3.67, "unit": "g"
                 NutrientDummy("Protein", 3.67, "g"),
-                // From JSON: nutrition.nutrients[1] where "name": "Fat", "amount": 5.38, "unit": "g"
                 NutrientDummy("Fat", 5.38, "g"),
-                // From JSON: nutrition.nutrients[3] where "name": "Carbohydrates", "amount": 11.25, "unit": "g"
                 NutrientDummy("Carbohydrates", 11.25, "g")
             ),
-            // From JSON: nutrition.caloricBreakdown: "percentProtein": 13.58, "percentFat": 44.8, "percentCarbs": 41.62
             caloricBreakdown = CaloricBreakdownDummy(13.58, 44.8, 41.62)
         ),
         extendedIngredients = listOf(
-            // From JSON: extendedIngredients[0]: "id": 9040, "name": "bananas", "original": "2 ripe bananas, mashed until smooth & creamy", "amount": 2.0, "unit": ""
             IngredientDummy(9040, "bananas", "2 ripe bananas, mashed until smooth & creamy", 2.0, ""),
-            // From JSON: extendedIngredients[3]: "id": 10116098, "name": "creamy peanut butter", "original": "1/3 cup peanut butter - creamy or chunky", "amount": 0.33333334, "unit": "cup"
             IngredientDummy(10116098, "creamy peanut butter", "1/3 cup peanut butter - creamy or chunky", 0.33, "cup"),
-            // From JSON: extendedIngredients[5]: "id": 8121, "name": "oatmeal", "original": "1 1/2 cups quick oatmeal - uncooked", "amount": 1.5, "unit": "cups"
             IngredientDummy(8121, "oatmeal", "1 1/2 cups quick oatmeal - uncooked", 1.5, "cups")
         ),
-        // From JSON: "instructions": "Preheat heat oven to 350 degrees.In a large bowl, mix mashed banana & peanut butter until completely combined..."
-        // OR from JSON: analyzedInstructions[0].steps[0].step for more detailed step-by-step instructions
         instructions = "Preheat oven to 350 degrees. In a large bowl, mix mashed banana & peanut butter until completely combined...",
-        // From JSON root: "summary": "If you want to add more <b>gluten free and dairy free</b> recipes to your repertoire..."
         summary = "If you want to add more gluten free and dairy free recipes to your repertoire, this might be a recipe you should try."
     )
 
@@ -153,7 +148,9 @@ fun RecipeDetailScreen(navController: NavController) {
 @Composable
 private fun TopBar(
     modifier: Modifier = Modifier,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    isFavorite: Boolean = false,
+    onFavoriteClick: () -> Unit = {}
 ) {
     val green = colorResource(id = R.color.green)
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
@@ -168,24 +165,48 @@ private fun TopBar(
         Row(
             modifier = modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back Button",
-                    tint = Color.White
+            // Left side - Back button and title
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back Button",
+                        tint = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "Recipe Detail",
+                    fontSize = 20.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = "Recipe Detail",
-                fontSize = 20.sp,
-                fontFamily = OpenSans,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            // Right side - Favorite button
+            IconButton(
+                onClick = onFavoriteClick,
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        Color.White.copy(alpha = 0.2f),
+                        CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavorite) Color.Red else Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
@@ -203,6 +224,9 @@ private fun RecipeDetailContent(
     val green = colorResource(id = R.color.green)
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
+
+    // State for favorite toggle
+    var isFavorite by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -399,6 +423,11 @@ private fun RecipeDetailContent(
 
         TopBar(
             onBackClick = { navController.popBackStack() },
+            isFavorite = isFavorite,
+            onFavoriteClick = {
+                isFavorite = !isFavorite
+                // TODO: Add logic to save/remove from favorites
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)

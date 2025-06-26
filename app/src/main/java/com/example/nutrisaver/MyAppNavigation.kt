@@ -32,6 +32,7 @@ import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
 import com.example.nutrisaver.ui.screens.user.RecipeScreen
 import com.example.nutrisaver.ui.screens.user.SearchResultScreen
 import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
+import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
@@ -43,9 +44,10 @@ fun MyAppNavigation(
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
     foodStockViewModel: FoodStockViewModel
+    adminUsersViewModel: AdminUsersViewModel
 ) {
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "auth") {
+    NavHost(navController = navController, startDestination = "admin") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {
@@ -142,7 +144,10 @@ fun MyAppNavigation(
 
         navigation(startDestination = "alluser", route = "admin") {
             composable("alluser") {
-                AllUserScreen(navController = navController)
+                AllUserScreen(
+                    navController = navController,
+                    adminUsersViewModel = adminUsersViewModel
+                )
             }
             composable("application") {
                 ApplicationScreen(navController = navController)
