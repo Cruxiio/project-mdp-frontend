@@ -3,6 +3,8 @@ package com.example.nutrisaver
 //import com.example.nutrisaver.Build
 
 import android.app.Application
+import com.example.nutrisaver.data.repositories.AdminRepo
+import com.example.nutrisaver.data.repositories.AdminRepoImpl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import com.example.nutrisaver.data.repositories.AuthRepo
@@ -16,6 +18,8 @@ import com.example.nutrisaver.data.sources.local.CommonLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.ConsumptionLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.auth.AuthLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.Webservice
+import com.example.nutrisaver.data.sources.remote.admin.AdminDataSource
+import com.example.nutrisaver.data.sources.remote.admin.AdminDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.auth.AuthDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.CommonDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.ConsumptionDataSourceImpl
@@ -31,6 +35,7 @@ class NutriSaverApplication : Application() {
     lateinit var commonRepo: CommonRepo
     lateinit var authRepo: AuthRepo
     lateinit var consumRepo : ConsumptionRepo
+    lateinit var adminRepo: AdminRepo
 
     override fun onCreate() {
         super.onCreate()
@@ -55,7 +60,7 @@ class NutriSaverApplication : Application() {
         val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         val retrofit = Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl("http://10.0.2.2:3000/")
+            .baseUrl("http://192.168.0.111:3000/")
             .client(okHttpClient)// Pastikan IP ini benar untuk emulator Anda
             .build()
 
@@ -65,6 +70,7 @@ class NutriSaverApplication : Application() {
         val authRemoteDataSource = AuthDataSourceImpl(retrofitService)
         val commonRemoteDataSource = CommonDataSourceImpl(retrofitService)
         val consumptionRemoteDataSource = ConsumptionDataSourceImpl(retrofitService)
+        val adminDataSource = AdminDataSourceImpl(retrofitService)
 
         // Inisialisasi Repositories dengan SEMUA dependensinya ===
         // Sekarang kita memberikan dependensi remote DAN lokal
@@ -80,6 +86,8 @@ class NutriSaverApplication : Application() {
             consumpRemoteDataSource = consumptionRemoteDataSource,
             consumpLocalDataSource = consumptionLocalDataSource
         )
-
+        adminRepo = AdminRepoImpl(
+            adminDataSource = adminDataSource
+        )
     }
 }

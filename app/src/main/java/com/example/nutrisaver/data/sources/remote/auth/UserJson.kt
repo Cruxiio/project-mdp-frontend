@@ -1,5 +1,6 @@
 package com.example.nutrisaver.data.sources.remote.auth
 
+import com.example.nutrisaver.data.model.User
 import com.example.nutrisaver.data.sources.remote.common.AllergenJson
 import com.example.nutrisaver.data.sources.remote.common.NutritionNeedsJson
 import com.squareup.moshi.Json

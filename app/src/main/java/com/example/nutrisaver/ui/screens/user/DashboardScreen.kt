@@ -4,10 +4,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import android.util.Log
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,13 +21,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
@@ -30,10 +35,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +49,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -54,7 +62,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.screens.admin.generateDummyHealthArticles
-import com.example.nutrisaver.ui.screens.user.dashboard.CalorieProgressSection
 import com.example.nutrisaver.ui.screens.user.dashboard.FoodStockExpirationSection
 import com.example.nutrisaver.ui.screens.user.dashboard.HealthArticleSection
 import com.example.nutrisaver.ui.screens.user.dashboard.MealLogSection
@@ -64,16 +71,18 @@ import com.example.nutrisaver.ui.screens.user.dashboard.WeightLogBottomSheet
 import com.example.nutrisaver.ui.screens.user.dashboard.WeightReportSection
 import com.example.nutrisaver.ui.theme.OpenSans
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
+import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeButton
 import com.example.nutrisaver.viewmodel.UserState
 import com.example.nutrisaver.viewmodel.UserViewModel
 import kotlin.math.cos
 import kotlin.math.sin
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 
 ///// DUMMY DATA BUAT TAMPILAN ///////////////////////////////////////////
@@ -236,12 +245,9 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     // Bandingkan juga dengan 0f untuk konsistensi, dan pastikan targetWater tidak 0 untuk pembagian
     val waterIntakeProgress = if (targetWater > 0f) minOf(currentWater.toFloat() / targetWater, 1f) else 0f
 
-//    var showBottomSheet by remember { mutableStateOf(false) }
-//    var isReduceMode by remember { mutableStateOf(false) }
-
     // --- Definisi warna dan gradient (tidak ada perubahan) ---
-//    val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
-//    val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
+    val backgroundGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.bg2_1), colorResource(id = R.color.bg2_2)))
+    val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
     // todo: ganti ke water intake user
     val currentIntake = remember { mutableStateOf(1000) }
     val targetIntake = 2000
@@ -342,7 +348,8 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                             .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Text(
-                            text = userProfile?.goal?.replace("_", " ")?.replaceFirstChar { it.titlecase(Locale.getDefault()) } ?: "Set Goal",
+                            text = userProfile?.goal?.replace("_", " ")?.replaceFirstChar { it.titlecase(
+                                Locale.getDefault()) } ?: "Set Goal",
                             fontSize = 18.sp,
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold,
@@ -485,7 +492,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                         fontFamily = OpenSans,
                         color = colorResource(R.color.water_3)
                     )
-                    LinearProgressIndicator(
+                    androidx.compose.material3.LinearProgressIndicator(
                         progress = waterIntakeProgress, // This will still cap at 1.0 for visual consistency
                         modifier = Modifier
                             .fillMaxWidth()
@@ -533,7 +540,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                             modifier = Modifier.weight(1f), // Make it take half width
                             onClick = {
                                 isReduceMode = true
-                                showBottomSheet = true
+                                showWaterIntakeBottomSheet = true
                             }
                         )
                         WaterIntakeButton(
@@ -543,7 +550,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                             modifier = Modifier.weight(1f), // Make it take half width
                             onClick = {
                                 isReduceMode = false
-                                showBottomSheet = true
+                                showWaterIntakeBottomSheet = true
                             }
                         )
                     }

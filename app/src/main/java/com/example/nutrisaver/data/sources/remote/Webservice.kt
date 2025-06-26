@@ -4,6 +4,7 @@ import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionJson
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -32,4 +33,11 @@ interface Webservice {
 
     @GET("api/consumption/today") // Sesuaikan jika path berbeda
     suspend fun getTodaysConsumption(@Header("Authorization") token: String): DailyConsumptionJson
+
+    //===========================================================================
+    // admin api
+    @GET("api/admin/users")
+    suspend fun getUsers(): List<UserJson>
+    @DELETE("api/admin/users/{userId}")
+    suspend fun deleteUser(@Path("userId") userId: String)
 }
