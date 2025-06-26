@@ -43,11 +43,11 @@ fun MyAppNavigation(
     navController: NavHostController,
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
-    foodStockViewModel: FoodStockViewModel
+    foodStockViewModel: FoodStockViewModel,
     adminUsersViewModel: AdminUsersViewModel
 ) {
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "admin") {
+    NavHost(navController = navController, startDestination = "user") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {

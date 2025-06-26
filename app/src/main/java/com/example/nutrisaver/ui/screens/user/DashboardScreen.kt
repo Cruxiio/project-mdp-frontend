@@ -84,8 +84,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.time.temporal.ChronoUnit
-import java.util.Locale
-
 
 ///// DUMMY DATA BUAT TAMPILAN ///////////////////////////////////////////
 // dummy data class buat tampilan weight entry

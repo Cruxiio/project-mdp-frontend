@@ -32,8 +32,9 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     authViewModel = authViewModel,
                     userViewModel = userViewModel,
-                    adminUsersViewModel = adminUsersViewModel
-                
+                    adminUsersViewModel = adminUsersViewModel,
+                    foodStockViewModel = foodStockViewModel,
+                )
             }
         }
     }
