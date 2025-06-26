@@ -7,9 +7,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.example.nutrisaver.ui.screens.admin.AdminHealthArticleScreen
 import com.example.nutrisaver.ui.screens.admin.AllUserScreen
 import com.example.nutrisaver.ui.screens.admin.ApplicationScreen
-import com.example.nutrisaver.ui.screens.admin.HealthArticleScreen
 import com.example.nutrisaver.ui.screens.auth.LoginScreen
 import com.example.nutrisaver.ui.screens.auth.RegisterDetailScreen
 import com.example.nutrisaver.ui.screens.auth.RegisterScreen
@@ -26,6 +26,7 @@ import com.example.nutrisaver.ui.screens.user.ProfileScreen
 import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
 import com.example.nutrisaver.ui.screens.user.RecipeScreen
 import com.example.nutrisaver.ui.screens.user.SearchResultScreen
+import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
 
 @Composable
 fun MyAppNavigation(
@@ -34,7 +35,7 @@ fun MyAppNavigation(
     authViewModel: AuthViewModel
 ) {
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "admin") {
+    NavHost(navController = navController, startDestination = "user") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {
@@ -69,6 +70,9 @@ fun MyAppNavigation(
             }
             composable("loghistory") {
                 LogHistoryScreen(navController = navController)
+            }
+            composable("userhealtharticle") {
+                UserHealthArticleScreen(navController = navController)
             }
             composable("foodstock") {
                 FoodStockScreen(navController = navController)
@@ -112,8 +116,8 @@ fun MyAppNavigation(
             composable("application") {
                 ApplicationScreen(navController = navController)
             }
-            composable("healtharticle") {
-                HealthArticleScreen(navController = navController)
+            composable("adminhealtharticle") {
+                AdminHealthArticleScreen(navController = navController)
             }
         }
     }

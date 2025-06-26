@@ -52,10 +52,9 @@ import com.example.nutrisaver.ui.screens.user.generateDummyFoodStock
 @Composable
 fun FoodStockExpirationSection(
     modifier: Modifier = Modifier,
-    foodStockItems: List<FoodStockItemDummy> = generateDummyFoodStock(), // todo: ganti dengan object FoodStockItem dari backend
+    foodStockItems: List<FoodStockItemDummy>, // todo: ganti dengan object FoodStockItem dari backend
     onViewAllClick: () -> Unit = {}
 ) {
-
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Card(
