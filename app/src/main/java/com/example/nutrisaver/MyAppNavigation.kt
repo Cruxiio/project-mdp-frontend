@@ -6,6 +6,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import androidx.navigation.compose.rememberNavController
+import com.example.nutrisaver.ui.screens.admin.AdminHealthArticleScreen
+import com.example.nutrisaver.ui.screens.admin.AllUserScreen
+import com.example.nutrisaver.ui.screens.admin.ApplicationScreen
 import com.example.nutrisaver.ui.screens.auth.LoginScreen
 import com.example.nutrisaver.ui.screens.auth.RegisterDetailScreen
 import com.example.nutrisaver.ui.screens.auth.RegisterScreen
@@ -14,6 +18,7 @@ import com.example.nutrisaver.ui.screens.user.CreateRecipeScreen
 import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.EditInformationScreen
 import com.example.nutrisaver.ui.screens.user.EditProfileScreen
+import com.example.nutrisaver.ui.screens.user.FavoriteRecipeScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
 import com.example.nutrisaver.ui.screens.user.LogHistoryScreen
 import com.example.nutrisaver.ui.screens.user.LogMealScreen
@@ -22,6 +27,7 @@ import com.example.nutrisaver.ui.screens.user.ProfileScreen
 import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
 import com.example.nutrisaver.ui.screens.user.RecipeScreen
 import com.example.nutrisaver.ui.screens.user.SearchResultScreen
+import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
@@ -69,6 +75,9 @@ fun MyAppNavigation(
             composable("loghistory") {
                 LogHistoryScreen(navController = navController)
             }
+            composable("userhealtharticle") {
+                UserHealthArticleScreen(navController = navController)
+            }
             composable("foodstock") {
                 FoodStockScreen(navController = navController)
             }
@@ -77,6 +86,9 @@ fun MyAppNavigation(
             }
             composable("recipe") {
                 RecipeScreen(navController = navController)
+            }
+            composable("favoriterecipe") {
+                FavoriteRecipeScreen(navController = navController)
             }
             composable("searchresults") {
                 SearchResultScreen(navController = navController)
@@ -106,8 +118,16 @@ fun MyAppNavigation(
             }
         }
 
-        navigation(startDestination = "splash", route = "admin") {
-
+        navigation(startDestination = "alluser", route = "admin") {
+            composable("alluser") {
+                AllUserScreen(navController = navController)
+            }
+            composable("application") {
+                ApplicationScreen(navController = navController)
+            }
+            composable("adminhealtharticle") {
+                AdminHealthArticleScreen(navController = navController)
+            }
         }
     }
 }
