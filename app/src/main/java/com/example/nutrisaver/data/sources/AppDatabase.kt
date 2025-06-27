@@ -11,14 +11,17 @@ import com.example.nutrisaver.data.sources.local.dao.IngredientDao
 import com.example.nutrisaver.data.sources.local.entity.UserEntity
 import com.example.nutrisaver.data.sources.local.dao.UserDao
 import com.example.nutrisaver.data.sources.local.entity.AllergenEntity
+import com.example.nutrisaver.data.sources.local.entity.DailyConsumptionDetailEntity
 import com.example.nutrisaver.data.sources.local.entity.DailyConsumptionEntity
 import com.example.nutrisaver.data.sources.local.entity.FoodStockEntity
 import com.example.nutrisaver.data.sources.local.entity.IngredientEntity
 import com.example.nutrisaver.data.sources.local.entity.UserAllergenCrossRef
 
 @Database(
-    entities = [UserEntity::class, AllergenEntity::class, UserAllergenCrossRef::class, DailyConsumptionEntity::class, IngredientEntity :: class, FoodStockEntity::class],
-    version = 7, // Mulai dari 1. Naikkan jika ada perubahan skema
+    entities = [UserEntity::class, AllergenEntity::class, UserAllergenCrossRef::class,
+        DailyConsumptionEntity::class, IngredientEntity :: class, FoodStockEntity::class,
+               DailyConsumptionDetailEntity::class],
+    version = 8, // Mulai dari 1. Naikkan jika ada perubahan skema
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

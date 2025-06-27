@@ -35,6 +35,7 @@ import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
 @Composable
@@ -44,10 +45,11 @@ fun MyAppNavigation(
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
     foodStockViewModel: FoodStockViewModel,
-    adminUsersViewModel: AdminUsersViewModel
+    adminUsersViewModel: AdminUsersViewModel,
+    logMealViewModel: LogMealViewModel
 ) {
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "user") {
+    NavHost(navController = navController, startDestination = "auth") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {
@@ -78,7 +80,7 @@ fun MyAppNavigation(
             }
             composable("logmeal/{mealType}") {backStackEntry ->
                 val mealType = backStackEntry.arguments?.getString("mealType") ?: ""
-                LogMealScreen(navController = navController, mealType = mealType)
+                LogMealScreen(navController = navController, mealType = mealType, logMealViewModel = logMealViewModel)
             }
             composable("loghistory") {
                 LogHistoryScreen(navController = navController)

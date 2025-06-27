@@ -1,5 +1,6 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,25 +27,31 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +61,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,17 +71,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.DailyConsumptionDetail
+import com.example.nutrisaver.data.model.Recipe
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.LogMealState
+import com.example.nutrisaver.viewmodel.LogMealViewModel
+import com.example.nutrisaver.viewmodel.SearchState
+import com.google.firebase.auth.FirebaseAuth
+import java.util.Locale
 
 @Composable
-fun LogMealScreen(navController: NavController, mealType: String) {
+fun LogMealScreen(navController: NavController, mealType: String, logMealViewModel: LogMealViewModel) {
     Scaffold(
         bottomBar = {
             UserBottomNavBar(navController = navController)
         }
     ) { innerPadding ->
-        LogMealContent(modifier = Modifier.padding(innerPadding), navController, mealType)
+        LogMealContent(modifier = Modifier.padding(innerPadding), navController, mealType, logMealViewModel)
     }
 }
 
@@ -113,7 +128,8 @@ private fun TopBar(
 fun LogMealContent(
     modifier: Modifier = Modifier,
     navController: NavController,
-    mealType: String
+    mealType: String,
+    logMealViewModel : LogMealViewModel
 ) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
@@ -122,15 +138,51 @@ fun LogMealContent(
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
-    var selectedFood by remember { mutableStateOf<String?>(null) }
+    val searchState by logMealViewModel.searchState.observeAsState(SearchState.Idle)
+    val logState by logMealViewModel.logState.observeAsState(LogMealState.Idle)
+    val firebaseUser = FirebaseAuth.getInstance().currentUser
+    val context = LocalContext.current
+
     var selectedTab by remember { mutableStateOf("Choose Recipe") }
-    var foodName by remember { mutableStateOf("") }
-    var quantity by remember { mutableStateOf("0") }
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    // --- STATE UNTUK MENAMPUNG DATA FORM ---
+    var selectedRecipe by remember { mutableStateOf<Recipe?>(null) }
+    var customFoodName by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf("100") }
     var selectedUnit by remember { mutableStateOf("grams") }
     var calories by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
     var protein by remember { mutableStateOf("") }
     var fat by remember { mutableStateOf("") }
+    var searchQuery by remember { mutableStateOf("") }
+
+    // EFEK: Saat resep dipilih, isi field nutrisi secara otomatis
+    LaunchedEffect(selectedRecipe) {
+        selectedRecipe?.let {
+            quantity = "100" // Reset kuantitas ke 100 gram
+            calories = it.calories.toInt().toString()
+            carbs = String.format(Locale.US, "%.1f", it.carbs)
+            protein = String.format(Locale.US, "%.1f", it.protein)
+            fat = String.format(Locale.US, "%.1f", it.fat)
+        }
+    }
+
+    // EFEK: Menangani hasil logging (sukses/gagal)
+    LaunchedEffect(logState) {
+        when (val state = logState) {
+            is LogMealState.Success -> {
+                Toast.makeText(context, "Makanan berhasil dicatat!", Toast.LENGTH_SHORT).show()
+                logMealViewModel.onLogFinished()
+                navController.popBackStack()
+            }
+            is LogMealState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                logMealViewModel.onLogFinished()
+            }
+            else -> {}
+        }
+    }
 
     val icon = when (mealType.lowercase()) {
         "breakfast" -> R.drawable.breakfast_icon
@@ -302,27 +354,22 @@ fun LogMealContent(
             when (selectedTab) {
                 "Choose Recipe" -> {
                     ChooseRecipeForm(
-                        selectedFood = selectedFood,
-                        onFoodSelected = { selectedFood = it },
+                        selectedRecipe = selectedRecipe,
+                        onSelectClick = { showBottomSheet = true },
                         quantity = quantity,
                         onQuantityChange = { quantity = it },
                         selectedUnit = selectedUnit,
                         onUnitChange = { selectedUnit = it },
                         calories = calories,
-                        onCaloriesChange = { calories = it },
                         carbs = carbs,
-                        onCarbsChange = { carbs = it },
                         protein = protein,
-                        onProteinChange = { protein = it },
-                        fat = fat,
-                        onFatChange = { fat = it },
-                        sheetState = sheetState
+                        fat = fat
                     )
                 }
                 "Custom" -> {
                     CustomForm(
-                        foodName = foodName,
-                        onFoodNameChange = { foodName = it },
+                        foodName = customFoodName,
+                        onFoodNameChange = { customFoodName = it },
                         quantity = quantity,
                         onQuantityChange = { quantity = it },
                         selectedUnit = selectedUnit,
@@ -344,8 +391,31 @@ fun LogMealContent(
             // Log Button
             Button(
                 onClick = {
-                    // todo: tambahkan logika logging makanan
-                    navController.popBackStack()
+                    val finalQuantity = quantity.toFloatOrNull() ?: 0f
+                    val finalCalories = calories.toFloatOrNull() ?: 0f
+                    val finalFoodName = if (selectedTab == "Choose Recipe") selectedRecipe?.title else customFoodName
+
+                    if (finalFoodName.isNullOrBlank() || finalQuantity <= 0f || finalCalories <= 0f) {
+                        Toast.makeText(context, "Nama, kuantitas, dan kalori wajib diisi.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    firebaseUser?.getIdToken(false)?.addOnSuccessListener { tokenResult ->
+                        tokenResult.token?.let { token ->
+                            val detailToLog = DailyConsumptionDetail(
+                                id = 0,
+                                mealType = mealType.lowercase(),
+                                foodName = finalFoodName,
+                                quantity = finalQuantity,
+                                unit = selectedUnit,
+                                calories = finalCalories,
+                                carbs = carbs.toFloatOrNull() ?: 0f,
+                                protein = protein.toFloatOrNull() ?: 0f,
+                                fat = fat.toFloatOrNull() ?: 0f
+                            )
+                            logMealViewModel.logMeal(detailToLog)
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -374,6 +444,26 @@ fun LogMealContent(
                     )
                 }
             }
+            if (showBottomSheet) {
+                val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                RecipeSearchBottomSheet(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    searchState = searchState,
+                    onSearchClick = {
+                        firebaseUser?.getIdToken(false)?.addOnSuccessListener { tokenResult ->
+                            tokenResult.token?.let { logMealViewModel.searchRecipes(searchQuery) }
+                        }
+                    },
+                    onSelectFood = { recipe ->
+                        selectedRecipe = recipe // Update resep yang dipilih
+                        showBottomSheet = false
+                        searchQuery = "" // Reset query setelah memilih
+                    },
+                    onDismiss = { showBottomSheet = false },
+                    sheetState = sheetState
+                )
+            }
         }
         TopBar(
             onBackClick = { navController.popBackStack() },
@@ -384,78 +474,29 @@ fun LogMealContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChooseRecipeForm(
-    selectedFood: String?,
-    onFoodSelected: (String) -> Unit,
+    selectedRecipe: Recipe?,
+    onSelectClick: () -> Unit,
     quantity: String,
     onQuantityChange: (String) -> Unit,
     selectedUnit: String,
     onUnitChange: (String) -> Unit,
     calories: String,
-    onCaloriesChange: (String) -> Unit,
     carbs: String,
-    onCarbsChange: (String) -> Unit,
     protein: String,
-    onProteinChange: (String) -> Unit,
-    fat: String,
-    onFatChange: (String) -> Unit,
-    sheetState: androidx.compose.material3.SheetState
+    fat: String
 ) {
-    var query by remember { mutableStateOf("") }
-    var showBottomSheet by remember { mutableStateOf(false) }
-    val foodOptions = listOf(
-        "Apple",
-        "Banana",
-        "Cherry",
-        "Durian",
-        "Eggplant",
-        "Broccoli",
-        "Chicken Breast",
-        "Rice",
-        "Salmon",
-        "Avocado"
-    ) // todo: ganti ke list recipe (recipenya dari remote atau local?)
-    val filteredOptions = foodOptions.filter {
-        it.contains(query, ignoreCase = true)
-    }
-
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         RecipeSelector(
-            selectedFood = selectedFood,
-            onClick = { showBottomSheet = true }
+            selectedFood = selectedRecipe?.title,
+            onClick = onSelectClick
         )
-
-        // Quantity and Unit
-        QuantityUnitField(
-            quantity = quantity,
-            onQuantityChange = onQuantityChange,
-            selectedUnit = selectedUnit,
-            onUnitChange = onUnitChange
-        )
-
-        // Nutrition Fields (Numeric Only, now disabled)
-        FormField(label = "Calories", value = calories, onValueChange = onCaloriesChange, isNumeric = true, enabled = false)
-        FormField(label = "Carbs", value = carbs, onValueChange = onCarbsChange, isNumeric = true, enabled = false)
-        FormField(label = "Protein", value = protein, onValueChange = onProteinChange, isNumeric = true, enabled = false)
-        FormField(label = "Fat", value = fat, onValueChange = onFatChange, isNumeric = true, enabled = false)
-    }
-
-    if (showBottomSheet) {
-        RecipeSearchBottomSheet(
-            query = query,
-            onQueryChange = { query = it },
-            filteredOptions = filteredOptions,
-            selectedFood = selectedFood,
-            onSelectFood = {
-                onFoodSelected(it)
-                showBottomSheet = false
-                query = ""
-            },
-            onDismiss = { showBottomSheet = false },
-            sheetState = sheetState
-        )
+        QuantityUnitField(quantity, onQuantityChange, selectedUnit, onUnitChange)
+        FormField(label = "Calories", value = calories, onValueChange = {}, isNumeric = true, enabled = false)
+        FormField(label = "Carbs", value = carbs, onValueChange = {}, isNumeric = true, enabled = false)
+        FormField(label = "Protein", value = protein, onValueChange = {}, isNumeric = true, enabled = false)
+        FormField(label = "Fat", value = fat, onValueChange = {}, isNumeric = true, enabled = false)
     }
 }
 
@@ -542,11 +583,11 @@ fun CustomForm(
 private fun RecipeSearchBottomSheet(
     query: String,
     onQueryChange: (String) -> Unit,
-    filteredOptions: List<String>,
-    selectedFood: String?,
-    onSelectFood: (String) -> Unit,
+    searchState: SearchState, // <-- DIUBAH: Terima SearchState dari ViewModel
+    onSearchClick: () -> Unit,
+    onSelectFood: (Recipe) -> Unit, // <-- DIUBAH: Callback sekarang dengan objek Recipe
     onDismiss: () -> Unit,
-    sheetState: androidx.compose.material3.SheetState
+    sheetState: SheetState
 ) {
     ModalBottomSheet(
         modifier = Modifier.fillMaxHeight(0.7f),
@@ -570,54 +611,98 @@ private fun RecipeSearchBottomSheet(
         }
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-            TextField(
-                value = query,
-                onValueChange = onQueryChange,
-                placeholder = { Text("Search Recipe...",
-                    fontSize = 16.sp,
-                    fontFamily = OpenSans,
-                    color = Color.Gray
-                ) },
+            // -- MULAI PERUBAHAN DI SINI --
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-            )
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // TextField untuk mencari resep
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    placeholder = {
+                        Text("Search Recipe...",
+                            fontSize = 16.sp,
+                            fontFamily = OpenSans,
+                            color = Color.Gray
+                        )
+                    },
+                    modifier = Modifier
+                        .weight(1f) // Mengisi sisa ruang
+                        .border(0.4.dp, Color.Gray, RoundedCornerShape(8.dp)),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input),
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
+                    ),
+                    singleLine = true
+                )
+
+                // Tombol Search baru
+                IconButton(
+                    onClick = onSearchClick,
+                    modifier = Modifier
+                        .size(56.dp) // Menyamakan tinggi dengan OutlinedTextField
+                        .background(color = colorResource(id = R.color.green), shape = RoundedCornerShape(8.dp)),
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search Button"
+                    )
+                }
+            }
+            // -- AKHIR PERUBAHAN --
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (filteredOptions.isEmpty()) {
-                Text(
-                    text = "No results found.",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    fontFamily = OpenSans,
-                    fontSize = 16.sp,
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Light
-                )
-            } else {
-                LazyColumn {
-                    items(filteredOptions) { option ->
-                        val isSelected = option == selectedFood
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isSelected) colorResource(R.color.pastel_green2)
-                                    else Color.Transparent
-                                )
-                                .clickable { onSelectFood(option) }
-                                .padding(horizontal = 12.dp, vertical = 12.dp)
-                        ) {
-                            Text(
-                                text = option,
-                                fontSize = 16.sp,
-                                fontFamily = OpenSans,
-                                color = if (isSelected) colorResource(R.color.green_dark) else Color.Black,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                when (searchState) {
+                    is SearchState.Loading -> {
+                        CircularProgressIndicator() // Tampilkan loading spinner
+                    }
+                    is SearchState.Error -> {
+                        Text(
+                            text = searchState.message,
+                            color = Color.Red,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    is SearchState.Success -> {
+                        val recipes = searchState.recipes
+                        if (recipes.isEmpty()) {
+                            Text("No results found. Try another keyword.")
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                items(recipes, key = { it.id }) { recipe ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable { onSelectFood(recipe) } // Kirim objek Recipe saat diklik
+                                            .padding(horizontal = 12.dp, vertical = 12.dp)
+                                    ) {
+                                        // TODO: Bisa ditambahkan Image(recipe.imageUrl) di sini
+                                        Text(
+                                            text = recipe.title,
+                                            fontSize = 16.sp,
+                                            fontFamily = OpenSans,
+                                            color = Color.Black
+                                        )
+                                    }
+                                }
+                            }
                         }
+                    }
+                    is SearchState.Idle -> {
+                        Text("Type something to search for recipes.")
                     }
                 }
             }
@@ -695,7 +780,7 @@ fun QuantityUnitField(
     onUnitChange: (String) -> Unit
 ) {
     var unitExpanded by remember { mutableStateOf(false) }
-    val unitOptions = listOf("grams", "ml", "pieces", "servings")
+    val unitOptions = listOf("gram", "ml", "pcs", "serving")
 
     Column {
         Text(

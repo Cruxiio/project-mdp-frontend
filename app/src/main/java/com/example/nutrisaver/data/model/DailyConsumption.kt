@@ -27,12 +27,13 @@ data class DailyConsumption(
     val dinnerProteinGrams: Float,
     val dinnerCarbsGrams: Float,
     val dinnerFatGrams: Float,
-    val date: String
+    val createdAt: String,
+    val details: List<DailyConsumptionDetail> = emptyList()
 ) {
     companion object {
         fun fromDailyConsumptionJson(json: DailyConsumptionJson): DailyConsumption? {
             // Validasi semua field yang diperlukan
-            if (json.userId == null || json.date == null) return null
+            if (json.userId == null || json.createdAt == null) return null
             return DailyConsumption(
                 id = json.id,
                 userId = json.userId,
@@ -58,7 +59,8 @@ data class DailyConsumption(
                 dinnerProteinGrams = json.dinnerProtein ?: 0f,
                 dinnerCarbsGrams = json.dinnerCarbs ?: 0f,
                 dinnerFatGrams = json.dinnerFat?: 0f,
-                date = json.date
+                createdAt = json.createdAt,
+                details = json.details?.map { it.toDetail() } ?: emptyList()
             )
         }
     }

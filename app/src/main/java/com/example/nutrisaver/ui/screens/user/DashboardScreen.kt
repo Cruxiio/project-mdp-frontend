@@ -85,6 +85,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.time.temporal.ChronoUnit
 
+
 ///// DUMMY DATA BUAT TAMPILAN ///////////////////////////////////////////
 // dummy data class buat tampilan weight entry
 // todo: nanti dihapus
@@ -418,6 +419,8 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                     protein = consumption?.breakfastProteinGrams ?: 0f,
                     fat = consumption?.breakfastFatGrams ?: 0f,
                     carbs = consumption?.breakfastCarbsGrams ?: 0f,
+                    // <-- DIUBAH: Filter dan berikan detail untuk sarapan
+                    details = consumption?.details?.filter { it.mealType.equals("breakfast", ignoreCase = true) } ?: emptyList(),
                     gradient = Brush.verticalGradient(colors = listOf(colorResource(R.color.blue_1), colorResource(R.color.blue_2))),
                     onLogClick = { navController.navigate("logmeal/breakfast") },
                     modifier = Modifier.fillMaxWidth()
@@ -429,6 +432,8 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                     protein = consumption?.lunchProteinGrams ?: 0f,
                     fat = consumption?.lunchFatGrams ?: 0f,
                     carbs = consumption?.lunchCarbsGrams ?: 0f,
+                    // <-- DIUBAH: Filter dan berikan detail untuk makan siang
+                    details = consumption?.details?.filter { it.mealType.equals("lunch", ignoreCase = true) } ?: emptyList(),
                     gradient = Brush.verticalGradient(colors = listOf(colorResource(R.color.yellow_1), colorResource(R.color.yellow_2))),
                     onLogClick = { navController.navigate("logmeal/lunch") },
                     modifier = Modifier.fillMaxWidth()
@@ -440,6 +445,8 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                     protein = consumption?.dinnerProteinGrams ?: 0f,
                     fat = consumption?.dinnerFatGrams ?: 0f,
                     carbs = consumption?.dinnerCarbsGrams ?: 0f,
+                    // <-- DIUBAH: Filter dan berikan detail untuk makan malam
+                    details = consumption?.details?.filter { it.mealType.equals("dinner", ignoreCase = true) } ?: emptyList(),
                     gradient = Brush.verticalGradient(colors = listOf(colorResource(R.color.pink_1), colorResource(R.color.pink_2))),
                     onLogClick = { navController.navigate("logmeal/dinner") },
                     modifier = Modifier.fillMaxWidth()

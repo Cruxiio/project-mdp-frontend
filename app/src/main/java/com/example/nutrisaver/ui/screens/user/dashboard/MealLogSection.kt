@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -30,18 +31,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.DailyConsumptionDetail
 import com.example.nutrisaver.ui.theme.OpenSans
 
 @Composable
 fun MealLogSection(
-    modifier: Modifier = Modifier,
     type: String,
     calories: Float,
-    protein: Float = 0f,
-    fat: Float = 0f,
-    carbs: Float = 0f,
+    protein: Float,
+    fat: Float,
+    carbs: Float,
+    details: List<DailyConsumptionDetail>, // <-- BARU: Terima daftar detail
     gradient: Brush,
     onLogClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -104,44 +107,62 @@ fun MealLogSection(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Nutritional information row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // Calories
-                    NutritionItem(
-                        label = "Calories",
-                        value = calories.toString() ?: "0",
-                        unit = "kcal",
-                        modifier = Modifier.weight(1f)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    NutritionItem(label = "Calories", value = calories.toInt().toString(), unit = "kcal")
+                    NutritionItem(label = "Protein", value = String.format("%.1f", protein), unit = "g")
+                    NutritionItem(label = "Fat", value = String.format("%.1f", fat), unit = "g")
+                    NutritionItem(label = "Carbs", value = String.format("%.1f", carbs), unit = "g")
+                }
+
+                if (details.isNotEmpty()) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        thickness = 1.dp,
+                        color = Color.Black.copy(alpha = 0.1f)
                     )
 
-                    // Protein
-                    NutritionItem(
-                        label = "Protein",
-                        value = protein.toString(),
-                        unit = "gram",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Fat
-                    NutritionItem(
-                        label = "Fat",
-                        value = fat.toString(),
-                        unit = "gram",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Carbs
-                    NutritionItem(
-                        label = "Carbs",
-                        value = carbs.toString(),
-                        unit = "gram",
-                        modifier = Modifier.weight(1f)
-                    )
+                    // Gunakan Column untuk menampilkan daftar item
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        details.forEach { detailItem ->
+                            MealDetailItemRow(
+                                foodName = detailItem.foodName,
+                                calories = detailItem.calories.toInt()
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MealDetailItemRow(
+    foodName: String,
+    calories: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = foodName,
+            fontSize = 14.sp,
+            fontFamily = OpenSans,
+            color = Color.Black.copy(alpha = 0.8f),
+            modifier = Modifier.weight(1f) // Agar bisa menangani teks panjang
+        )
+        Text(
+            text = "$calories kcal",
+            fontSize = 14.sp,
+            fontFamily = OpenSans,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Black.copy(alpha = 0.9f)
+        )
     }
 }
 

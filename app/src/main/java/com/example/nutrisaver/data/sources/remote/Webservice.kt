@@ -3,11 +3,14 @@ package com.example.nutrisaver.data.sources.remote
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import com.example.nutrisaver.data.sources.remote.common.AddFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
+import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionDetailJson
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionJson
 import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
 import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.IngredientJson
 import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
+import com.example.nutrisaver.data.sources.remote.common.RecipeJson
+import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
 import retrofit2.Response
@@ -68,10 +71,23 @@ interface Webservice {
         @Body request: UpdateFoodStockRequestJson // <-- Gunakan request yang baru
     ): UpdateFoodStockResponseJson
 
-    //===========================================================================
     // admin api
     @GET("api/admin/users")
     suspend fun getUsers(): List<UserJson>
+
     @DELETE("api/admin/users/{userId}")
     suspend fun deleteUser(@Path("userId") userId: String)
+
+    @POST("api/recipe/search")
+    suspend fun searchRecipes(
+        @Header("Authorization") token: String,
+        @Body request: RecipeSearchRequestJson
+    ): List<RecipeJson>
+
+    @POST("api/consumption/log")
+    suspend fun logMeal(
+        @Header("Authorization") token: String,
+        @Body mealDetail: DailyConsumptionDetailJson // Terima DTO yang baru
+    ) // Endpoint ini mungkin tidak mengembalikan body, jadi bisa Unit
+
 }
