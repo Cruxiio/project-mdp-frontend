@@ -45,14 +45,35 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.nutrisaver.data.model.FoodStock
 import com.example.nutrisaver.ui.screens.user.ExpiryStatus
 import com.example.nutrisaver.ui.screens.user.FoodStockItemDummy
 import com.example.nutrisaver.ui.screens.user.generateDummyFoodStock
 
+
+enum class ExpiryStatus {
+    EXPIRED, CRITICAL, WARNING, SAFE
+}
+
+// Fungsi helper untuk model FoodStock
+fun FoodStock.getDaysUntilExpiry(): Long {
+    return ChronoUnit.DAYS.between(LocalDate.now(), this.expiredDate)
+}
+
+fun FoodStock.getExpiryStatus(): ExpiryStatus {
+    val daysUntilExpiry = getDaysUntilExpiry()
+    return when {
+        daysUntilExpiry < 0 -> ExpiryStatus.EXPIRED
+        daysUntilExpiry <= 3 -> ExpiryStatus.CRITICAL
+        daysUntilExpiry <= 10 -> ExpiryStatus.WARNING // Sesuai logika: 4-10 hari
+        else -> ExpiryStatus.SAFE
+    }
+}
+
 @Composable
 fun FoodStockExpirationSection(
     modifier: Modifier = Modifier,
-    foodStockItems: List<FoodStockItemDummy>, // todo: ganti dengan object FoodStockItem dari backend
+    foodStockItems: List<FoodStock>, // todo: ganti dengan object FoodStockItem dari backend
     onViewAllClick: () -> Unit = {}
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -167,7 +188,7 @@ fun FoodStockExpirationSection(
 
 @Composable
 fun FoodStockItemCard(
-    item: FoodStockItemDummy, // todo: ganti dengan object FoodStockItem dari backend
+    item: FoodStock, // todo: ganti dengan object FoodStockItem dari backend
     modifier: Modifier = Modifier
 ) {
     val expiryStatus = item.getExpiryStatus()
@@ -249,7 +270,7 @@ fun FoodStockItemCard(
 @Composable
 fun FoodStockBottomSheet(
     onDismiss: () -> Unit,
-    foodStockItems: List<FoodStockItemDummy> = generateDummyFoodStock()
+    foodStockItems: List<FoodStock>
 ) {
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -270,7 +291,7 @@ fun FoodStockBottomSheet(
 
 @Composable
 fun FoodStockBottomSheetContent(
-    foodStockItems: List<FoodStockItemDummy>, // todo: ganti dengan object FoodStockItem dari backend, hapus default valuenya
+    foodStockItems: List<FoodStock>, // todo: ganti dengan object FoodStockItem dari backend, hapus default valuenya
     onDismiss: () -> Unit
 ) {
     Column(

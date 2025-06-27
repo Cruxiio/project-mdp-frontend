@@ -5,6 +5,7 @@ package com.example.nutrisaver
 import android.app.Application
 import com.example.nutrisaver.data.repositories.AdminRepo
 import com.example.nutrisaver.data.repositories.AdminRepoImpl
+import android.util.Log
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import com.example.nutrisaver.data.repositories.AuthRepo
@@ -17,11 +18,16 @@ import com.example.nutrisaver.data.repositories.FoodStockRepo
 import com.example.nutrisaver.data.repositories.FoodStockRepoImpl
 import com.example.nutrisaver.data.repositories.IngredientRepo
 import com.example.nutrisaver.data.repositories.IngredientRepoImpl
+import com.example.nutrisaver.data.repositories.RecipeRepo
+import com.example.nutrisaver.data.repositories.RecipeRepoImpl
+import com.example.nutrisaver.data.repositories.WeightLogRepo
+import com.example.nutrisaver.data.repositories.WeightLogRepoImpl
 import com.example.nutrisaver.data.sources.AppDatabase
 import com.example.nutrisaver.data.sources.local.CommonLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.ConsumptionLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.FoodStockLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.IngredientLocalDataSourceImpl
+import com.example.nutrisaver.data.sources.local.WeightLogLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.auth.AuthLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.Webservice
 import com.example.nutrisaver.data.sources.remote.admin.AdminDataSource
@@ -31,8 +37,13 @@ import com.example.nutrisaver.data.sources.remote.common.CommonDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.ConsumptionDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.FoodStockDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.IngredientDataSourceImpl
+import com.example.nutrisaver.data.sources.remote.common.RecipeDataSourceImpl
+import com.example.nutrisaver.data.sources.remote.common.WeightLogDataSourceImpl
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
@@ -46,6 +57,8 @@ class NutriSaverApplication : Application() {
     lateinit var ingredientRepo : IngredientRepo
     lateinit var foodStockRepo : FoodStockRepo
     lateinit var adminRepo: AdminRepo
+    lateinit var recipeRepo : RecipeRepo
+    lateinit var weightLogRepo: WeightLogRepo
 
     override fun onCreate() {
         super.onCreate()
@@ -60,6 +73,7 @@ class NutriSaverApplication : Application() {
         val consumptionLocalDataSource = ConsumptionLocalDataSourceImpl(database.consumptionDao())
         val ingredientLocalDataSource = IngredientLocalDataSourceImpl(database.ingredientDao())
         val foodStockLocalDataSource = FoodStockLocalDataSourceImpl(database.foodStockDao())
+        val weightLogLocalDataSource = WeightLogLocalDataSourceImpl(database.weightLogDao())
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY // BODY akan menampilkan semua detail response
         }
@@ -85,6 +99,8 @@ class NutriSaverApplication : Application() {
         val ingredientRemoteDataSource = IngredientDataSourceImpl(retrofitService)
         val foodStockRemoteDataSource = FoodStockDataSourceImpl(retrofitService)
         val adminDataSource = AdminDataSourceImpl(retrofitService)
+        val recipeRemoteDataSource = RecipeDataSourceImpl(retrofitService)
+        val weightLogRemoteDataSource = WeightLogDataSourceImpl(retrofitService)
 
         // Inisialisasi Repositories dengan SEMUA dependensinya ===
         // Sekarang kita memberikan dependensi remote DAN lokal
@@ -111,5 +127,17 @@ class NutriSaverApplication : Application() {
         adminRepo = AdminRepoImpl(
             adminDataSource = adminDataSource
         )
+        recipeRepo = RecipeRepoImpl(
+            recipeRemoteDataSource = recipeRemoteDataSource
+        )
+        weightLogRepo = WeightLogRepoImpl(
+            weightRemoteDataSource = weightLogRemoteDataSource,
+            weightLocalDataSource = weightLogLocalDataSource
+        )
+
+//        Log.w("DATABASE_DEBUG", "!!! MENGHAPUS SEMUA TABEL DI DATABASE LOKAL SAAT STARTUP !!!")
+//        CoroutineScope(Dispatchers.IO).launch {
+//            database.clearAllTables()
+//        }
     }
 }

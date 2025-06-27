@@ -3,13 +3,19 @@ package com.example.nutrisaver.data.sources.remote
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import com.example.nutrisaver.data.sources.remote.common.AddFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
+import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionDetailJson
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionJson
 import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
 import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.IngredientJson
 import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
+import com.example.nutrisaver.data.sources.remote.common.RecipeJson
+import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
+import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
+import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -52,8 +58,8 @@ interface Webservice {
         @Body foodStock: NewFoodStockRequestJson
     ): Response<AddFoodStockResponseJson>
 
-    @GET("api/foodstock/stock") // Asumsi path-nya ini, sesuaikan jika perlu
-    suspend fun getAllFoodStock(@Header("Authorization") token: String): List<FoodStockJson>
+    @GET("api/foodstock/stock") // Sesuaikan path jika nama endpoint Anda berbeda
+    suspend fun getAllFoodStock(@Header("Authorization") token: String): List<FoodStockJson> // <-- DIUBAH
 
     @DELETE("api/foodstock/delete/{id}")
     suspend fun deleteFoodStock(
@@ -68,10 +74,46 @@ interface Webservice {
         @Body request: UpdateFoodStockRequestJson // <-- Gunakan request yang baru
     ): UpdateFoodStockResponseJson
 
-    //===========================================================================
     // admin api
     @GET("api/admin/users")
     suspend fun getUsers(): List<UserJson>
+
     @DELETE("api/admin/users/{userId}")
     suspend fun deleteUser(@Path("userId") userId: String)
+
+    @POST("api/recipe/search")
+    suspend fun searchRecipes(
+        @Header("Authorization") token: String,
+        @Body request: RecipeSearchRequestJson
+    ): List<RecipeJson>
+
+    @POST("api/consumption/log")
+    suspend fun logMeal(
+        @Header("Authorization") token: String,
+        @Body mealDetail: DailyConsumptionDetailJson // Terima DTO yang baru
+    ) // Endpoint ini mungkin tidak mengembalikan body, jadi bisa Unit
+
+    @POST("api/consumption/water")
+    suspend fun updateWaterIntake(
+        @Header("Authorization") token: String,
+        @Body waterUpdate: WaterUpdateRequestJson
+    ): Response<ResponseBody>
+
+    @GET("api/weight/history")
+    suspend fun getWeightHistory(@Header("Authorization") token: String): List<WeightLogJson>
+
+    @POST("api/weight/log")
+    suspend fun logWeight(
+        @Header("Authorization") token: String,
+        @Body weightLog: WeightLogJson
+    ): Response<ResponseBody> // Atau sesuaikan dengan respons backend
+
+    @GET("api/foodstock/expiring/soon") // <-- PERBAIKI PATH URL-nya agar cocok dengan backend
+    suspend fun getExpiringSoonStock(@Header("Authorization") token: String): List<FoodStockJson> // <-- UBAH return type-nya
+
+    @GET("api/consumption/by/date")
+    suspend fun getConsumptionByDate(
+        @Header("Authorization") token: String,
+        @Query("date") date: String
+    ): Response<DailyConsumptionJson>
 }
