@@ -42,7 +42,7 @@ class UserViewModel(
     private val _userState = MutableLiveData<UserState>()
     val userState: LiveData<UserState> = _userState
     val todaysConsumption: LiveData<DailyConsumption?> =
-        consumptionRepo.getTodaysConsumption().asLiveData()
+        consumptionRepo.getTodaysConsumptionWithDetails().asLiveData()
 
     /**
      * Mengambil data profil user dari repository.

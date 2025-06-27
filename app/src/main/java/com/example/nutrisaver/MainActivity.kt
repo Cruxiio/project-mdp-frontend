@@ -10,6 +10,7 @@ import com.example.nutrisaver.ui.theme.NutriSaverTheme
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
@@ -27,13 +28,18 @@ class MainActivity : ComponentActivity() {
                 val userViewModel: UserViewModel = viewModel(factory=factory)
                 val foodStockViewModel : FoodStockViewModel = viewModel(factory=factory)
                 val adminUsersViewModel: AdminUsersViewModel = viewModel(factory=factory)
+                val logMealViewModel : LogMealViewModel = viewModel(factory=factory)
 
                 MyAppNavigation(
                     navController = navController,
                     authViewModel = authViewModel,
                     userViewModel = userViewModel,
-                    adminUsersViewModel = adminUsersViewModel
-                
+                    adminUsersViewModel = adminUsersViewModel,
+                    logMealViewModel = logMealViewModel,
+                    foodStockViewModel = foodStockViewModel
+                )
+
+                MyAppNavigation(navController = navController, authViewModel = authViewModel, userViewModel = userViewModel, adminUsersViewModel = adminUsersViewModel , logMealViewModel = logMealViewModel, foodStockViewModel = foodStockViewModel)
             }
         }
     }
