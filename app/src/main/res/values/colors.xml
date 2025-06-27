@@ -2,16 +2,48 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="form_input">#FCFFFB</color>
+    <color name="gray_border">#c6c6c6</color>
     <color name="bg">#f6fbf0</color>
     <color name="green">#39a23d</color>
     <color name="green_teal_dark">#008063</color>
     <color name="green_dark">#295d2c</color>
     <color name="pastel_green">#E4FCA9</color>
-
+    <color name="pastel_green2">#CBEB78</color>
     <color name="bg2_1">#f6fbf0</color>
     <color name="bg2_2">#d1dbd2</color>
     <color name="item_1">#92b693</color>
     <color name="item_2">#52ad9f</color>
-
+    <color name="item2_1">#bffabf</color>
+    <color name="item2_2">#96cdc1</color>
+    <color name="delete_confirm">#ed1d24</color>
+    <color name="cancel">#6e6e6e</color>
+    <color name="create_confirm">#46c143</color>
+    <color name="logout_btn_1">#da3422</color>
+    <color name="logout_btn_2">#af0404</color>
     <color name="red">#da3422</color>
+    <color name="red_light">#fd8a7e</color>
+    <color name="yellow">#ffd790</color>
+    <color name="carbs_light">#6ce5e8</color>
+    <color name="carbs">#41b8d5</color>
+    <color name="carbs_1">#00b6bc</color>
+    <color name="carbs_2">#005381</color>
+    <color name="protein_light">#ffdc71</color>"
+    <color name="protein">#f7c326</color>
+    <color name="protein_1">#d99214</color>
+    <color name="protein_2">#923400</color>
+    <color name="fat_light">#ff8e85</color>
+    <color name="fat">#f1473a</color>
+    <color name="fat_1">#db2929</color>
+    <color name="fat_2">#8b0d0d</color>
+    <color name="pink_1">#fd8a7e</color>
+    <color name="pink_2">#c45592</color>
+    <color name="yellow_1">#ffd790</color>
+    <color name="yellow_2">#abd862</color>
+    <color name="blue_1">#98e1e4</color>
+    <color name="blue_2">#1baf8c</color>
+    <color name="water_1">#2fb2dd</color>
+    <color name="water_2">#2a85f1</color>
+    <color name="water_3">#0186b2</color>
+    <color name="water_4">#2fb2dd</color>
 </resources>

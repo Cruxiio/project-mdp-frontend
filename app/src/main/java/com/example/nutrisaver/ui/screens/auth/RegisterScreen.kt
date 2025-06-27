@@ -43,8 +43,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.nutrisaver.AuthState
-import com.example.nutrisaver.AuthViewModel
+import com.example.nutrisaver.viewmodel.AuthState
+import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.theme.OpenSans
 
@@ -85,10 +85,9 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp)
-                .align(Alignment.TopCenter),
+                .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(45.dp))
 
             Text(
                 text = "Create Account",
@@ -124,11 +123,13 @@ fun RegisterScreen(
                         singleLine = true,
                         value = username,
                         onValueChange = { username = it },
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(
-                                R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
-                        )
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor = colorResource(R.color.black),
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -139,11 +140,13 @@ fun RegisterScreen(
                         singleLine = true,
                         value = email,
                         onValueChange = { email = it },
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(
-                                R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
-                        )
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor = colorResource(R.color.black),
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -157,11 +160,13 @@ fun RegisterScreen(
                         label = {  },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(
-                                R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
-                        )
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor = colorResource(R.color.black),
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -175,11 +180,13 @@ fun RegisterScreen(
                         label = {  },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = colorResource(R.color.black),
-                            unfocusedTextColor =  colorResource(R.color.black), focusedContainerColor = colorResource(
-                                R.color.bg),
-                            unfocusedContainerColor = colorResource(R.color.bg)
-                        )
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colorResource(R.color.black),
+                            unfocusedTextColor = colorResource(R.color.black),
+                            focusedContainerColor = colorResource(R.color.form_input),
+                            unfocusedContainerColor = colorResource(R.color.form_input)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
                     )
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -215,11 +222,11 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
             HorizontalDivider(
                 thickness = 2.dp
             )
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             Row(
                 modifier = Modifier
@@ -231,7 +238,7 @@ fun RegisterScreen(
                 Text(
                     modifier = Modifier.weight(1f),
                     text = "Already Have an Account? ",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontFamily = OpenSans,
                     color = Color.Black
                 )
@@ -245,7 +252,7 @@ fun RegisterScreen(
                 ) {
                     Text(
                         text = "Sign in",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         style = TextStyle(
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Bold,
@@ -254,7 +261,7 @@ fun RegisterScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }
