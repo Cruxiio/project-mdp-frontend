@@ -38,7 +38,7 @@ data class DailyConsumptionEntity(
         return DailyConsumption(
             id = null, // Saat mengambil dari DB lokal, id akan selalu null.
             userId = this.userId,
-            date = this.date,
+            createdAt = this.date,
             // ... semua field lainnya
             totalCalories = this.totalCalories,
             totalProtein = this.totalProtein,
@@ -67,9 +67,9 @@ data class DailyConsumptionEntity(
 
     companion object {
         // <-- DIUBAH: Fungsi konversi dari model domain
-        fun fromDaily(daily: DailyConsumption): DailyConsumptionEntity {
+        fun fromDaily(daily: DailyConsumption, date: String): DailyConsumptionEntity {
             return DailyConsumptionEntity(
-                date = daily.date, // Gunakan date sebagai Primary Key
+                date = date, // Gunakan date sebagai Primary Key
                 userId = daily.userId,
                 totalCalories = daily.totalCalories,
                 totalProtein = daily.totalProtein,

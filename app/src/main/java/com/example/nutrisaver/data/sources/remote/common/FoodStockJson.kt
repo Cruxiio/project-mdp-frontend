@@ -56,3 +56,4 @@ data class UpdateFoodStockResponseJson(
     @Json(name = "message") val message: String?,
     @Json(name = "foodStock") val foodStock: FoodStockJson?
 )
+

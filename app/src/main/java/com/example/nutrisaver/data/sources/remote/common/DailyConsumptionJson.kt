@@ -29,5 +29,6 @@ data class DailyConsumptionJson(
     @Json(name = "dinner_protein") val dinnerProtein: Float?,
     @Json(name = "dinner_carbs") val dinnerCarbs: Float?,
     @Json(name = "dinner_fat") val dinnerFat: Float?,
-    @Json(name = "date") val date: String?
+    @Json(name = "createdAt") val createdAt: String?,
+    @Json(name = "details") val details: List<DailyConsumptionDetailJson>?
 )
