@@ -55,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.WeightLog
 import com.example.nutrisaver.ui.screens.user.WeightEntryDummy
 import com.example.nutrisaver.ui.theme.OpenSans
 import java.time.LocalDate
@@ -66,7 +67,7 @@ import kotlin.math.abs
 @Composable
 fun WeightReportSection(
     modifier: Modifier = Modifier,
-    weightData: List<WeightEntryDummy>, // todo: ganti ke object aslinya setelah backend jadi
+    weightData: List<WeightLog>, // todo: ganti ke object aslinya setelah backend jadi
     selectedPeriod: String,
     onPeriodChange: (String) -> Unit,
     onLogWeightClick: () -> Unit,
@@ -268,7 +269,7 @@ fun WeightReportSection(
 @SuppressLint("DefaultLocale")
 @Composable
 fun WeightLineChart(
-    weightData: List<WeightEntryDummy>, // todo: ganti ke object aslinya setelah backend jadi
+    weightData: List<WeightLog>, // todo: ganti ke object aslinya setelah backend jadi
     selectedPeriod: String,
     modifier: Modifier = Modifier
 ) {

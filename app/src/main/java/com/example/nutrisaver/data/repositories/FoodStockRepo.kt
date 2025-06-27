@@ -12,6 +12,7 @@ interface FoodStockRepo {
     suspend fun addFoodStock(token: String, foodStock: FoodStock)
     suspend fun deleteFoodStock(token: String, id: Int)
     suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock
+    suspend fun getExpiringSoonStock(token: String): List<FoodStock>
 }
 
 
@@ -75,4 +76,10 @@ class FoodStockRepoImpl(
         Log.d(TAG, "updateFoodStockQuantity: BERHASIL mengupdate di remote dan lokal.")
         return updatedStock
     }
+
+    override suspend fun getExpiringSoonStock(token: String): List<FoodStock> {
+        // Fungsi ini langsung meneruskan panggilan ke remote data source
+        return foodRemoteDataSource.getExpiringSoonStock(token)
+    }
+
 }

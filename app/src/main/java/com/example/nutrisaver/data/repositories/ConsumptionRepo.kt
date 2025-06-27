@@ -20,6 +20,8 @@ interface ConsumptionRepo {
     fun getTodaysConsumptionWithDetails(): Flow<DailyConsumption?>
     suspend fun refreshTodaysConsumption(token: String)
     suspend fun logMeal(token: String, mealDetail: DailyConsumptionDetail)
+    suspend fun updateWaterIntake(token: String, amount: Int)
+    suspend fun getConsumptionByDate(token: String, date: LocalDate): DailyConsumption?
 }
 
 class ConsumptionRepoImpl(
@@ -141,6 +143,29 @@ class ConsumptionRepoImpl(
         } catch (e: Exception) {
             Log.e(TAG, "[Local] FAILED: An error occurred during local DB update.", e)
         }
+    }
+
+    override suspend fun updateWaterIntake(token: String, amount: Int) {
+        val TAG = "UpdateWaterSync"
+        try {
+            Log.d(TAG, "Attempting to update water intake on remote server...")
+            consumpRemoteDataSource.updateWaterIntake(token, amount)
+            Log.d(TAG, "SUCCESS: Water intake sent to remote server.")
+
+            // Setelah server sukses, panggil refresh untuk sinkronisasi total.
+            Log.d(TAG, "Triggering a full refresh to sync local data...")
+            refreshTodaysConsumption(token)
+            Log.d(TAG, "SUCCESS: Full sync completed after water update.")
+        } catch (e: Exception) {
+            Log.e(TAG, "FAILED to update water or sync data.", e)
+            throw e
+        }
+    }
+
+    override suspend fun getConsumptionByDate(token: String, date: LocalDate): DailyConsumption? {
+        // Untuk layar history, kita bisa asumsikan selalu butuh data terbaru,
+        // jadi kita langsung panggil remote data source.
+        return consumpRemoteDataSource.getConsumptionByDate(token, date)
     }
 
 }

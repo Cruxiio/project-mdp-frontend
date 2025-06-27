@@ -83,7 +83,7 @@ fun MyAppNavigation(
                 LogMealScreen(navController = navController, mealType = mealType, logMealViewModel = logMealViewModel)
             }
             composable("loghistory") {
-                LogHistoryScreen(navController = navController)
+                LogHistoryScreen(navController = navController, logMealViewModel = logMealViewModel)
             }
             composable("userhealtharticle") {
                 UserHealthArticleScreen(navController = navController)

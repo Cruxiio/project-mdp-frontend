@@ -75,6 +75,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
+import com.example.nutrisaver.data.model.WeightLog
 import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeButton
 import com.example.nutrisaver.viewmodel.UserState
 import com.example.nutrisaver.viewmodel.UserViewModel
@@ -218,6 +219,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     val userProfile by userViewModel.userProfile.observeAsState()
     val consumption by userViewModel.todaysConsumption.observeAsState()
     val userState by userViewModel.userState.observeAsState()
+    val expiringFoodStock by userViewModel.expiringFoodStock.observeAsState(emptyList())
 
     // --- 2. PICU REFRESH DATA DARI REMOTE SAAT LAYAR MUNCUL ---
     LaunchedEffect(key1 = Unit) {
@@ -238,7 +240,9 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     val targetCarbs = consumption?.targetCarbs?.toFloat() ?: 250f
 
     // State untuk water intake, diambil dari ViewModel dan bisa diubah di UI
-    var currentWater by remember(consumption) { mutableStateOf(consumption?.totalWater?.toInt() ?: 0) }
+    // var currentWater by remember(consumption) { mutableStateOf(consumption?.totalWater?.toInt() ?: 0) }
+
+    val currentWater = consumption?.totalWater?.toInt() ?: 0
     val targetWater = consumption?.targetWater?.toInt() ?: 2000
     val waterIntakeProgress = if (targetWater > 0f) minOf(currentWater.toFloat() / targetWater, 1f) else 0f
     var showWaterIntakeBottomSheet by remember { mutableStateOf(false) }
@@ -249,22 +253,25 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
 
     // --- State untuk data berat badan ---
-    val allWeightData = remember { generateSampleWeightData() }
+    val weightHistory by userViewModel.weightHistory.observeAsState(emptyList())
     var selectedPeriod by remember { mutableStateOf("Monthly") }
-    var filteredWeightData by remember { mutableStateOf(emptyList<WeightEntryDummy>()) }
+    // DIUBAH: Tipe datanya sekarang List<WeightLog>
+    var filteredWeightData by remember { mutableStateOf(emptyList<WeightLog>()) }
     var showWeightLogBottomSheet by remember { mutableStateOf(false) }
+
 
     // todo: nanti ganti codingannya sama function viewmodelnya setelah backend
     val foodStockItems = remember { generateDummyFoodStock() }
     val healthArticleItems = remember { generateDummyHealthArticles() }
 
-    LaunchedEffect(selectedPeriod, allWeightData) {
+
+    LaunchedEffect(selectedPeriod, weightHistory) { // <-- DIUBAH
         val today = LocalDate.now()
-        filteredWeightData = when (selectedPeriod) {
-            "Weekly" -> allWeightData.filter { !it.date.isBefore(today.minusWeeks(1)) }
-            "Monthly" -> allWeightData.filter { !it.date.isBefore(today.minusMonths(1)) }
-            "Yearly" -> allWeightData.filter { !it.date.isBefore(today.minusYears(1)) }
-            else -> allWeightData
+        filteredWeightData = when (selectedPeriod) { // <-- Ganti nama var ini agar cocok dengan tipe datanya
+            "Weekly" -> weightHistory.filter { !it.date.isBefore(today.minusWeeks(1)) }
+            "Monthly" -> weightHistory.filter { !it.date.isBefore(today.minusMonths(1)) }
+            "Yearly" -> weightHistory.filter { !it.date.isBefore(today.minusYears(1)) }
+            else -> weightHistory
         }.sortedBy { it.date }
     }
 
@@ -458,8 +465,8 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             WaterIntakeSection(
                 currentIntake = currentWater,
                 targetIntake = targetWater,
-                onAdd240ml = { currentWater += 240 },
-                onAdd500ml = { currentWater += 500 },
+                onAdd240ml = { userViewModel.updateWaterIntake(240) },
+                onAdd500ml = { userViewModel.updateWaterIntake(500) },
                 onReduceClick = {
                     isReduceMode = true
                     showWaterIntakeBottomSheet = true
@@ -497,7 +504,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                         restoreState = true
                     }
                 },
-                foodStockItems = foodStockItems,
+                foodStockItems = expiringFoodStock,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -516,11 +523,8 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
             isReduceMode = isReduceMode,
             onDismiss = { showWaterIntakeBottomSheet = false },
             onConfirm = { amount ->
-                if (isReduceMode) {
-                    currentWater = maxOf(0, currentWater - amount)
-                } else {
-                    currentWater= currentWater + amount
-                }
+                val finalAmount = if (isReduceMode) -amount else amount
+                userViewModel.updateWaterIntake(finalAmount)
                 showWaterIntakeBottomSheet = false
             }
         )
@@ -530,10 +534,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
         WeightLogBottomSheet(
             onDismiss = { showWeightLogBottomSheet = false },
             onConfirm = { weight, unit, date ->
-                // TODO: Save weight to database
-                Log.d("WeightLogBottomSheet", "Weight: $weight, Unit: $unit, Date: $date")
-                // After saving, consider refreshing the weight data if it's stored locally
-                // For now, let's just dismiss
+                userViewModel.logWeight(weight, unit, date)
                 showWeightLogBottomSheet = false
             }
         )
