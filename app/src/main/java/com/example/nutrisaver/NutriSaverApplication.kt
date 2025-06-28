@@ -93,7 +93,7 @@ class NutriSaverApplication : Application() {
         val retrofitService = retrofit.create(Webservice::class.java)
 
         //Buat instance untuk semua Remote Data Source ===
-        val authRemoteDataSource = AuthDataSourceImpl(retrofitService)
+        val authRemoteDataSource = AuthDataSourceImpl(retrofitService, this)
         val commonRemoteDataSource = CommonDataSourceImpl(retrofitService)
         val consumptionRemoteDataSource = ConsumptionDataSourceImpl(retrofitService)
         val ingredientRemoteDataSource = IngredientDataSourceImpl(retrofitService)
@@ -110,7 +110,8 @@ class NutriSaverApplication : Application() {
         )
         authRepo = AuthRepoImpl(
             authDataSource = authRemoteDataSource,
-            authLocalDataSource = authLocalDataSource
+            authLocalDataSource = authLocalDataSource,
+            context = this
         )
         consumRepo = ConsumptionRepoImpl(
             consumpRemoteDataSource = consumptionRemoteDataSource,

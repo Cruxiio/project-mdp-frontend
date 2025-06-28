@@ -15,15 +15,20 @@ import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJ
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
 import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
+import retrofit2.http.PartMap
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -47,10 +52,12 @@ interface Webservice {
         @Path("userId") userId: String // <-- Parameter baru untuk mengisi {userId} di URL
     ): UserJson
 
+    @Multipart
     @PATCH("api/user/profile")
     suspend fun updateUserProfile(
-        @Header("Authorization") token: String,
-        @Body user: UserJson
+        @Header("Authorization") bearerToken: String,
+        @PartMap data: Map<String, @JvmSuppressWildcards RequestBody>, // For name, username, email
+        @Part profilePicture: MultipartBody.Part? // For the image file
     ): UserJson
 
     @PATCH("api/user/profile/information")

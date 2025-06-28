@@ -28,6 +28,16 @@ data class User(
     var updatedAt: Instant?,
     var deletedAt: Instant? = null
 ) {
+    val absoluteProfilePictureUrl: String?
+        get() = if (!profilePicture.isNullOrBlank()) {
+            // IMPORTANT: Match this base URL to your server's address
+            // This is the same URL you used in your Retrofit base URL, but WITHOUT the /api/
+            // because /uploads is typically served directly from the root.
+            "http://10.0.2.2:3000" + profilePicture
+        } else {
+            null
+        }
+
     companion object {
         // Mapper dari UserJson (dari API) ke User (untuk aplikasi)
         fun fromUserJson(json: UserJson): User? {
