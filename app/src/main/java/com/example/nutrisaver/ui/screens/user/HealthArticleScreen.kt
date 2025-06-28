@@ -26,7 +26,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,16 +51,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.screens.admin.FilterDropdown
+import com.example.nutrisaver.ui.screens.admin.HealthArticleDummy
+import com.example.nutrisaver.ui.screens.admin.generateDummyHealthArticles
 import com.example.nutrisaver.ui.theme.OpenSans
 import java.time.format.DateTimeFormatter
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.nutrisaver.data.model.HealthArticle
-import com.example.nutrisaver.viewmodel.HealthArticleListState
-import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 
 @Composable
 fun UserHealthArticleScreen(navController: NavController) {
@@ -118,15 +111,6 @@ private fun UserHealthArticleContent(
     modifier: Modifier = Modifier,
     navController: NavController,
 ) {
-    // 1. Inisialisasi ViewModel menggunakan ViewModelFactory
-    val context = LocalContext.current
-    // PASTIKAN NAMA ViewModelFactory BENAR
-    val viewModelFactory = ViewModelFactory.getInstance(context)
-    val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = viewModelFactory)
-
-    // 2. Ambil state dari ViewModel
-    val articlesState by healthArticleViewModel.articlesState.observeAsState()
-
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
@@ -138,12 +122,21 @@ private fun UserHealthArticleContent(
     var showGoalDropdown by remember { mutableStateOf(false) }
     var showDietDropdown by remember { mutableStateOf(false) }
 
-    LaunchedEffect(searchQuery, selectedGoalFilter, selectedDietFilter) {
-        healthArticleViewModel.loadHealthArticles(
-            title = searchQuery,
-            targetGoal = selectedGoalFilter,
-            targetDietType = selectedDietFilter
-        )
+    val allArticles = remember { generateDummyHealthArticles() }
+
+    // Filter articles based on search and filters
+    val filteredArticles = remember(searchQuery, selectedGoalFilter, selectedDietFilter) {
+        allArticles.filter { article ->
+            val matchesSearch = searchQuery.isBlank() ||
+                    article.title.contains(searchQuery, ignoreCase = true) ||
+                    article.content.contains(searchQuery, ignoreCase = true) ||
+                    article.createdBy.contains(searchQuery, ignoreCase = true)
+
+            val matchesGoal = selectedGoalFilter == "All" || article.targetGoal == selectedGoalFilter
+            val matchesDiet = selectedDietFilter == "All" || article.targetDietType == selectedDietFilter
+
+            matchesSearch && matchesGoal && matchesDiet
+        }
     }
 
     Box(
@@ -217,48 +210,29 @@ private fun UserHealthArticleContent(
                 }
             }
 
-            when (val state = articlesState) {
-                is HealthArticleListState.Loading -> {
-                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+            // Articles List
+            if (filteredArticles.isEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
+                ) {
+                    Text(
+                        text = "No articles found matching your criteria",
+                        fontSize = 16.sp,
+                        fontFamily = OpenSans,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
                 }
-                is HealthArticleListState.Success -> {
-                    val articles = state.data
-                    if (articles.isEmpty()) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
-                        ) {
-                            Text(
-                                text = "No articles found matching your criteria",
-                                fontSize = 16.sp,
-                                fontFamily = OpenSans,
-                                color = Color.Gray,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else {
-                        // 5. Loop melalui data dari state dan perbaiki parameter
-                        articles.forEach { articleItem ->
-                            HealthArticleCard(
-                                article = articleItem, // <-- Kirim objek dari loop
-                            )
-                        }
-                    }
-                }
-                is HealthArticleListState.Error -> {
-                    Text(text = state.message, color = Color.Red, modifier = Modifier.padding(16.dp))
-                }
-                null -> {
-                    // State awal, bisa tampilkan loading juga
-                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+            } else {
+                filteredArticles.forEach { article ->
+                    HealthArticleCard(
+                        article = article,
+                    )
                 }
             }
         }
@@ -267,7 +241,7 @@ private fun UserHealthArticleContent(
 
 @Composable
 private fun HealthArticleCard(
-    article: HealthArticle,
+    article: HealthArticleDummy, // todo: ganti ke tipe data aslinya
 ) {
     val green = colorResource(R.color.green)
 
