@@ -2,6 +2,7 @@ package com.example.nutrisaver.viewmodel
 
 import android.app.Activity
 import android.app.Application // Tambahkan import ini
+import android.content.Context
 import android.util.Log
 import android.util.Patterns
 import androidx.lifecycle.AndroidViewModel // Ubah ViewModel menjadi AndroidViewModel
@@ -40,8 +41,15 @@ class AuthViewModel(
     // GoogleAuthClient diinisialisasi di sini (asumsi kelasnya sudah ada)
     private val googleAuthClient = GoogleAuthClient(application)
 
+    private val sharedPreferences = application.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+
+    // LiveData untuk menyimpan email yang diingat
+    private val _rememberedEmail = MutableLiveData<String?>()
+    val rememberedEmail: LiveData<String?> = _rememberedEmail
+
     init {
         checkAuthStatus()
+        loadRememberedEmail()
     }
 
     fun checkAuthStatus() {
@@ -94,15 +102,29 @@ class AuthViewModel(
      * Jika Anda punya sistem login custom yang mengembalikan custom token,
      * lihat catatan di bawah.
      */
-    fun login(email: String, password: String) {
+    private fun loadRememberedEmail() {
+        _rememberedEmail.value = sharedPreferences.getString("REMEMBERED_EMAIL", null)
+    }
+
+    // DIUBAH: Fungsi login sekarang juga mengatur SharedPreferences
+    fun login(email: String, password: String, rememberMe: Boolean) {
         if (email.isEmpty() || password.isEmpty()) {
             _authState.value = AuthState.Error("Email dan Password wajib diisi!")
             return
         }
         _authState.value = AuthState.Loading
+
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    // Jika login berhasil, atur SharedPreferences berdasarkan checkbox
+                    if (rememberMe) {
+                        // Simpan email
+                        sharedPreferences.edit().putString("REMEMBERED_EMAIL", email).apply()
+                    } else {
+                        // Hapus email yang tersimpan
+                        sharedPreferences.edit().remove("REMEMBERED_EMAIL").apply()
+                    }
                     _authState.value = AuthState.Authenticated
                 } else {
                     _authState.value =
@@ -212,7 +234,12 @@ class AuthViewModel(
         _authState.value = AuthState.Loading
         viewModelScope.launch {
             try {
-                googleAuthClient.signOut()
+                googleAuthClient.signOut() // Asumsi ini juga memanggil auth.signOut()
+                auth.signOut() // Panggil signOut Firebase secara eksplisit
+
+                // Hapus email yang diingat saat logout
+                sharedPreferences.edit().remove("REMEMBERED_EMAIL").apply()
+
                 _authState.value = AuthState.Unauthenticated
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

@@ -213,7 +213,7 @@ fun LoginScreen(modifier: Modifier = Modifier,
                    Spacer(modifier = Modifier.height(10.dp))
                    Button(
                        onClick = {
-                           authViewModel.login(email,password)
+                           authViewModel.login(email,password, rememberMe)
                        },
                        enabled = authState.value != AuthState.Loading,
                        contentPadding = PaddingValues(),
