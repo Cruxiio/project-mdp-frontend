@@ -1,6 +1,5 @@
 package com.example.nutrisaver.ui.screens.user
 
-import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -69,7 +68,7 @@ fun SearchResultScreen(navController: NavController) {
 }
 
 @Composable
-fun TopBar(
+private fun TopBar(
     onBackClick: () -> Unit = {}
 ) {
     Row(

@@ -134,10 +134,16 @@ fun MyAppNavigation(
                 )
             }
             composable("editinformation") {
-                EditInformationScreen(navController = navController)
+                EditInformationScreen(
+                    navController = navController,
+                    userViewModel = userViewModel
+                )
             }
             composable("editprofile") {
-                EditProfileScreen(navController = navController)
+                EditProfileScreen(
+                    navController = navController,
+                    userViewModel = userViewModel
+                )
             }
             composable("notification") {
                 NotificationScreen(navController = navController)

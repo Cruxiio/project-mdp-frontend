@@ -16,22 +16,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -39,13 +34,14 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -55,18 +51,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.UserViewModel
+import com.example.nutrisaver.data.model.User // Import User data class
 
 @Composable
-fun EditProfileScreen(navController: NavController) {
-    Scaffold { innerPadding ->
+fun EditProfileScreen(navController: NavController, userViewModel: UserViewModel) {
+    Scaffold(
+        topBar = { TopBar(onBackClick = { navController.popBackStack() }) }
+    ) { innerPadding ->
         EditProfileContent(
             modifier = Modifier.padding(innerPadding),
-            navController = navController
+            navController = navController,
+            userViewModel = userViewModel
         )
     }
 }
@@ -84,7 +84,12 @@ private fun TopBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(greenGradient)
-            .padding(vertical = 12.dp, horizontal = 16.dp)
+            .padding(
+                top = 32.dp,
+                bottom = 12.dp,
+                start = 16.dp,
+                end = 16.dp
+            )
     ) {
         Row(
             modifier = modifier
@@ -115,7 +120,8 @@ private fun TopBar(
 @Composable
 private fun EditProfileContent(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    userViewModel: UserViewModel // Pass UserViewModel here
 ) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
@@ -124,16 +130,43 @@ private fun EditProfileContent(
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
+    val userProfile by userViewModel.userProfile.observeAsState()
+
+    var name by remember { mutableStateOf("") } // Add name field
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    // Removed password field as per recommendation for separate flow
+    var profilePictureUri by remember { mutableStateOf<Uri?>(null) } // To hold current or selected URI
 
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) } // This holds the *new* selected image
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedImageUri = uri
     }
+
+    // Fetch user profile when the composable enters the composition
+    LaunchedEffect(Unit) {
+        userViewModel.fetchUserProfile()
+    }
+
+    // Populate fields when userProfile is available
+    LaunchedEffect(userProfile) {
+        userProfile?.let { user ->
+            name = user.name
+            username = user.username
+            email = user.email
+            user.profilePicture?.let { uriString ->
+                try {
+                    profilePictureUri = Uri.parse(uriString)
+                } catch (e: Exception) {
+                    // Handle invalid URI string if necessary
+                    profilePictureUri = null
+                }
+            }
+        }
+    }
+
 
     Column(
         modifier = modifier
@@ -143,7 +176,6 @@ private fun EditProfileContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column {
-            TopBar(onBackClick = { navController.popBackStack() })
             Column(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -154,13 +186,19 @@ private fun EditProfileContent(
                         .background(Color.Gray, shape = CircleShape)
                         .border(10.dp, colorResource(R.color.bg), CircleShape)
                         .clickable {
-                            imagePickerLauncher.launch("image/*")
+                            imagePickerLauncher.launch("image/*") // Launch picker on click
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (selectedImageUri != null) {
+                    val painter = when {
+                        selectedImageUri != null -> rememberAsyncImagePainter(selectedImageUri) // New selected image
+                        profilePictureUri != null -> rememberAsyncImagePainter(profilePictureUri) // Existing profile picture
+                        else -> null
+                    }
+
+                    if (painter != null) {
                         Image(
-                            painter = rememberAsyncImagePainter(selectedImageUri),
+                            painter = painter,
                             contentDescription = "Profile Image",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -213,6 +251,27 @@ private fun EditProfileContent(
                     .padding(horizontal = 24.dp)
             ) {
                 Text(
+                    text = "Name", // New field for user's full name
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.DarkGray
+                )
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    value = name,
+                    onValueChange = { name = it },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor = colorResource(R.color.black),
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
+                    )
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
                     text = "Username",
                     modifier = Modifier.padding(bottom = 8.dp),
                     fontSize = 16.sp,
@@ -248,30 +307,7 @@ private fun EditProfileContent(
                     singleLine = true,
                     value = email,
                     onValueChange = { email = it },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colorResource(R.color.black),
-                        unfocusedTextColor = colorResource(R.color.black),
-                        focusedContainerColor = colorResource(R.color.form_input),
-                        unfocusedContainerColor = colorResource(R.color.form_input)
-                    )
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = "Password",
-                    fontSize = 16.sp,
-                    fontFamily = OpenSans,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray
-                )
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    singleLine = true,
-                    value = password,
-                    onValueChange = { password = it },
-                    label = {  },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colorResource(R.color.black),
                         unfocusedTextColor = colorResource(R.color.black),
@@ -287,7 +323,20 @@ private fun EditProfileContent(
         ) {
             Button(
                 onClick = {
-                    // TODO: Simpan editan user ke database
+                    val currentUser = userProfile // Get the current user data
+                    if (currentUser != null) {
+                        // Create a copy of the user with only the fields updated by this screen
+                        val updatedUser = currentUser.copy(
+                            name = name,
+                            username = username,
+                            email = email,
+                            // Convert URI to String for profilePicture
+                            profilePicture = selectedImageUri?.toString() ?: currentUser.profilePicture
+                        )
+                        // Call ViewModel to update user profile
+                        userViewModel.updateUserProfile(updatedUser) // Use the new function
+                    }
+                    navController.popBackStack() // Navigate back to profile
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(

@@ -6,4 +6,6 @@ interface AuthDataSource {
     suspend fun register(user: User): User
     suspend fun getUserDetail(uuid: String): User
     suspend fun getUserProfile(idToken: String, userId: String): User
+    suspend fun updateUserProfile(idToken: String, user: User): User
+    suspend fun updateUserInformation(idToken: String, user: User): User
 }

@@ -25,4 +25,10 @@ class CommonRepoImpl(
 
         return remoteAllergens
     }
+
+    override suspend fun getEveryAllegen(keyword: String): List<Allergen> {
+        return commonDataSource.getAllergen(keyword)
+    }
+
+
 }
