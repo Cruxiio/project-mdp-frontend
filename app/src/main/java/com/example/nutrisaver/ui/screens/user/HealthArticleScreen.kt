@@ -58,6 +58,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nutrisaver.data.model.HealthArticle
 import com.example.nutrisaver.viewmodel.HealthArticleListState
@@ -120,9 +121,6 @@ private fun UserHealthArticleContent(
 ) {
     // 1. Inisialisasi ViewModel menggunakan ViewModelFactory
     val context = LocalContext.current
-    // PASTIKAN NAMA ViewModelFactory BENAR
-    val viewModelFactory = ViewModelFactory.getInstance(context)
-    val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = viewModelFactory)
 
     // 2. Ambil state dari ViewModel
     val articlesState by healthArticleViewModel.articlesState.observeAsState()
