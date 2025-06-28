@@ -21,6 +21,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -44,6 +45,18 @@ interface Webservice {
     suspend fun getUserProfile(
         @Header("Authorization") token: String,
         @Path("userId") userId: String // <-- Parameter baru untuk mengisi {userId} di URL
+    ): UserJson
+
+    @PATCH("api/user/profile")
+    suspend fun updateUserProfile(
+        @Header("Authorization") token: String,
+        @Body user: UserJson
+    ): UserJson
+
+    @PATCH("api/user/profile/information")
+    suspend fun updateUserInformation(
+        @Header("Authorization") token: String,
+        @Body user: UserJson
     ): UserJson
 
     @GET("api/consumption/today") // Sesuaikan jika path berbeda

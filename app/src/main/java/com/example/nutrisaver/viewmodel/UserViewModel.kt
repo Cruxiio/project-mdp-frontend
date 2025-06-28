@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.nutrisaver.data.model.Allergen
 import com.example.nutrisaver.data.model.DailyConsumption
 import com.example.nutrisaver.data.model.FoodStock
 import com.example.nutrisaver.data.model.User
@@ -14,7 +15,6 @@ import com.example.nutrisaver.data.model.WeightLog
 import com.example.nutrisaver.data.repositories.AuthRepo
 import com.example.nutrisaver.data.repositories.CommonRepo
 import com.example.nutrisaver.data.repositories.ConsumptionRepo
-import com.example.nutrisaver.data.repositories.ConsumptionRepoImpl
 import com.example.nutrisaver.data.repositories.FoodStockRepo
 import com.example.nutrisaver.data.repositories.WeightLogRepo
 import com.google.firebase.auth.FirebaseAuth
@@ -24,7 +24,7 @@ import java.time.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
 sealed class UserState {
-    object Idle : UserState() // State awal
+    object Idle : UserState()
     object Loading : UserState()
     object Success : UserState()
     data class Error(val message: String) : UserState()
@@ -41,11 +41,12 @@ class UserViewModel(
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    // State untuk menampung data profil user
     private val _userProfile = MutableLiveData<User?>()
     val userProfile: LiveData<User?> = _userProfile
 
-    // State untuk mengelola UI (Loading, Error, Success)
+    private val _allergenState = MutableLiveData<List<Allergen>>()
+    val allergenState: LiveData<List<Allergen>> = _allergenState
+
     private val _userState = MutableLiveData<UserState>()
     val userState: LiveData<UserState> = _userState
     val todaysConsumption: LiveData<DailyConsumption?> =
@@ -57,8 +58,7 @@ class UserViewModel(
     val expiringFoodStock: LiveData<List<FoodStock>> = _expiringFoodStock
 
     /**
-     * Mengambil data profil user dari repository.
-     * Menerapkan strategi Cache-First yang ada di AuthRepoImpl.
+     * Fetches the user profile from the repository.
      */
     fun fetchUserProfile() {
         val firebaseUser = auth.currentUser
@@ -70,15 +70,12 @@ class UserViewModel(
         _userState.value = UserState.Loading
         viewModelScope.launch {
             try {
-                val firebaseUser = auth.currentUser!!
                 val rawToken = firebaseUser.getIdToken(true).await().token
                 val uid = firebaseUser.uid
 
                 if (rawToken != null) {
-                    // [FIX DI SINI] Tambahkan "Bearer " di depan token
                     val bearerToken = "Bearer $rawToken"
-
-                    val profile = authRepo.getUserProfile(bearerToken, uid) // Kirim token yang sudah diformat
+                    val profile = authRepo.getUserProfile(bearerToken, uid)
                     _userProfile.value = profile
                     _userState.value = UserState.Success
                 } else {
@@ -87,12 +84,106 @@ class UserViewModel(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e("UserViewModel", "Gagal mengambil profil user", e)
-                // Cek apakah errornya adalah HttpException 401
                 if (e is retrofit2.HttpException && e.code() == 401) {
                     _userState.value = UserState.Error("Autentikasi gagal. Silakan coba login kembali.")
                 } else {
                     _userState.value = UserState.Error(e.message ?: "Gagal memuat profil.")
                 }
+            }
+        }
+    }
+
+    /**
+     * Updates profile picture, name, username, email remotely and locally.
+     * @param user The User object containing the updated profile fields.
+     */
+    fun updateUserProfile(user: User) {
+        val firebaseUser = auth.currentUser
+        if (firebaseUser == null) {
+            _userState.value = UserState.Error("Sesi berakhir. Silakan login kembali.")
+            return
+        }
+
+        _userState.value = UserState.Loading
+        viewModelScope.launch {
+            try {
+                val rawToken = firebaseUser.getIdToken(true).await().token
+                if (rawToken != null) {
+                    val bearerToken = "Bearer $rawToken"
+                    // Call the AuthRepo to update user profile remotely
+                    // This uses the existing updateUserProfile in AuthRepoImpl, which passes User to AuthDataSourceImpl
+                    val updatedUser = authRepo.updateUserProfile(bearerToken, user)
+
+                    // Update local user profile cache with the response from the server
+                    _userProfile.value = updatedUser
+                    _userState.value = UserState.Success
+                } else {
+                    throw Exception("Gagal mendapatkan token autentikasi.")
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e("UserViewModel", "Gagal mengupdate profil user (nama, username, email, gambar)", e)
+                _userState.value = UserState.Error(e.message ?: "Gagal mengupdate profil.")
+            }
+        }
+    }
+
+    /**
+     * Updates comprehensive user information (gender, dob, weight, height, goals, diet, allergens)
+     * This function is for the "Edit Information" screen.
+     * @param user The User object with updated information.
+     */
+    fun updateUserInformation(user: User) {
+        val firebaseUser = auth.currentUser
+        if (firebaseUser == null) {
+            _userState.value = UserState.Error("Sesi berakhir. Silakan login kembali.")
+            return
+        }
+
+        _userState.value = UserState.Loading
+        viewModelScope.launch {
+            try {
+                val rawToken = firebaseUser.getIdToken(true).await().token
+                if (rawToken != null) {
+                    val bearerToken = "Bearer $rawToken"
+                    val updatedUser = authRepo.updateUserInformation(bearerToken, user)
+                    _userProfile.value = updatedUser
+                    _userState.value = UserState.Success
+                } else {
+                    throw Exception("Gagal mendapatkan token autentikasi.")
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e("UserViewModel", "Gagal mengupdate informasi user", e)
+                _userState.value = UserState.Error(e.message ?: "Gagal mengupdate informasi.")
+            }
+        }
+    }
+
+    /**
+     * Fetches all available allergens from the backend.
+     */
+    fun fetchAllergens() {
+        _userState.value = UserState.Loading
+        viewModelScope.launch {
+            try {
+                val firebaseUser = auth.currentUser
+                if (firebaseUser != null) {
+                    val rawToken = firebaseUser.getIdToken(true).await().token
+                    if (rawToken != null) {
+                        val allergens = commonRepo.getAllergen("") // Using getAllergen now
+                        _allergenState.value = allergens
+                        _userState.value = UserState.Success
+                    } else {
+                        throw Exception("Gagal mendapatkan token autentikasi untuk alergen.")
+                    }
+                } else {
+                    _userState.value = UserState.Error("User not authenticated to fetch allergens.")
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e("UserViewModel", "Gagal mengambil daftar alergen", e)
+                _userState.value = UserState.Error(e.message ?: "Gagal memuat alergen.")
             }
         }
     }
@@ -104,18 +195,13 @@ class UserViewModel(
         viewModelScope.launch {
             try {
                 val token = firebaseUser.getIdToken(true).await().token ?: throw Exception("Token tidak valid")
+                val bearerToken = "Bearer $token"
 
-                // Panggil fungsi refresh dari repo, tidak perlu casting lagi
-                authRepo.getUserProfile(token, firebaseUser.uid).let { _userProfile.value = it }
-                consumptionRepo.refreshTodaysConsumption(token)
-                weightLogRepo.refreshWeightHistory(token)
-
-                // PANGGILAN BARU
-                foodStockRepo.getExpiringSoonStock(token).let { _expiringFoodStock.value = it }
-
-                // Ambil juga profil user
-                val profile = authRepo.getUserProfile(token, firebaseUser.uid)
-                _userProfile.value = profile
+                authRepo.getUserProfile(bearerToken, firebaseUser.uid).let { _userProfile.value = it }
+                consumptionRepo.refreshTodaysConsumption(bearerToken)
+                weightLogRepo.refreshWeightHistory(bearerToken)
+                foodStockRepo.getExpiringSoonStock(bearerToken).let { _expiringFoodStock.value = it }
+                commonRepo.getAllergen("").let { _allergenState.value = it } // Using getAllergen here too
 
                 _userState.value = UserState.Success
             } catch (e: Exception) {
@@ -127,18 +213,16 @@ class UserViewModel(
     }
 
     fun updateWaterIntake(amount: Int) {
-        // Jangan lakukan apa-apa jika jumlahnya 0
         if (amount == 0) return
 
         val firebaseUser = auth.currentUser ?: return
 
-        // Tidak perlu set state Loading agar UI tidak berkedip,
-        // karena perubahan akan terlihat setelah refresh.
         viewModelScope.launch {
             try {
                 val token = firebaseUser.getIdToken(true).await().token ?: throw Exception("Token tidak valid")
-                consumptionRepo.updateWaterIntake(token, amount)
-                weightLogRepo.refreshWeightHistory(token)
+                val bearerToken = "Bearer $token"
+                consumptionRepo.updateWaterIntake(bearerToken, amount)
+                weightLogRepo.refreshWeightHistory(bearerToken)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e("UserViewModel", "Gagal mengupdate asupan air", e)
@@ -152,7 +236,8 @@ class UserViewModel(
             _userState.value = UserState.Loading
             try {
                 val token = auth.currentUser?.getIdToken(true)?.await()?.token ?: throw Exception("Token tidak valid")
-                weightLogRepo.logWeight(token, weight, unit, date)
+                val bearerToken = "Bearer $token"
+                weightLogRepo.logWeight(bearerToken, weight, unit, date)
                 _userState.value = UserState.Success
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -161,5 +246,4 @@ class UserViewModel(
             }
         }
     }
-
 }

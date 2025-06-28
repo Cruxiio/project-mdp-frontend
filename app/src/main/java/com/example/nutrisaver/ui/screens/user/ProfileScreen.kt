@@ -122,9 +122,6 @@ fun ProfileContent(
     val itemGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.item_1), colorResource(id = R.color.item_2)))
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> selectedImageUri = uri }
 
     Box(
         modifier = modifier
@@ -155,8 +152,7 @@ fun ProfileContent(
                             modifier = Modifier
                                 .size(130.dp)
                                 .clip(CircleShape)
-                                .border(BorderStroke(2.dp, Color.White), CircleShape)
-                                .clickable { imagePickerLauncher.launch("image/*") },
+                                .border(BorderStroke(2.dp, Color.White), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             // Logika untuk menampilkan gambar profil
@@ -201,6 +197,40 @@ fun ProfileContent(
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
+
+                Box(
+                    modifier = Modifier.background(greenGradient)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Your Information",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            onClick = { navController.navigate("editinformation") },
+                            contentPadding = PaddingValues(),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.pastel_green)),
+                            shape = CircleShape,
+                        ) {
+                            Text(
+                                "Edit",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colorResource(R.color.green),
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
+                        }
+                    }
+
+                }
 
                 // --- BAGIAN DETAIL INFORMASI ---
                 Column(modifier = Modifier.fillMaxWidth()) {

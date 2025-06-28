@@ -36,4 +36,5 @@ interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCrossRefs(crossRefs: List<UserAllergenCrossRef>)
+
 }
