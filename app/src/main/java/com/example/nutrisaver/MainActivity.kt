@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.nutrisaver.ui.theme.NutriSaverTheme
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
+import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
@@ -29,6 +30,7 @@ class MainActivity : ComponentActivity() {
                 val foodStockViewModel : FoodStockViewModel = viewModel(factory=factory)
                 val adminUsersViewModel: AdminUsersViewModel = viewModel(factory=factory)
                 val logMealViewModel : LogMealViewModel = viewModel(factory=factory)
+                val feedbackViewModel : FeedbackViewModel = viewModel(factory=factory)
 
                 MyAppNavigation(
                     navController = navController,
@@ -36,10 +38,9 @@ class MainActivity : ComponentActivity() {
                     userViewModel = userViewModel,
                     adminUsersViewModel = adminUsersViewModel,
                     logMealViewModel = logMealViewModel,
-                    foodStockViewModel = foodStockViewModel
+                    foodStockViewModel = foodStockViewModel,
+                    feedBackViewModel = feedbackViewModel
                 )
-
-                MyAppNavigation(navController = navController, authViewModel = authViewModel, userViewModel = userViewModel, adminUsersViewModel = adminUsersViewModel , logMealViewModel = logMealViewModel, foodStockViewModel = foodStockViewModel)
             }
         }
     }

@@ -13,6 +13,7 @@ import com.example.nutrisaver.data.sources.remote.common.RecipeJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
+import com.example.nutrisaver.data.sources.remote.common.UserFeedbackJson
 import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
 import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
 import okhttp3.MultipartBody
@@ -65,6 +66,15 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Body user: UserJson
     ): UserJson
+
+    @GET("api/user/feedback")
+    suspend fun getUserFeedback(@Header("Authorization") token: String): List<UserFeedbackJson>
+
+    @POST("api/user/feedback")
+    suspend fun addFeedback(
+        @Header("Authorization") token: String,
+        @Body feedback: UserFeedbackJson
+    ): UserFeedbackJson
 
     @GET("api/consumption/today") // Sesuaikan jika path berbeda
     suspend fun getTodaysConsumption(@Header("Authorization") token: String): DailyConsumptionJson
