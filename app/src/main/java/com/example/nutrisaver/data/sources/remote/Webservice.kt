@@ -3,9 +3,12 @@ package com.example.nutrisaver.data.sources.remote
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import com.example.nutrisaver.data.sources.remote.common.AddFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
+import com.example.nutrisaver.data.sources.remote.common.CreateHealthArticleRequestJson
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionDetailJson
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionJson
 import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
+import com.example.nutrisaver.data.sources.remote.common.HealthArticleJson
+import com.example.nutrisaver.data.sources.remote.common.HealthArticleResponseJson
 import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.IngredientJson
 import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
@@ -13,6 +16,7 @@ import com.example.nutrisaver.data.sources.remote.common.RecipeJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
+import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleRequestJson
 import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
 import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
 import okhttp3.ResponseBody
@@ -129,4 +133,30 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Query("date") date: String
     ): Response<DailyConsumptionJson>
+
+    @POST("api/health-articles")
+    suspend fun createHealthArticle(
+        @Header("Authorization") token: String,
+        @Body request: CreateHealthArticleRequestJson
+    ): Response<HealthArticleJson>
+
+    @GET("api/health-articles")
+    suspend fun getHealthArticles(
+        @Query("target_goal") targetGoal: String? = null,
+        @Query("target_diet_type") targetDietType: String? = null,
+        @Query("title") title: String? = null
+    ): HealthArticleResponseJson
+
+    @PATCH("api/health-articles/{article_id}")
+    suspend fun updateHealthArticle(
+        @Header("Authorization") token: String,
+        @Path("article_id") articleId: Int,
+        @Body request: UpdateHealthArticleRequestJson
+    ): Response<HealthArticleJson>
+
+    @DELETE("api/health-articles/{article_id}")
+    suspend fun deleteHealthArticle(
+        @Header("Authorization") token: String,
+        @Path("article_id") articleId: Int
+    ): Response<Unit>
 }

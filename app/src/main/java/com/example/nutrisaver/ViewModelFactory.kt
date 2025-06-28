@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
@@ -22,6 +23,7 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
             val adminRepository = application.adminRepo
             val recipeRepository = application.recipeRepo
             val weightLogRepository = application.weightLogRepo
+            val healthArticleRepository = application.healthArticleRepo
 
             when {
                 isAssignableFrom(AuthViewModel::class.java) ->
@@ -34,6 +36,8 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
                     AdminUsersViewModel(adminRepository, application)
                 isAssignableFrom(LogMealViewModel::class.java) ->
                     LogMealViewModel(recipeRepository, consumRepository, application)
+                isAssignableFrom(HealthArticleViewModel::class.java) ->
+                    HealthArticleViewModel(healthArticleRepository)
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

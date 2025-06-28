@@ -62,7 +62,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
-import com.example.nutrisaver.ui.screens.admin.generateDummyHealthArticles
 import com.example.nutrisaver.ui.screens.user.dashboard.FoodStockExpirationSection
 import com.example.nutrisaver.ui.screens.user.dashboard.HealthArticleSection
 import com.example.nutrisaver.ui.screens.user.dashboard.MealLogSection
@@ -75,8 +74,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.nutrisaver.CustomViewModelFactory
+import com.example.nutrisaver.data.model.HealthArticle
 import com.example.nutrisaver.data.model.WeightLog
 import com.example.nutrisaver.ui.screens.user.dashboard.WaterIntakeButton
+import com.example.nutrisaver.viewmodel.HealthArticleListState
+import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 import com.example.nutrisaver.viewmodel.UserState
 import com.example.nutrisaver.viewmodel.UserViewModel
 import kotlin.math.cos
@@ -221,9 +225,13 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     val userState by userViewModel.userState.observeAsState()
     val expiringFoodStock by userViewModel.expiringFoodStock.observeAsState(emptyList())
 
+    val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = CustomViewModelFactory)
+    val articlesState by healthArticleViewModel.articlesState.observeAsState()
+
     // --- 2. PICU REFRESH DATA DARI REMOTE SAAT LAYAR MUNCUL ---
     LaunchedEffect(key1 = Unit) {
         userViewModel.refreshDashboardData()
+        healthArticleViewModel.loadHealthArticles()
     }
 
     // --- 3. SIAPKAN VARIABEL UNTUK UI DENGAN NILAI DEFAULT ---
@@ -262,7 +270,7 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
     // todo: nanti ganti codingannya sama function viewmodelnya setelah backend
     val foodStockItems = remember { generateDummyFoodStock() }
-    val healthArticleItems = remember { generateDummyHealthArticles() }
+    val healthArticleItems = remember { HealthArticle }
 
 
     LaunchedEffect(selectedPeriod, weightHistory) { // <-- DIUBAH
@@ -510,11 +518,37 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), thickness = 2.dp)
 
-            HealthArticleSection(
-                modifier = Modifier.fillMaxWidth(),
-                healthArticleItems = healthArticleItems,
-                navController = navController
-            )
+            when (val state = articlesState) {
+                is HealthArticleListState.Success -> {
+                    // Jika sukses, oper data asli ke komponen
+                    HealthArticleSection(
+                        modifier = Modifier.fillMaxWidth(),
+                        healthArticleItems = state.data, // <-- INI JAWABANNYA
+                        navController = navController
+                    )
+                }
+                is HealthArticleListState.Loading -> {
+                    // Tampilkan loading indicator saat data artikel sedang dimuat
+                    Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(strokeWidth = 2.dp)
+                    }
+                }
+                is HealthArticleListState.Error -> {
+                    // Tampilkan pesan jika gagal memuat artikel
+                    Text(
+                        text = "Could not load articles.",
+                        color = Color.Gray,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                null -> {
+                    // State awal, bisa juga tampilkan loading
+                    Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(strokeWidth = 2.dp)
+                    }
+                }
+            }
         }
     }
 

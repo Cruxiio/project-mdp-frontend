@@ -17,7 +17,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,14 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.nutrisaver.R
-import com.example.nutrisaver.ui.screens.admin.HealthArticleDummy // todo: hapus nanti
+import com.example.nutrisaver.data.model.HealthArticle
 import com.example.nutrisaver.ui.theme.OpenSans
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun HealthArticleSection(
     modifier: Modifier = Modifier,
-    healthArticleItems: List<HealthArticleDummy>, // todo: ganti dengan object HealthArticle dari backend
+    healthArticleItems: List<HealthArticle>,
     navController: NavController
 ) {
     Column {
@@ -97,7 +96,7 @@ fun HealthArticleSection(
 
         if (healthArticleItems.isEmpty()) {
             Text(
-                text = "No articles as of now",
+                text = "No articles available at the moment.",
                 fontSize = 16.sp,
                 fontFamily = OpenSans,
                 color = Color.Gray,
@@ -118,7 +117,7 @@ fun HealthArticleSection(
 
 @Composable
 private fun HealthArticleCard(
-    article: HealthArticleDummy, // todo: ganti ke tipe data aslinya
+    article: HealthArticle,
 ) {
     val green = colorResource(R.color.green)
 

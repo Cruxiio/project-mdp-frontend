@@ -57,14 +57,17 @@ import java.time.format.DateTimeFormatter
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.text.style.TextAlign
 import com.example.nutrisaver.data.model.HealthArticle
 import com.example.nutrisaver.viewmodel.HealthArticleListState
 import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 
+
 @Composable
-fun UserHealthArticleScreen(navController: NavController) {
+fun UserHealthArticleScreen(
+    navController: NavController,
+    healthArticleViewModel: HealthArticleViewModel
+) {
     Scaffold(
         topBar = {
             TopBar(onBackClick = { navController.popBackStack() })
@@ -72,7 +75,8 @@ fun UserHealthArticleScreen(navController: NavController) {
     ) { innerPadding ->
         UserHealthArticleContent(
             modifier = Modifier.padding(innerPadding),
-            navController = navController
+            navController = navController,
+            healthArticleViewModel = healthArticleViewModel
         )
     }
 }
@@ -117,14 +121,8 @@ private fun TopBar(
 private fun UserHealthArticleContent(
     modifier: Modifier = Modifier,
     navController: NavController,
+    healthArticleViewModel: HealthArticleViewModel
 ) {
-    // 1. Inisialisasi ViewModel menggunakan ViewModelFactory
-    val context = LocalContext.current
-    // PASTIKAN NAMA ViewModelFactory BENAR
-    val viewModelFactory = ViewModelFactory.getInstance(context)
-    val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = viewModelFactory)
-
-    // 2. Ambil state dari ViewModel
     val articlesState by healthArticleViewModel.articlesState.observeAsState()
 
     val background = colorResource(id = R.color.bg2_1)
@@ -260,6 +258,7 @@ private fun UserHealthArticleContent(
                         CircularProgressIndicator()
                     }
                 }
+
             }
         }
     }
