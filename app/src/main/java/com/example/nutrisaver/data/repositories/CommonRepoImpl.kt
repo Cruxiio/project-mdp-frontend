@@ -9,12 +9,12 @@ class CommonRepoImpl(
     private val commonLocalDataSource: CommonLocalDataSource
 ): CommonRepo {
     override suspend fun getAllergen(keyword: String): List<Allergen> {
-        // 1. Coba cari di database lokal dulu
-        val localAllergens = commonLocalDataSource.getAllergen(keyword)
-        if (localAllergens.isNotEmpty()) {
-            // Jika ketemu, langsung kembalikan
-            return localAllergens
-        }
+//        // 1. Coba cari di database lokal dulu
+//        val localAllergens = commonLocalDataSource.getAllergen(keyword)
+//        if (localAllergens.isNotEmpty()) {
+//            // Jika ketemu, langsung kembalikan
+//            return localAllergens
+//        }
 
         // 2. Jika di lokal tidak ada/kosong, ambil dari remote API
         val remoteAllergens = commonDataSource.getAllergen(keyword)

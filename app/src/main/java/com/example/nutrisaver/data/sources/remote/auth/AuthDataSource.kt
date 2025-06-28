@@ -14,4 +14,5 @@ interface AuthDataSource {
         profilePicture: MultipartBody.Part?
     ): UserJson
     suspend fun updateUserInformation(idToken: String, user: User): User
+    suspend fun getUserProfileForRegister(idToken: String, userId: String): User?
 }

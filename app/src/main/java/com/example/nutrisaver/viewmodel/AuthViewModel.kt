@@ -137,18 +137,34 @@ class AuthViewModel(
         _authState.value = AuthState.Loading
         viewModelScope.launch {
             try {
-                val success = googleAuthClient.signIn(activityContext)
-                if (success) {
+                // 1. Lakukan sign-in Google seperti biasa
+                val signInSuccess = googleAuthClient.signIn(activityContext)
+                if (!signInSuccess) throw Exception("Gagal login dengan Google.")
+
+                // 2. Ambil user & token dari Firebase
+                val firebaseUser = auth.currentUser ?: throw Exception("Sesi Firebase tidak ditemukan.")
+                val token = firebaseUser.getIdToken(true).await().token ?: throw Exception("Token tidak valid.")
+                val uid = firebaseUser.uid
+
+                // 3. Gunakan FUNGSI BARU untuk cek ke backend
+                Log.d("AuthViewModel", "Google Sign-In success. Checking user in backend with UID: $uid")
+                val existingUser = authRepo.getUserProfileForRegister(token, uid)
+
+                // 4. Tentukan alur berikutnya berdasarkan hasil
+                if (existingUser != null) {
+                    // User sudah ada, langsung ke dashboard
+                    Log.d("AuthViewModel", "User already exists. Navigating to dashboard.")
                     _authState.value = AuthState.Authenticated
                 } else {
-                    _authState.value = AuthState.Error("Google Sign-In Gagal.")
+                    // User BARU, arahkan untuk melengkapi data
+                    Log.d("AuthViewModel", "New user. Navigating to complete registration details.")
+                    _authState.value = AuthState.NeedsRegistrationDetails
                 }
             } catch (e: CancellationException) {
                 _authState.value = AuthState.Unauthenticated
                 Log.w("AuthViewModel", "Google Sign-In dibatalkan", e)
             } catch (e: Exception) {
-                _authState.value =
-                    AuthState.Error(e.message ?: "Terjadi error saat Sign In dengan Google.")
+                _authState.value = AuthState.Error(e.message ?: "Terjadi error saat Sign In dengan Google.")
             }
         }
     }
@@ -180,55 +196,109 @@ class AuthViewModel(
         _authState.value = AuthState.Loading
         viewModelScope.launch {
             try {
-                // 1. Buat user di Firebase Authentication
-                val authResult = auth.createUserWithEmailAndPassword(registerInp.email, registerInp.password).await()
-                val firebaseUser: FirebaseUser = authResult.user ?: throw Exception("Gagal membuat user di Firebase.")
+                // ================== LOGIKA PERCABANGAN KUNCI ==================
+                // Cek apakah ini alur registrasi manual (ditandai dengan adanya password).
+                if (registerInp.password.isNotEmpty()) {
+                    // --- INI ADALAH ALUR REGISTRASI MANUAL ---
+                    Log.d("AuthViewModel", "Signup path: Manual Registration")
 
-                // 2. Siapkan objek User untuk dikirim ke backend Anda
-                //    Ini adalah PERBAIKAN KUNCI: pastikan semua field diisi sesuai konstruktor User.
-                val userToRegister = User(
-                    id = null, // ID akan dibuat oleh backend
-                    uuid = firebaseUser.uid,
-                    role = "user",
-                    name = inp.name,
-                    username = registerInp.username,
-                    email = registerInp.email,
-                    dateOfBirth = MockDB.dateFormater(inp.dateOfBirth), // Pastikan formatnya YYYY-MM-DD
-                    gender = inp.gender,
-                    weight = inp.weight,
-                    height = inp.height,
-                    profilePicture = null, // Diisi nanti
-                    goal = inp.goalOption,
-                    targetWeight = inp.targetWeight,
-                    dietType = inp.dietTypeOption,
-                    proteinRatio = inp.protein,
-                    carbsRatio = inp.carbs,
-                    fatRatio = inp.fat,
-                    allergen = inp.allergen,
-                    nutritionNeeds = null, // Ini akan dihitung dan diisi oleh backend
-                    firebaseToken = null, // Tidak perlu untuk alur ini
-                    createdAt = null, // Backend yang mengatur
-                    updatedAt = null, // Backend yang mengatur
-                    deletedAt = null
-                )
+                    // 1. Buat user baru di Firebase Auth menggunakan data dari halaman pertama.
+                    val authResult = auth.createUserWithEmailAndPassword(registerInp.email, registerInp.password).await()
+                    val firebaseUser = authResult.user ?: throw Exception("Gagal membuat user di Firebase.")
 
-                // 3. Panggil repository untuk menyimpan data user ke backend Anda
-                Log.d("AuthViewModel", "Registering user to backend: $userToRegister")
-                val newUserFromBackend = authRepo.register(userToRegister)
-                Log.d("AuthViewModel", "Backend response: $newUserFromBackend")
+                    // 2. Bangun objek User untuk dikirim ke backend.
+                    val userToRegister = User(
+                        id = null,
+                        uuid = firebaseUser.uid,
+                        role = "user",
+                        name = inp.name, // Ambil dari form detail
+                        username = registerInp.username, // Ambil dari form pertama
+                        email = registerInp.email, // Ambil dari form pertama
+                        dateOfBirth = MockDB.dateFormater(inp.dateOfBirth),
+                        gender = inp.gender,
+                        weight = inp.weight,
+                        height = inp.height,
+                        profilePicture = null, // User manual tidak punya foto profil awal
+                        goal = inp.goalOption,
+                        targetWeight = inp.targetWeight,
+                        dietType = inp.dietTypeOption,
+                        proteinRatio = inp.protein,
+                        carbsRatio = inp.carbs,
+                        fatRatio = inp.fat,
+                        allergen = inp.allergen,
+                        // field lain
+                        nutritionNeeds = null,
+                        firebaseToken = null,
+                        createdAt = null,
+                        updatedAt = null,
+                        deletedAt = null
+                    )
 
-                // 4. Jika semua berhasil, update state ke Authenticated
+                    // 3. Kirim data ke backend Anda.
+                    Log.d("AuthViewModel", "Registering manual user to backend: $userToRegister")
+                    authRepo.register(userToRegister)
+
+                } else {
+                    // --- INI ADALAH ALUR MELENGKAPI PROFIL GOOGLE ---
+                    Log.d("AuthViewModel", "Signup path: Google Profile Completion")
+
+                    // 1. User sudah ada, cukup ambil data user yang sedang aktif.
+                    val firebaseUser = auth.currentUser ?: throw Exception("Sesi login Google tidak ditemukan. Silakan coba lagi.")
+
+                    // 2. Bangun objek User untuk dikirim ke backend.
+                    val userToRegister = User(
+                        id = null,
+                        uuid = firebaseUser.uid,
+                        role = "user",
+                        name = inp.name.ifEmpty { firebaseUser.displayName ?: "" }, // Gunakan nama dari Google jika form kosong
+                        username = firebaseUser.displayName?.split(" ")?.first() ?: "user", // Default username dari Google
+                        email = firebaseUser.email!!, // Email pasti ada dari Google
+                        dateOfBirth = MockDB.dateFormater(inp.dateOfBirth),
+                        gender = inp.gender,
+                        weight = inp.weight,
+                        height = inp.height,
+                        profilePicture = firebaseUser.photoUrl?.toString(), // Ambil foto dari Google
+                        goal = inp.goalOption,
+                        targetWeight = inp.targetWeight,
+                        dietType = inp.dietTypeOption,
+                        proteinRatio = inp.protein,
+                        carbsRatio = inp.carbs,
+                        fatRatio = inp.fat,
+                        allergen = inp.allergen,
+                        // field lain
+                        nutritionNeeds = null,
+                        firebaseToken = null,
+                        createdAt = null,
+                        updatedAt = null,
+                        deletedAt = null
+                    )
+
+                    // 3. Kirim data ke backend Anda.
+                    Log.d("AuthViewModel", "Registering Google user to backend: $userToRegister")
+                    authRepo.register(userToRegister)
+                }
+
+                // Setelah salah satu alur berhasil, set state ke Authenticated.
                 _authState.value = AuthState.Authenticated
 
+                // (Sangat disarankan) Bersihkan state registerInp setelah selesai.
+                registerInp = RegisterInp()
+
             } catch (e: Exception) {
-                // IMPROVEMENT: Tangani semua kemungkinan error (network, duplikat, dll)
-                if (e is CancellationException) throw e // Jangan tangani cancellation
+                if (e is CancellationException) throw e
+
+                // Memberikan pesan error yang lebih baik kepada user
+                val errorMessage = when (e) {
+                    is com.google.firebase.auth.FirebaseAuthUserCollisionException -> "Email ini sudah terdaftar. Silakan login atau gunakan email lain."
+                    else -> e.message ?: "Terjadi kesalahan saat registrasi."
+                }
+
                 Log.e("AuthViewModel", "Signup failed", e)
-                _authState.value =
-                    AuthState.Error(e.message ?: "Terjadi kesalahan saat registrasi.")
+                _authState.value = AuthState.Error(errorMessage)
             }
         }
     }
+
 
     fun signOut() {
         _authState.value = AuthState.Loading
@@ -255,5 +325,6 @@ sealed class AuthState {
     object Unauthenticated : AuthState()
     object Loading : AuthState()
     object ToRegisterPage2 : AuthState()
+    object NeedsRegistrationDetails : AuthState()
     data class Error(val message: String) : AuthState()
 }

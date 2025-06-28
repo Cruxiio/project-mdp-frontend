@@ -34,6 +34,14 @@ class AuthRepoImpl(
         return newUser
     }
 
+    override suspend fun getUserProfileForRegister(idToken: String, userId: String): User? {
+        // Untuk pengecekan saat registrasi, kita tidak perlu cache.
+        // Kita selalu ingin data terbaru dari server untuk memutuskan alur.
+        // Jadi, kita langsung panggil fungsi spesifik dari data source.
+        Log.d("AuthRepo", "Calling dataSource.getUserProfileForRegister for UID: $userId")
+        return authDataSource.getUserProfileForRegister(idToken, userId)
+    }
+
     override suspend fun getUserDetail(uuid: String): User {
         val localUser = authLocalDataSource.getUser(uuid)
         if (localUser != null) {

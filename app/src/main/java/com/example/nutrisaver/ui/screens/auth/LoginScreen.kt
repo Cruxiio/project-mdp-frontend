@@ -85,6 +85,13 @@ fun LoginScreen(modifier: Modifier = Modifier,
                     launchSingleTop = true
                 }
             }
+            is AuthState.NeedsRegistrationDetails -> {
+                // Gunakan nama rute yang benar dari NavHost Anda
+                navController.navigate("register-detail") {
+                    popUpTo("auth") { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
             is AuthState.Error -> Toast.makeText(context,
                 (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
             else -> Unit
