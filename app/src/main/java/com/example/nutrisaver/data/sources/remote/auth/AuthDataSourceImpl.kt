@@ -28,4 +28,18 @@ class AuthDataSourceImpl(
         return User.fromUserJson(userJson)
             ?: throw Exception("Gagal mem-parsing data profil user dari server.")
     }
+
+    override suspend fun updateUserProfile(idToken: String, user: User): User {
+        val userJsonToUpdate = user.toUserJson()
+        val updatedUserJson = webservice.updateUserProfile(idToken, userJsonToUpdate)
+        return User.fromUserJson(updatedUserJson)
+            ?: throw Exception("Gagal mem-parsing data user yang diperbarui dari server (updateUserProfile).")
+    }
+
+    override suspend fun updateUserInformation(idToken: String, user: User): User {
+        val userJsonToUpdate = user.toUserJson()
+        val updatedUserJson = webservice.updateUserInformation(idToken, userJsonToUpdate)
+        return User.fromUserJson(updatedUserJson)
+            ?: throw Exception("Gagal mem-parsing data user yang diperbarui dari server.")
+    }
 }

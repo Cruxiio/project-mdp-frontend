@@ -23,6 +23,7 @@ interface FoodStockDataSource {
     suspend fun getAllFoodStock(token: String): List<FoodStock>
     suspend fun deleteFoodStock(token: String, id: Int)
     suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock
+    suspend fun getExpiringSoonStock(token: String): List<FoodStock>
 }
 
 /**
@@ -109,6 +110,17 @@ class FoodStockDataSourceImpl(
                 ?: throw Exception("Invalid data received after updating.")
         } catch (e: Exception) {
             Log.e("FoodStockRemoteDS", "Failed to update food stock", e)
+            throw e
+        }
+    }
+
+    override suspend fun getExpiringSoonStock(token: String): List<FoodStock> {
+        try {
+            val formattedToken = "Bearer $token"
+            val jsonList = webservice.getExpiringSoonStock(formattedToken)
+            return jsonList.mapNotNull { FoodStock.fromStockJson(it) }
+        } catch (e: Exception) {
+            Log.e("FoodStockRemoteDS", "Failed to get expiring stock", e)
             throw e
         }
     }

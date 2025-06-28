@@ -4,11 +4,18 @@ import android.util.Log
 import com.example.nutrisaver.data.sources.remote.auth.AuthDataSource
 import com.example.nutrisaver.data.model.User
 import com.example.nutrisaver.data.sources.local.auth.AuthLocalDataSource
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class AuthRepoImpl(
     private val authDataSource: AuthDataSource,
     private val authLocalDataSource: AuthLocalDataSource
 ): AuthRepo {
+    // This is the MutableStateFlow for the user profile cache
+    private val _userProfileCache = MutableStateFlow<User?>(null)
+    val userProfileCache: StateFlow<User?> = _userProfileCache.asStateFlow()
+
     override suspend fun register(user: User): User {
         val newUser: User = authDataSource.register(user)
         authLocalDataSource.saveUser(newUser)
@@ -51,6 +58,25 @@ class AuthRepoImpl(
             // 5. Kembalikan data baru dari remote
             return remoteUser
         }
+    }
+
+    override suspend fun updateUserProfile(idToken: String, user: User): User {
+        val updatedUser = authDataSource.updateUserProfile(idToken, user)
+        authLocalDataSource.saveUser(updatedUser) // Update Room DB
+        _userProfileCache.value = updatedUser // Update StateFlow cache
+        return updatedUser
+    }
+
+    override suspend fun updateUserInformation(idToken: String, user: User): User {
+        // Your backend now uses the token for identification, so no userId needed in the path.
+        // The user object itself carries its UUID.
+        val updatedUser = authDataSource.updateUserInformation(idToken, user)
+
+        // After successful remote update, update local Room cache and StateFlow cache
+        authLocalDataSource.saveUser(updatedUser) // Update Room DB
+
+        _userProfileCache.value = updatedUser // Update StateFlow cache
+        return updatedUser
     }
 
 }

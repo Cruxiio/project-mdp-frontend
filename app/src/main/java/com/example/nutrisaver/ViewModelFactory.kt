@@ -21,12 +21,13 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
             val foodStockRepository = application.foodStockRepo
             val adminRepository = application.adminRepo
             val recipeRepository = application.recipeRepo
+            val weightLogRepository = application.weightLogRepo
 
             when {
                 isAssignableFrom(AuthViewModel::class.java) ->
                     AuthViewModel(commonRepository,authRepository,application)
                 isAssignableFrom(UserViewModel::class.java) ->
-                    UserViewModel(commonRepository,authRepository,consumRepository, application)
+                    UserViewModel(commonRepository,authRepository,consumRepository,  weightLogRepository, foodStockRepository, application)
                 isAssignableFrom(FoodStockViewModel::class.java) ->
                     FoodStockViewModel(ingredientRepository, foodStockRepository)
                 isAssignableFrom(AdminUsersViewModel::class.java) ->

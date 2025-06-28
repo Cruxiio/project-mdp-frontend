@@ -69,13 +69,20 @@ import com.example.nutrisaver.ui.theme.OpenSans
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
+import com.example.nutrisaver.data.model.Allergen
+import com.example.nutrisaver.viewmodel.UserViewModel
 
 @Composable
-fun EditInformationScreen(navController: NavController) {
-    Scaffold { innerPadding ->
+fun EditInformationScreen(navController: NavController, userViewModel: UserViewModel) {
+    Scaffold(
+        topBar = { TopBar(onBackClick = { navController.popBackStack() }) }
+    ) { innerPadding ->
         EditInformationContent(
             modifier = Modifier.padding(innerPadding),
-            navController = navController
+            navController = navController,
+            userViewModel = userViewModel
         )
     }
 
@@ -94,7 +101,12 @@ private fun TopBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(greenGradient)
-            .padding(vertical = 12.dp, horizontal = 16.dp)
+            .padding(
+                top = 32.dp,
+                bottom = 12.dp,
+                start = 16.dp,
+                end = 16.dp
+            )
     ) {
         Row(
             modifier = modifier
@@ -126,19 +138,36 @@ private fun convertMillisToDate(millis: Long): String {
     return formatter.format(Date(millis))
 }
 
+// helper function to convert date string to millis
+private fun convertDateToMillis(dateString: String): Long? {
+    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    return try {
+        formatter.parse(dateString)?.time
+    } catch (e: Exception) {
+        null // Return null if parsing fails
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun EditInformationContent(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    userViewModel: UserViewModel
 ) {
-    // todo: ganti semua value ini dari value user saat ini
-    val genderOptions = listOf("Male", "Female")
-    val (gender, onGenderOptionSelected) = remember { mutableStateOf(genderOptions[0]) }
+    val userProfile by userViewModel.userProfile.observeAsState()
 
+    var gender by remember { mutableStateOf("Male") }
     var showDateModal by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
-    val dateOfBirth = datePickerState.selectedDateMillis?.let { convertMillisToDate(it) } ?: ""
+
+    val initialDateMillis = remember(userProfile?.dateOfBirth) {
+        userProfile?.dateOfBirth?.let { dateString ->
+            convertDateToMillis(dateString)
+        } ?: System.currentTimeMillis()
+    }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
+    var dateOfBirth by remember { mutableStateOf(userProfile?.dateOfBirth ?: "") }
+
 
     var weight by remember { mutableStateOf(0) }
     var height by remember { mutableStateOf(0) }
@@ -147,25 +176,109 @@ private fun EditInformationContent(
     var goalExpanded by remember { mutableStateOf(false) }
     var goal by remember { mutableStateOf(goalOptions[0]) }
 
+    val dietTypeOptions = listOf("vegan", "ketogenic", "low carbs", "strict calories", "free", "custom")
+    var dietTypeExpanded by remember { mutableStateOf(false) }
+    var dietType by remember { mutableStateOf(dietTypeOptions[0]) }
+
     var targetWeight by remember { mutableStateOf(0) }
 
     var protein by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
     var fat by remember { mutableStateOf("") }
-    val proteinVal = protein.toIntOrNull() ?: 0
-    val carbsVal = carbs.toIntOrNull() ?: 0
-    val fatVal = fat.toIntOrNull() ?: 0
-    val total = proteinVal + carbsVal + fatVal
 
-    // Todo: nanti diganti jadi allergen yang ada di database
-    val allAllergen = listOf("Peanuts", "Shellfish", "Dairy", "Eggs", "Wheat", "Soy")
+    val allAvailableAllergens by userViewModel.allergenState.observeAsState(emptyList())
     var allergyExpanded by remember { mutableStateOf(false) }
-    var selectedAllergy by remember { mutableStateOf(allAllergen[0]) }
-    var userAllergies by remember { mutableStateOf(listOf<String>()) }
-    // Local callback function that updates userAllergies state
-    val onAllergyListChanged: (List<String>) -> Unit = { newList ->
-        userAllergies = newList
+    // This selectedAllergy is for the dropdown selection itself
+    var selectedAllergyFromDropdown by remember { mutableStateOf<Allergen?>(null) }
+    // This holds the allergies the user HAS selected
+    var userAllergies by remember { mutableStateOf(listOf<Allergen>()) }
+
+
+    // Fetch user profile and all allergens when the composable enters the composition
+    LaunchedEffect(Unit) {
+        userViewModel.fetchUserProfile()
+        userViewModel.fetchAllergens() // This populates allAvailableAllergens
     }
+
+    // Populate fields when userProfile is available
+    LaunchedEffect(userProfile) {
+        userProfile?.let { user ->
+            gender = user.gender.replaceFirstChar { it.uppercase(Locale.getDefault()) }
+            dateOfBirth = user.dateOfBirth
+            weight = user.weight
+            height = user.height
+            goal = user.goal.replaceFirstChar { it.uppercase(Locale.getDefault()) }
+            dietType = user.dietType
+            targetWeight = user.targetWeight
+            protein = user.proteinRatio.toString()
+            carbs = user.carbsRatio.toString()
+            fat = user.fatRatio.toString()
+            userAllergies = user.allergen
+        }
+    }
+
+    // Initialize selectedAllergyFromDropdown based on allAvailableAllergens
+    // This ensures the dropdown always shows an available option.
+    // userAllergies is NOT used for the initial selection of the dropdown itself.
+    LaunchedEffect(allAvailableAllergens) {
+        selectedAllergyFromDropdown = allAvailableAllergens.firstOrNull()
+    }
+
+    // Update `dateOfBirth` whenever the `datePickerState`'s selection changes
+    LaunchedEffect(datePickerState.selectedDateMillis) {
+        datePickerState.selectedDateMillis?.let {
+            dateOfBirth = convertMillisToDate(it)
+        }
+    }
+
+    // Handle diet type changes and update the macronutrient values
+    fun updateMacronutrientRecommendations(newDietType: String) {
+        when (newDietType) {
+            "vegan" -> {
+                protein = "27.5"
+                carbs = "47.5"
+                fat = "25.0"
+            }
+            "ketogenic" -> {
+                protein = "20.0"
+                carbs = "10.0"
+                fat = "70.0"
+            }
+            "low carbs" -> {
+                protein = "30.0"
+                carbs = "30.0"
+                fat = "40.0"
+            }
+            "strict calories" -> {
+                protein = "30.0"
+                carbs = "45.0"
+                fat = "25.0"
+            }
+            "free" -> {
+                protein = "20.0"
+                carbs = "50.0"
+                fat = "30.0"
+            }
+            "custom" -> {
+                // Keep current values if custom is selected, or reset if they are default
+                if (protein == "0.0" && carbs == "0.0" && fat == "0.0") {
+                    protein = ""
+                    carbs = ""
+                    fat = ""
+                }
+            }
+        }
+    }
+
+    // Trigger the update when the selected diet type changes
+    LaunchedEffect(dietType) {
+        updateMacronutrientRecommendations(dietType)
+    }
+
+    val proteinVal = protein.toFloatOrNull() ?: 0f
+    val carbsVal = carbs.toFloatOrNull() ?: 0f
+    val fatVal = fat.toFloatOrNull() ?: 0f
+    val total = proteinVal + carbsVal + fatVal
 
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
@@ -177,17 +290,15 @@ private fun EditInformationContent(
     val item2 = colorResource(id = R.color.item_2)
     val itemGradient = Brush.verticalGradient(listOf(item1, item2))
 
-    Column(modifier = modifier
+    Box(modifier = modifier
         .fillMaxSize()
         .background(backgroundGradient)) {
-        TopBar(onBackClick = { navController.popBackStack() })
-        Spacer(modifier = Modifier.height(16.dp))
-
         Column( modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 32.dp)
             .verticalScroll(rememberScrollState())
         ) {
+            Spacer(Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -199,6 +310,7 @@ private fun EditInformationContent(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
+                val genderOptions = listOf("Male", "Female")
                 Row(modifier = Modifier.selectableGroup()) {
                     genderOptions.forEach { text ->
                         Row(
@@ -206,14 +318,14 @@ private fun EditInformationContent(
                             modifier = Modifier
                                 .selectable(
                                     selected = (text == gender),
-                                    onClick = { onGenderOptionSelected(text) },
+                                    onClick = { gender = text },
                                     role = Role.RadioButton
                                 )
                                 .padding(horizontal = 8.dp)
                         ) {
                             RadioButton(
                                 selected = (text == gender),
-                                onClick = { onGenderOptionSelected(text) },
+                                onClick = { gender = text },
                                 colors = RadioButtonDefaults.colors(
                                     selectedColor = colorResource(R.color.green),
                                 )
@@ -237,7 +349,7 @@ private fun EditInformationContent(
                 fontWeight = FontWeight.Bold
             )
             OutlinedTextField(
-                value = if (dateOfBirth == "") "Select Date" else dateOfBirth,
+                value = if (dateOfBirth.isEmpty()) "Select Date" else dateOfBirth,
                 onValueChange = {},
                 readOnly = true,
                 modifier = Modifier
@@ -252,8 +364,8 @@ private fun EditInformationContent(
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = if (dateOfBirth == "") Color.Gray else Color.Black,
-                    unfocusedTextColor = if (dateOfBirth == "") Color.Gray else Color.Black,
+                    focusedTextColor = if (dateOfBirth.isEmpty()) Color.Gray else Color.Black,
+                    unfocusedTextColor = if (dateOfBirth.isEmpty()) Color.Gray else Color.Black,
                     focusedContainerColor = colorResource(R.color.form_input),
                     unfocusedContainerColor = colorResource(R.color.form_input)
                 )
@@ -356,7 +468,7 @@ private fun EditInformationContent(
                 onExpandedChange = { goalExpanded = !goalExpanded }
             ) {
                 OutlinedTextField(
-                    value = goal,
+                    value = goal.replaceFirstChar { it.uppercase(Locale.getDefault()) },
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = {
@@ -379,7 +491,7 @@ private fun EditInformationContent(
                 ) {
                     goalOptions.forEach { selectionOption ->
                         DropdownMenuItem(
-                            text = { androidx.compose.material.Text(selectionOption) },
+                            text = { Text(selectionOption) },
                             onClick = {
                                 goal = selectionOption
                                 goalExpanded = false
@@ -410,6 +522,7 @@ private fun EditInformationContent(
                         .weight(1f)
                         .padding(end = 8.dp),
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colorResource(R.color.black),
                         unfocusedTextColor = colorResource(R.color.black),
@@ -422,22 +535,65 @@ private fun EditInformationContent(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                "Macronutient Ratio",
+                "Diet Type",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
-            RatioInputField("Protein", protein, onValueChange = { protein = it })
-            RatioInputField("Carbs", carbs, onValueChange = { carbs = it })
-            RatioInputField("Fat", fat, onValueChange = { fat = it })
+            ExposedDropdownMenuBox(
+                expanded = dietTypeExpanded,
+                onExpandedChange = { dietTypeExpanded = !dietTypeExpanded }
+            ) {
+                OutlinedTextField(
+                    value = dietType.replaceFirstChar { it.uppercase(Locale.getDefault()) },
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = dietTypeExpanded)
+                    },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colorResource(R.color.black),
+                        unfocusedTextColor = colorResource(R.color.black),
+                        focusedContainerColor = colorResource(R.color.form_input),
+                        unfocusedContainerColor = colorResource(R.color.form_input)
+                    )
+                )
+
+                ExposedDropdownMenu(
+                    expanded = dietTypeExpanded,
+                    onDismissRequest = { dietTypeExpanded = false }
+                ) {
+                    dietTypeOptions.forEach { selectionOption ->
+                        DropdownMenuItem(
+                            text = { Text(selectionOption.replaceFirstChar { it.uppercase(Locale.getDefault()) }) },
+                            onClick = {
+                                dietType = selectionOption
+                                dietTypeExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                "Macronutrient Ratio",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            val isDietTypeCustom = dietType == "custom"
+            RatioInputField("Protein", protein, onValueChange = { if (isDietTypeCustom) protein = it }, enabled = isDietTypeCustom)
+            RatioInputField("Carbs", carbs, onValueChange = { if (isDietTypeCustom) carbs = it }, enabled = isDietTypeCustom)
+            RatioInputField("Fat", fat, onValueChange = { if (isDietTypeCustom) fat = it}, enabled = isDietTypeCustom)
             Spacer(Modifier.height(10.dp))
             Text(
-                text = "Total: $total%",
-                color = if (total == 100) colorResource(R.color.green) else colorResource(R.color.red),
+                text = "Total: ${String.format("%.1f", total)}%",
+                color = if (total.toFloat() == 100f) colorResource(R.color.green) else colorResource(R.color.red),
                 fontFamily = OpenSans,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.ExtraBold
             )
-            if (total != 100) {
+            if (total.toFloat() != 100f) {
                 Text(
                     "Total must equal 100%",
                     color = Color.Red,
@@ -447,7 +603,7 @@ private fun EditInformationContent(
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                "Allegies",
+                "Allergies",
                 modifier = Modifier.padding(bottom = 5.dp),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
@@ -462,7 +618,7 @@ private fun EditInformationContent(
                     onExpandedChange = { allergyExpanded = !allergyExpanded }
                 ) {
                     OutlinedTextField(
-                        value = if (selectedAllergy.isNotEmpty()) selectedAllergy else "Select allergy",
+                        value = selectedAllergyFromDropdown?.name ?: "Select allergy",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = {
@@ -481,11 +637,12 @@ private fun EditInformationContent(
                         expanded = allergyExpanded,
                         onDismissRequest = { allergyExpanded = false }
                     ) {
-                        allAllergen.forEach { allergy ->
+                        // Iterate through all available allergens
+                        allAvailableAllergens.forEach { allergy ->
                             DropdownMenuItem(
-                                text = { androidx.compose.material.Text(allergy) },
+                                text = { Text(allergy.name) },
                                 onClick = {
-                                    selectedAllergy = allergy
+                                    selectedAllergyFromDropdown = allergy
                                     allergyExpanded = false
                                 }
                             )
@@ -495,10 +652,12 @@ private fun EditInformationContent(
 
                 Button(
                     onClick = {
-                        if (selectedAllergy.isNotEmpty() && selectedAllergy !in userAllergies) {
-                            val updatedList = userAllergies + selectedAllergy
-                            onAllergyListChanged(updatedList)
-                            selectedAllergy = ""
+                        // Add the selected allergy if it's not null and not already in the list
+                        selectedAllergyFromDropdown?.let { allergyToAdd ->
+                            if (allergyToAdd !in userAllergies) {
+                                userAllergies = userAllergies + allergyToAdd
+                                selectedAllergyFromDropdown = null // Clear selection after adding
+                            }
                         }
                     },
                     contentPadding = PaddingValues(),
@@ -541,19 +700,18 @@ private fun EditInformationContent(
                         ) {
                             AssistChip(
                                 onClick = { /* gk perlu diisi */ },
-                                label = { androidx.compose.material.Text(
-                                    allergy,
+                                label = { Text(
+                                    allergy.name,
                                     color = Color.White,
                                     fontFamily = OpenSans,
                                     fontWeight = FontWeight.Bold
                                 ) },
                                 trailingIcon = {
-                                    androidx.compose.material.Icon(
+                                    Icon(
                                         imageVector = Icons.Default.Close,
                                         contentDescription = "Remove",
                                         modifier = Modifier.clickable {
-                                            val updatedList = userAllergies - allergy
-                                            onAllergyListChanged(updatedList)
+                                            userAllergies = userAllergies - allergy
                                         },
                                         tint = Color.White
                                     )
@@ -578,7 +736,25 @@ private fun EditInformationContent(
 
             Button(
                 onClick = {
-                    // TODO: Simpan editan user ke database
+                    // Collect all the updated information
+                    val updatedUser = userProfile?.copy(
+                        gender = gender.lowercase(Locale.getDefault()),
+                        dateOfBirth = dateOfBirth,
+                        weight = weight,
+                        height = height,
+                        goal = goal.lowercase(Locale.getDefault()),
+                        dietType = dietType,
+                        targetWeight = targetWeight,
+                        proteinRatio = protein.toFloatOrNull() ?: 0f,
+                        carbsRatio = carbs.toFloatOrNull() ?: 0f,
+                        fatRatio = fat.toFloatOrNull() ?: 0f,
+                        allergen = userAllergies
+                    )
+                    // Call ViewModel to update user information
+                    updatedUser?.let {
+                        userViewModel.updateUserInformation(it)
+                    }
+                    navController.popBackStack() // Navigate back to profile
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(
@@ -596,7 +772,7 @@ private fun EditInformationContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Edit Information",
+                        text = "Save Information",
                         fontSize = 20.sp,
                         fontFamily = OpenSans,
                         color = Color.White,
@@ -604,8 +780,7 @@ private fun EditInformationContent(
                     )
                 }
             }
-
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 }

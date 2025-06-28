@@ -53,7 +53,7 @@ data class User(
                 proteinRatio = json.protein_ratio ?: 0f,
                 carbsRatio = json.carbs_ratio ?: 0f,
                 fatRatio = json.fat_ratio ?: 0f,
-                allergen = json.allergen?.map { Allergen.fromAllergenJson(it) } ?: emptyList(),
+                allergen = json.allergen?.mapNotNull { Allergen.fromAllergenJson(it) } ?: emptyList(),
                 nutritionNeeds = json.nutrition_needs?.let { NutritionNeeds.fromNutritionNeedsJson(it) },
                 firebaseToken = json.firebase_token,
                 createdAt = json.createdAt?.let { Instant.parse(it) },

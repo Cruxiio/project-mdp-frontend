@@ -7,8 +7,12 @@ data class Allergen (
     val name: String,
 ) {
     companion object{
-        fun fromAllergenJson(a: AllergenJson) =
-            Allergen(a.id, a.name)
+        fun fromAllergenJson(a: AllergenJson): Allergen? {
+            if (a.id == null) { // Add name null check if needed
+                return null // Cannot map to Allergen without an ID (or name)
+            }
+            return Allergen(a.id, a.name)
+        }
     }
     fun toAllergenJson() = AllergenJson(id,name)
 }

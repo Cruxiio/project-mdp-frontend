@@ -13,11 +13,15 @@ import com.example.nutrisaver.data.sources.remote.common.RecipeJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
+import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
+import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -43,6 +47,18 @@ interface Webservice {
         @Path("userId") userId: String // <-- Parameter baru untuk mengisi {userId} di URL
     ): UserJson
 
+    @PATCH("api/user/profile")
+    suspend fun updateUserProfile(
+        @Header("Authorization") token: String,
+        @Body user: UserJson
+    ): UserJson
+
+    @PATCH("api/user/profile/information")
+    suspend fun updateUserInformation(
+        @Header("Authorization") token: String,
+        @Body user: UserJson
+    ): UserJson
+
     @GET("api/consumption/today") // Sesuaikan jika path berbeda
     suspend fun getTodaysConsumption(@Header("Authorization") token: String): DailyConsumptionJson
 
@@ -55,8 +71,8 @@ interface Webservice {
         @Body foodStock: NewFoodStockRequestJson
     ): Response<AddFoodStockResponseJson>
 
-    @GET("api/foodstock/stock") // Asumsi path-nya ini, sesuaikan jika perlu
-    suspend fun getAllFoodStock(@Header("Authorization") token: String): List<FoodStockJson>
+    @GET("api/foodstock/stock") // Sesuaikan path jika nama endpoint Anda berbeda
+    suspend fun getAllFoodStock(@Header("Authorization") token: String): List<FoodStockJson> // <-- DIUBAH
 
     @DELETE("api/foodstock/delete/{id}")
     suspend fun deleteFoodStock(
@@ -90,4 +106,27 @@ interface Webservice {
         @Body mealDetail: DailyConsumptionDetailJson // Terima DTO yang baru
     ) // Endpoint ini mungkin tidak mengembalikan body, jadi bisa Unit
 
+    @POST("api/consumption/water")
+    suspend fun updateWaterIntake(
+        @Header("Authorization") token: String,
+        @Body waterUpdate: WaterUpdateRequestJson
+    ): Response<ResponseBody>
+
+    @GET("api/weight/history")
+    suspend fun getWeightHistory(@Header("Authorization") token: String): List<WeightLogJson>
+
+    @POST("api/weight/log")
+    suspend fun logWeight(
+        @Header("Authorization") token: String,
+        @Body weightLog: WeightLogJson
+    ): Response<ResponseBody> // Atau sesuaikan dengan respons backend
+
+    @GET("api/foodstock/expiring/soon") // <-- PERBAIKI PATH URL-nya agar cocok dengan backend
+    suspend fun getExpiringSoonStock(@Header("Authorization") token: String): List<FoodStockJson> // <-- UBAH return type-nya
+
+    @GET("api/consumption/by/date")
+    suspend fun getConsumptionByDate(
+        @Header("Authorization") token: String,
+        @Query("date") date: String
+    ): Response<DailyConsumptionJson>
 }

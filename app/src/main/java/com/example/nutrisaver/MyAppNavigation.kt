@@ -83,7 +83,7 @@ fun MyAppNavigation(
                 LogMealScreen(navController = navController, mealType = mealType, logMealViewModel = logMealViewModel)
             }
             composable("loghistory") {
-                LogHistoryScreen(navController = navController)
+                LogHistoryScreen(navController = navController, logMealViewModel = logMealViewModel)
             }
             composable("userhealtharticle") {
                 UserHealthArticleScreen(navController = navController)
@@ -134,10 +134,16 @@ fun MyAppNavigation(
                 )
             }
             composable("editinformation") {
-                EditInformationScreen(navController = navController)
+                EditInformationScreen(
+                    navController = navController,
+                    userViewModel = userViewModel
+                )
             }
             composable("editprofile") {
-                EditProfileScreen(navController = navController)
+                EditProfileScreen(
+                    navController = navController,
+                    userViewModel = userViewModel
+                )
             }
             composable("notification") {
                 NotificationScreen(navController = navController)
