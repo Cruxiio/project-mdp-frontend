@@ -139,9 +139,10 @@ fun ProfileContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 20.dp)
                     .verticalScroll(rememberScrollState())
             ) {
+                Spacer(Modifier.height(40.dp))
+
                 // --- BAGIAN HEADER PROFIL ---
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -151,14 +152,16 @@ fun ProfileContent(
                         Box(
                             modifier = Modifier
                                 .size(130.dp)
-                                .clip(CircleShape)
+                                .background(Color.Gray, shape = CircleShape)
                                 .border(BorderStroke(2.dp, Color.White), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            // Logika untuk menampilkan gambar profil
                             val painter = when {
+                                // For EditProfileScreen: if a new image is selected, it takes precedence
+                                // (selectedImageUri is already an absolute content URI, so no prepending needed here)
                                 selectedImageUri != null -> rememberAsyncImagePainter(selectedImageUri)
-                                !user.profilePicture.isNullOrBlank() -> rememberAsyncImagePainter(user.profilePicture)
+                                // For both screens: use the new absoluteProfilePictureUrl
+                                !user.absoluteProfilePictureUrl.isNullOrBlank() -> rememberAsyncImagePainter(user.absoluteProfilePictureUrl)
                                 else -> null
                             }
 
@@ -167,12 +170,12 @@ fun ProfileContent(
                                     painter = painter,
                                     contentDescription = "Profile Picture",
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize().clip(CircleShape)
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Person,
-                                    contentDescription = "Default Profile Picture",
+                                    contentDescription = "Default Profile Icon",
                                     tint = Color.White,
                                     modifier = Modifier.size(60.dp)
                                 )
