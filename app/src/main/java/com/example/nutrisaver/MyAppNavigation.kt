@@ -23,6 +23,7 @@ import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.EditInformationScreen
 import com.example.nutrisaver.ui.screens.user.EditProfileScreen
 import com.example.nutrisaver.ui.screens.user.FavoriteRecipeScreen
+import com.example.nutrisaver.ui.screens.user.FeedbackScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
 import com.example.nutrisaver.ui.screens.user.LogHistoryScreen
 import com.example.nutrisaver.ui.screens.user.LogMealScreen
@@ -147,6 +148,9 @@ fun MyAppNavigation(
             }
             composable("notification") {
                 NotificationScreen(navController = navController)
+            }
+            composable("userfeedback") {
+                FeedbackScreen(navController = navController)
             }
         }
 

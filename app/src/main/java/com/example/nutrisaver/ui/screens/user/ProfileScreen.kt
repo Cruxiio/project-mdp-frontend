@@ -120,6 +120,7 @@ fun ProfileContent(
     val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
     val logoutGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.logout_btn_1), colorResource(id = R.color.logout_btn_2)))
     val itemGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.item_1), colorResource(id = R.color.item_2)))
+    val feedbackGradient = Brush.verticalGradient(listOf(colorResource(R.color.feedback_btn_1), colorResource(R.color.feedback_btn_2)))
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -285,7 +286,25 @@ fun ProfileContent(
                     }
                 }
                 HorizontalDivider(thickness = 1.dp)
+
                 Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = {
+                        navController.navigate("userfeedback")
+                    },
+                    contentPadding = PaddingValues(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 24.dp)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize().background(feedbackGradient, shape = CircleShape), contentAlignment = Alignment.Center) {
+                        Text("Feedback", fontSize = 18.sp, fontFamily = OpenSans, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
                 // Tombol Logout
                 Button(
                     onClick = { authViewModel.signOut() },
