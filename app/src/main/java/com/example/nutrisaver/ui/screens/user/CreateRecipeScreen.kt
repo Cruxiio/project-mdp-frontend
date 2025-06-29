@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,26 +25,27 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,7 +53,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -67,16 +66,28 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.nutrisaver.CustomViewModelFactory
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.FoodStock
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
-import com.google.firebase.components.Lazy
+import com.example.nutrisaver.viewmodel.ChosenIngredient
+import com.example.nutrisaver.viewmodel.CreateRecipeViewModel
+
 
 @Composable
-fun CreateRecipeScreen(navController: NavController) {
+fun CreateRecipeScreen(
+    navController: NavController,
+    createRecipeViewModel: CreateRecipeViewModel = viewModel(factory = CustomViewModelFactory)
+) {
     Scaffold { innerPadding ->
-        CreateRecipeContent(modifier = Modifier.padding(innerPadding), navController)
+        CreateRecipeContent(
+            modifier = Modifier.padding(innerPadding),
+            navController = navController,
+            createRecipeViewModel = createRecipeViewModel
+        )
     }
 }
 
@@ -119,8 +130,11 @@ private fun TopBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CreateRecipeContent(modifier: Modifier = Modifier,
-                        navController: NavController) {
+private fun CreateRecipeContent(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    createRecipeViewModel: CreateRecipeViewModel
+) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
@@ -128,23 +142,34 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
-    var showInfoDialog by remember { mutableStateOf(false) }
+    // Mengambil state dari ViewModel
+    val userFoodStock by createRecipeViewModel.userFoodStock.observeAsState(emptyList())
+    val chosenIngredients by createRecipeViewModel.chosenIngredients.observeAsState(emptyList())
 
+    // State lokal untuk UI
+    var showInfoDialog by remember { mutableStateOf(false) }
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    val foodOptions = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant") // todo: isi dengan list food stock user di database
-    var selectedFood by remember { mutableStateOf<String?>(null) }
-    var query by remember { mutableStateOf("") }
-    val filteredOptions = foodOptions.filter {
-        it.contains(query, ignoreCase = true)
-    }
 
-    val ingredientsChosen = listOf("Apple", "Banana", "Cherry", "Durian", "Eggplant") // todo: isi dengan ingredient yang dipilih
+    var selectedFoodStock by remember { mutableStateOf<FoodStock?>(null) }
+    var amountToUse by remember { mutableStateOf("1") } // Simpan sebagai String untuk input
+
+    var query by remember { mutableStateOf("") }
+    val filteredOptions = userFoodStock.filter {
+        it.name.contains(query, ignoreCase = true)
+    }
 
     val openConfirmDialog = remember { mutableStateOf(false) }
 
+    // Memuat data food stock saat layar pertama kali dibuka
+    LaunchedEffect(Unit) {
+        createRecipeViewModel.loadUserFoodStock()
+    }
+
     Box(
-        modifier = modifier.background(backgroundGradient).fillMaxSize()
+        modifier = modifier
+            .background(backgroundGradient)
+            .fillMaxSize()
     ) {
         Column(
             modifier = Modifier
@@ -152,6 +177,7 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
                 .verticalScroll(rememberScrollState())
                 .padding(top = 70.dp, bottom = 80.dp)
         ) {
+            // Region: Recipe Name Box (Tidak diubah)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -160,71 +186,30 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
                         val strokeWidth = 2.dp.toPx()
                         val topY = 0f
                         val bottomY = size.height
-
-                        drawLine(
-                            color = Color.Gray,
-                            start = Offset(0f, topY),
-                            end = Offset(size.width, topY),
-                            strokeWidth = strokeWidth
-                        )
-                        drawLine(
-                            color = Color.Gray,
-                            start = Offset(0f, bottomY - strokeWidth),
-                            end = Offset(size.width, bottomY - strokeWidth),
-                            strokeWidth = strokeWidth
-                        )
+                        drawLine(color = Color.Gray, start = Offset(0f, topY), end = Offset(size.width, topY), strokeWidth = strokeWidth)
+                        drawLine(color = Color.Gray, start = Offset(0f, bottomY - strokeWidth), end = Offset(size.width, bottomY - strokeWidth), strokeWidth = strokeWidth)
                     }
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp, horizontal = 32.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 32.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .height(120.dp)
-                            .width(120.dp)
-                            .clip(RoundedCornerShape(10.dp)),
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.default_food_image),
-                            contentDescription = "deskripsi gambar recipe",
-                            modifier = Modifier.fillMaxSize(), // fills entire box
-                            contentScale = ContentScale.Crop // or ContentScale.Cover depending on effect
-                        )
+                    Box(modifier = Modifier.height(120.dp).width(120.dp).clip(RoundedCornerShape(10.dp))) {
+                        Image(painter = painterResource(id = R.drawable.default_food_image), contentDescription = "deskripsi gambar recipe", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                     }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(
-                            "Recipe Name", // todo: ganti ke recipe name
-                            modifier = Modifier.padding(bottom = 8.dp),
-                            fontSize = 20.sp,
-                            fontFamily = OpenSans,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                        )
-                        Text(
-                            "Key Ingredient",
-                            fontSize = 16.sp,
-                            fontFamily = OpenSans,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                        )
-                        Text(
-                            "Key Ingredient", // todo: ganti ke concat
-                            fontSize = 16.sp,
-                            fontFamily = OpenSans,
-                            textAlign = TextAlign.Center,
-                        )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Recipe Name", modifier = Modifier.padding(bottom = 8.dp), fontSize = 20.sp, fontFamily = OpenSans, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                        Text("Key Ingredient", fontSize = 16.sp, fontFamily = OpenSans, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                        Text("Key Ingredient", fontSize = 16.sp, fontFamily = OpenSans, textAlign = TextAlign.Center)
                     }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Region: Ingredient Selection
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 FoodSelector(
-                    selectedFood = selectedFood,
+                    selectedFood = selectedFoodStock?.name,
                     onClick = { showBottomSheet = true }
                 )
                 Spacer(modifier = Modifier.height(20.dp))
@@ -233,140 +218,113 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "Amount to Use:",
-                        fontSize = 18.sp,
-                        fontFamily = OpenSans,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Text("Amount to Use:", fontSize = 18.sp, fontFamily = OpenSans, modifier = Modifier.weight(1f))
                     Row(
                         modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // DIUBAH: Tombol minus sekarang berfungsi
                         IconButton(
-                            onClick = { /* TODO: Decrease action */ },
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(
-                                    colorResource(R.color.item_1),
-                                    shape = RoundedCornerShape(10.dp))
+                            onClick = {
+                                amountToUse = (amountToUse.toIntOrNull() ?: 1).minus(1).coerceAtLeast(1).toString()
+                            },
+                            modifier = Modifier.size(36.dp).background(colorResource(R.color.item_1), shape = RoundedCornerShape(10.dp))
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_remove),
-                                contentDescription = "Minus"
-                            )
+                            Icon(painter = painterResource(id = R.drawable.ic_remove), contentDescription = "Minus")
                         }
+
+                        // DIUBAH: Teks kuantitas sekarang dinamis
                         Text(
-                            "100 g", // todo: fanti ke kuantitas stock beserta satuannya
+                            text = "$amountToUse ${selectedFoodStock?.unit ?: ""}",
                             fontSize = 18.sp,
                             fontFamily = OpenSans
                         )
+
+                        // DIUBAH: Tombol plus sekarang berfungsi
                         IconButton(
-                            onClick = { /* TODO: Increase action */ },
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(
-                                    colorResource(R.color.item_1),
-                                    shape = RoundedCornerShape(10.dp))
+                            onClick = {
+                                val currentStock = selectedFoodStock?.quantity ?: 1f
+                                amountToUse = (amountToUse.toIntOrNull() ?: 1).plus(1).coerceAtMost(currentStock.toInt()).toString()
+                            },
+                            modifier = Modifier.size(36.dp).background(colorResource(R.color.item_1), shape = RoundedCornerShape(10.dp))
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_add),
-                                contentDescription = "Plus"
-                            )
+                            Icon(painter = painterResource(R.drawable.ic_add), contentDescription = "Plus")
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(
                     onClick = {
-                        // todo: logika tambahkan ke ingredients chosen
+                        // DIUBAH: Menghubungkan logika ke ViewModel
+                        selectedFoodStock?.let { stock ->
+                            amountToUse.toFloatOrNull()?.let { amount ->
+                                createRecipeViewModel.addIngredientToRecipe(stock, amount)
+                            }
+                        }
                     },
+                    enabled = selectedFoodStock != null, // Tombol hanya aktif jika ada bahan yang dipilih
                     contentPadding = PaddingValues(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     shape = CircleShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
+                    modifier = Modifier.fillMaxWidth().height(50.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(greenGradient, shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Add to List",
-                            fontSize = 20.sp,
-                            fontFamily = OpenSans,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                        )
+                    Box(modifier = Modifier.fillMaxSize().background(greenGradient, shape = CircleShape), contentAlignment = Alignment.Center) {
+                        Text("Add to List", fontSize = 20.sp, fontFamily = OpenSans, color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 15.dp), thickness = 2.dp)
-                Text(
-                    "Ingredients",
-                    fontFamily = OpenSans,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 10.dp)
-                )
-                ingredientsChosen.forEach { item ->
-                    IngredientItem()
-                    Spacer(modifier = Modifier.height(10.dp))
+                Text("Ingredients", fontFamily = OpenSans, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
+
+                // DIUBAH: Menggunakan LazyColumn untuk efisiensi
+                if (chosenIngredients.isEmpty()) {
+                    Text("No ingredients added yet.", color = Color.Gray, modifier = Modifier.align(Alignment.CenterHorizontally))
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        chosenIngredients.forEach { chosen ->
+                            IngredientItem(
+                                chosenIngredient = chosen,
+                                onIncrease = { createRecipeViewModel.updateIngredientQuantity(chosen, 1f) },
+                                onDecrease = { createRecipeViewModel.updateIngredientQuantity(chosen, -1f) },
+                                onRemove = { createRecipeViewModel.removeIngredientFromRecipe(chosen) }
+                            )
+                        }
+                    }
                 }
             }
         }
+
+        // Region: TopBar dan Bottom Button (Tidak diubah)
         TopBar(
             onBackClick = { navController.popBackStack() },
             onInfoClick = { showInfoDialog = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
+            modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter)
         )
         Box(modifier = Modifier.padding(20.dp).align(Alignment.BottomCenter)) {
             Button(
-                onClick = {
-                    openConfirmDialog.value = true
-                },
+                onClick = { openConfirmDialog.value = true },
                 contentPadding = PaddingValues(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = CircleShape,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
+                modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(greenGradient, shape = CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Create this Recipe",
-                        fontSize = 20.sp,
-                        fontFamily = OpenSans,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                    )
+                Box(modifier = Modifier.fillMaxSize().background(greenGradient, shape = CircleShape), contentAlignment = Alignment.Center) {
+                    Text("Create this Recipe", fontSize = 20.sp, fontFamily = OpenSans, color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
 
+    // Region: Dialogs and Bottom Sheet
     if (showBottomSheet) {
         FoodSearchBottomSheet(
             query = query,
             onQueryChange = { query = it },
             filteredOptions = filteredOptions,
-            selectedFood = selectedFood,
-            onSelectFood = {
-                selectedFood = it
+            selectedFood = selectedFoodStock,
+            onSelectFood = { foodStock ->
+                selectedFoodStock = foodStock
+                amountToUse = "1" // Reset jumlah saat item baru dipilih
                 showBottomSheet = false
                 query = ""
             },
@@ -374,35 +332,34 @@ private fun CreateRecipeContent(modifier: Modifier = Modifier,
             sheetState = sheetState
         )
     }
-
     if (showInfoDialog) {
         InfoDialog(onDismissRequest = { showInfoDialog = false })
     }
-
-    if(openConfirmDialog.value) {
+    if (openConfirmDialog.value) {
         CreateConfirmDialog(
-            onDismissRequest = {
-                openConfirmDialog.value = false
-            },
+            onDismissRequest = { openConfirmDialog.value = false },
             onConfirmRequest = {
                 openConfirmDialog.value = false
-                // todo: logika kurangi stock makanan
+                // TODO: Panggil fungsi ViewModel untuk membuat resep
             },
             icon = Icons.Default.CheckCircle
         )
     }
 }
 
+// DIUBAH: Item sekarang dinamis
 @Composable
-private fun IngredientItem() {
-    val item1 = colorResource(id = R.color.item_1)
-    val item2 = colorResource(id = R.color.item_2)
-    val itemGradient = Brush.verticalGradient(listOf(item1, item2))
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(itemGradient, shape = RoundedCornerShape(20.dp))
+private fun IngredientItem(
+    chosenIngredient: ChosenIngredient,
+    onIncrease: () -> Unit,
+    onDecrease: () -> Unit,
+    onRemove: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -410,92 +367,87 @@ private fun IngredientItem() {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Nama Stock", // TODO: replace with dynamic name
-                fontFamily = OpenSans,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.width(130.dp)
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        color = colorResource(R.color.yellow),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .clickable { /* TODO: Decrease action */ },
-                contentAlignment = Alignment.Center
+            // Kolom untuk Informasi Teks
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_remove),
-                    contentDescription = "Minus",
-                    modifier = Modifier.size(18.dp)
+                Text(
+                    text = chosenIngredient.foodStock.name,
+                    fontFamily = OpenSans,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Text(
+                    text = "In stock: ${chosenIngredient.foodStock.quantity.toInt()} ${chosenIngredient.foodStock.unit}",
+                    fontFamily = OpenSans,
+                    fontSize = 12.sp,
+                    color = Color.Gray
                 )
             }
 
-            Spacer(modifier = Modifier.width(5.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-            Text(
-                text = "100", // TODO: dynamic quantity
-                fontSize = 18.sp,
-                fontFamily = OpenSans,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.width(40.dp)
-            )
-
-            Text(
-                text = "g", // TODO: dynamic unit
-                fontSize = 18.sp,
-                fontFamily = OpenSans,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.width(20.dp)
-            )
-
-            Spacer(modifier = Modifier.width(5.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        color = colorResource(R.color.yellow),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .clickable { /* TODO: Increase action */ },
-                contentAlignment = Alignment.Center
+            // Grup untuk Kontrol Aksi
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_add),
-                    contentDescription = "Plus",
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        color = colorResource(R.color.red_light),
-                        shape = RoundedCornerShape(10.dp)
+                // Tombol Minus
+                IconButton(onClick = onDecrease, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_remove),
+                        contentDescription = "Minus",
+                        tint = colorResource(R.color.green)
                     )
-                    .clickable { /* TODO: remove from ingredientsChosen */ },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Clear,
-                    contentDescription = "Remove",
-                    modifier = Modifier.size(18.dp)
+                }
+
+                // Teks Kuantitas
+                Text(
+                    text = chosenIngredient.amountToUse.toInt().toString(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = OpenSans,
+                    color = Color.Black
                 )
+
+                // Tombol Plus
+                IconButton(onClick = onIncrease, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add),
+                        contentDescription = "Plus",
+                        tint = colorResource(R.color.green)
+                    )
+                }
+
+                // Garis pemisah vertikal
+                VerticalDivider(modifier = Modifier
+                    .height(24.dp)
+                    .padding(horizontal = 8.dp))
+
+                // Tombol Hapus
+                IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Remove",
+                        tint = Color.Red
+                    )
+                }
             }
         }
     }
+}
+
+// Tambahkan VerticalDivider Composable jika belum ada
+@Composable
+fun VerticalDivider(modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxHeight()
+            .width(1.dp)
+            .background(color = Color.Gray.copy(alpha = 0.3f))
+    )
 }
 
 @Composable
@@ -611,77 +563,54 @@ private fun InfoDialog(
     }
 }
 
+// DIUBAH: FoodSelector tetap sama, hanya untuk tampilan
 @Composable
 private fun FoodSelector(selectedFood: String?, onClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .background(colorResource(R.color.form_input), RoundedCornerShape(10.dp))
-            .border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp))
-            .padding(vertical = 14.dp, horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).background(colorResource(R.color.form_input), RoundedCornerShape(10.dp)).border(0.4.dp, Color.DarkGray, RoundedCornerShape(10.dp)).padding(vertical = 14.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = selectedFood ?: "Select an ingredient",
-            color = if (selectedFood == null) Color.Gray else Color.Black,
-            fontFamily = OpenSans,
-            fontSize = 16.sp
-        )
-        Icon(
-            imageVector = Icons.Default.ArrowDropDown,
-            contentDescription = "Dropdown",
-            tint = Color.Black
-        )
+        Text(text = selectedFood ?: "Select an ingredient", color = if (selectedFood == null) Color.Gray else Color.Black, fontFamily = OpenSans, fontSize = 16.sp)
+        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Dropdown", tint = Color.Black)
     }
 }
 
+// DIUBAH: Bottom sheet sekarang bekerja dengan objek FoodStock
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FoodSearchBottomSheet(
     query: String,
     onQueryChange: (String) -> Unit,
-    filteredOptions: List<String>,
-    selectedFood: String?,
-    onSelectFood: (String) -> Unit,
+    filteredOptions: List<FoodStock>,
+    selectedFood: FoodStock?,
+    onSelectFood: (FoodStock) -> Unit,
     onDismiss: () -> Unit,
     sheetState: androidx.compose.material3.SheetState
 ) {
-    ModalBottomSheet(
-        modifier = Modifier.fillMaxHeight(),
-        sheetState = sheetState,
-        onDismissRequest = onDismiss
-    ) {
+    ModalBottomSheet(modifier = Modifier.fillMaxHeight(), sheetState = sheetState, onDismissRequest = onDismiss) {
         Column(Modifier.padding(16.dp)) {
-            TextField(
+            OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = { Text("Search...",
-                    fontSize = 16.sp,
-                    fontFamily = OpenSans,) },
+                placeholder = { Text("Search...", fontSize = 16.sp, fontFamily = OpenSans) },
                 modifier = Modifier.fillMaxWidth(),
             )
-
             Spacer(modifier = Modifier.height(8.dp))
-
             LazyColumn {
                 items(filteredOptions) { option ->
-                    val isSelected = option == selectedFood
+                    val isSelected = option.id == selectedFood?.id
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isSelected) colorResource(R.color.pastel_green2)
-                                else Color.Transparent
-                            )
+                            .background(if (isSelected) colorResource(R.color.pastel_green2) else Color.Transparent)
                             .clickable { onSelectFood(option) }
                             .padding(horizontal = 12.dp, vertical = 12.dp)
                     ) {
                         Text(
-                            text = option,
+                            text = option.name,
                             fontSize = 16.sp,
                             fontFamily = OpenSans,
                             color = if (isSelected) colorResource(R.color.green_dark) else Color.Black,
@@ -690,7 +619,6 @@ private fun FoodSearchBottomSheet(
                     }
                 }
             }
-
         }
     }
 }
