@@ -27,7 +27,7 @@ data class UserFeedback(
                 userId = json.userId,
                 message = json.message,
                 status = json.status,
-                adminResponse = json.adminResponse?: "",
+                adminResponse = json.adminResponse,
                 respondedBy = json.respondedBy,
                 createdAt = json.createdAt.let { Instant.parse(it) },
                 respondedAt = json.respondedAt?.let { Instant.parse(it) },

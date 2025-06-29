@@ -106,10 +106,23 @@ interface Webservice {
 
     // admin api
     @GET("api/admin/users")
-    suspend fun getUsers(): List<UserJson>
+    suspend fun getUsers(@Header("Authorization") bearerToken: String): List<UserJson>
 
     @DELETE("api/admin/users/{userId}")
-    suspend fun deleteUser(@Path("userId") userId: String)
+    suspend fun deleteUser(
+        @Header("Authorization") bearerToken: String,
+        @Path("userId") userId: String
+    )
+
+    @GET("api/admin/feedback")
+    suspend fun getAllFeedback(@Header("Authorization") bearerToken: String): List<UserFeedbackJson>
+
+    @PATCH("api/admin/feedback/{id}")
+    suspend fun respondFeedback(
+        @Header("Authorization") bearerToken: String,
+        @Path("id") feedbackId: Int,
+        @Body requestBody: UserFeedbackJson
+    )
 
     @POST("api/recipe/search")
     suspend fun searchRecipes(

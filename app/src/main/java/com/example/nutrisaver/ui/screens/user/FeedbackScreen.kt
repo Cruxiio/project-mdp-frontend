@@ -69,7 +69,9 @@ import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.Instant // For converting Instant to Date for UserFeedbackData
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -366,7 +368,7 @@ private fun FeedbackContent(
                     CircularProgressIndicator(color = colorResource(id = R.color.green))
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Memuat feedback...",
+                        text = "Getting feedback...",
                         fontFamily = OpenSans,
                         color = Color.Gray,
                         fontSize = 16.sp
@@ -422,7 +424,7 @@ private fun FeedbackContent(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Belum ada feedback",
+                            text = "No feedback",
                             fontSize = 18.sp,
                             fontFamily = OpenSans,
                             fontWeight = FontWeight.Medium,
@@ -431,7 +433,7 @@ private fun FeedbackContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Bagikan pikiran dan saran Anda kepada kami!",
+                            text = "Share you thoughts about us!",
                             fontSize = 14.sp,
                             fontFamily = OpenSans,
                             color = Color.Gray,
@@ -448,7 +450,7 @@ private fun FeedbackContent(
                         item {
                             Spacer(Modifier.height(16.dp))
                             Text(
-                                text = "Feedback Anda membantu kami berkembang!",
+                                text = "Your feedback helps us grow!",
                                 fontSize = 16.sp,
                                 fontFamily = OpenSans,
                                 fontWeight = FontWeight.Bold,
@@ -513,7 +515,7 @@ private fun FeedbackCard(feedback: UserFeedback) {
 
                 // User message
                 Text(
-                    text = "Pesan Anda:",
+                    text = "Your Message:",
                     fontSize = 14.sp,
                     fontFamily = OpenSans,
                     fontWeight = FontWeight.Bold,
@@ -546,7 +548,7 @@ private fun FeedbackCard(feedback: UserFeedback) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Respon Admin:",
+                                    text = "Admin Response:",
                                     fontSize = 14.sp,
                                     fontFamily = OpenSans,
                                     fontWeight = FontWeight.Bold,
@@ -588,12 +590,12 @@ private fun StatusChip(status: String) {
         "reviewed" -> Tuple3(
             colorResource(R.color.feedback_reviewed),
             Color.White,
-            "Ditinjau"
+            "Reviewed"
         )
         "done" -> Tuple3(
             colorResource(R.color.feedback_done),
             Color.White,
-            "Selesai"
+            "Done"
         )
         else -> Tuple3(
             Color.LightGray,
@@ -625,6 +627,15 @@ private data class Tuple3<A, B, C>(
 )
 
 private fun formatDate(date: Instant?): String {
-    val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    return formatter.format(date)
+    // Handle null case gracefully
+    if (date == null) {
+        return "N/A"
+    }
+
+    val javaUtilDate = Date.from(date)
+
+    // IMPORTANT: Set formatter to UTC to avoid timezone shifts for dates of birth/creation
+    val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) // Use the desired output format
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+    return formatter.format(javaUtilDate)
 }

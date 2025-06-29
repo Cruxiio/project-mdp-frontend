@@ -172,6 +172,11 @@ fun MyAppNavigation(
             composable("adminhealtharticle") {
                 AdminHealthArticleScreen(navController = navController)
             }
+            composable("adminfeedback") {
+                FeedbackScreen(
+                    navController = navController
+                )
+            }
         }
     }
 }
