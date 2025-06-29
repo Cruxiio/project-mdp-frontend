@@ -55,9 +55,20 @@ import com.example.nutrisaver.ui.screens.admin.HealthArticleDummy
 import com.example.nutrisaver.ui.screens.admin.generateDummyHealthArticles
 import com.example.nutrisaver.ui.theme.OpenSans
 import java.time.format.DateTimeFormatter
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.style.TextAlign
+import com.example.nutrisaver.data.model.HealthArticle
+import com.example.nutrisaver.viewmodel.HealthArticleListState
+import com.example.nutrisaver.viewmodel.HealthArticleViewModel
+
 
 @Composable
-fun UserHealthArticleScreen(navController: NavController) {
+fun UserHealthArticleScreen(
+    navController: NavController,
+    healthArticleViewModel: HealthArticleViewModel
+) {
     Scaffold(
         topBar = {
             TopBar(onBackClick = { navController.popBackStack() })
@@ -65,7 +76,8 @@ fun UserHealthArticleScreen(navController: NavController) {
     ) { innerPadding ->
         UserHealthArticleContent(
             modifier = Modifier.padding(innerPadding),
-            navController = navController
+            navController = navController,
+            healthArticleViewModel = healthArticleViewModel
         )
     }
 }
@@ -110,7 +122,10 @@ private fun TopBar(
 private fun UserHealthArticleContent(
     modifier: Modifier = Modifier,
     navController: NavController,
+    healthArticleViewModel: HealthArticleViewModel
 ) {
+    val articlesState by healthArticleViewModel.articlesState.observeAsState()
+
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
@@ -234,6 +249,7 @@ private fun UserHealthArticleContent(
                         article = article,
                     )
                 }
+
             }
         }
     }

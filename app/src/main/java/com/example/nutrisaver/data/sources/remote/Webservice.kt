@@ -1,5 +1,9 @@
 package com.example.nutrisaver.data.sources.remote
 
+import com.example.nutrisaver.data.model.json.CreateHealthArticleRequestJson
+import com.example.nutrisaver.data.model.json.HealthArticleJson
+import com.example.nutrisaver.data.model.json.HealthArticleResponseJson
+import com.example.nutrisaver.data.model.json.UpdateHealthArticleRequestJson
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import com.example.nutrisaver.data.sources.remote.common.AddFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
@@ -136,4 +140,30 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Query("date") date: String
     ): Response<DailyConsumptionJson>
+
+    @POST("api/common/health-articles")
+    suspend fun createHealthArticle(
+        @Header("Authorization") token: String,
+        @Body request: CreateHealthArticleRequestJson
+    ): Response<HealthArticleJson>
+
+    @GET("api/common/health-articles")
+    suspend fun getHealthArticles(
+        @Query("target_goal") targetGoal: String? = null,
+        @Query("target_diet_type") targetDietType: String? = null,
+        @Query("title") title: String? = null
+    ): HealthArticleResponseJson
+
+    @PATCH("api/common/health-articles/{article_id}")
+    suspend fun updateHealthArticle(
+        @Header("Authorization") token: String,
+        @Path("article_id") articleId: Int,
+        @Body request: UpdateHealthArticleRequestJson
+    ): Response<HealthArticleJson>
+
+    @DELETE("api/common/health-articles/{article_id}")
+    suspend fun deleteHealthArticle(
+        @Header("Authorization") token: String,
+        @Path("article_id") articleId: Int
+    ): Response<Unit>
 }

@@ -16,6 +16,8 @@ import com.example.nutrisaver.data.repositories.ConsumptionRepo
 import com.example.nutrisaver.data.repositories.ConsumptionRepoImpl
 import com.example.nutrisaver.data.repositories.FoodStockRepo
 import com.example.nutrisaver.data.repositories.FoodStockRepoImpl
+import com.example.nutrisaver.data.repositories.HealthArticleRepo
+import com.example.nutrisaver.data.repositories.HealthArticleRepoImpl
 import com.example.nutrisaver.data.repositories.IngredientRepo
 import com.example.nutrisaver.data.repositories.IngredientRepoImpl
 import com.example.nutrisaver.data.repositories.RecipeRepo
@@ -29,6 +31,8 @@ import com.example.nutrisaver.data.sources.local.FoodStockLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.IngredientLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.WeightLogLocalDataSourceImpl
 import com.example.nutrisaver.data.sources.local.auth.AuthLocalDataSourceImpl
+import com.example.nutrisaver.data.sources.remote.HealthArticleDataSource
+import com.example.nutrisaver.data.sources.remote.HealthArticleDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.Webservice
 import com.example.nutrisaver.data.sources.remote.admin.AdminDataSource
 import com.example.nutrisaver.data.sources.remote.admin.AdminDataSourceImpl
@@ -59,6 +63,7 @@ class NutriSaverApplication : Application() {
     lateinit var adminRepo: AdminRepo
     lateinit var recipeRepo : RecipeRepo
     lateinit var weightLogRepo: WeightLogRepo
+    lateinit var healthArticleRepo: HealthArticleRepo
 
     override fun onCreate() {
         super.onCreate()
@@ -101,6 +106,7 @@ class NutriSaverApplication : Application() {
         val adminDataSource = AdminDataSourceImpl(retrofitService)
         val recipeRemoteDataSource = RecipeDataSourceImpl(retrofitService)
         val weightLogRemoteDataSource = WeightLogDataSourceImpl(retrofitService)
+        val healthArticleRemoteDataSource = HealthArticleDataSourceImpl(retrofitService)
 
         // Inisialisasi Repositories dengan SEMUA dependensinya ===
         // Sekarang kita memberikan dependensi remote DAN lokal
@@ -124,6 +130,9 @@ class NutriSaverApplication : Application() {
         foodStockRepo = FoodStockRepoImpl(
             foodRemoteDataSource = foodStockRemoteDataSource,
             foodLocalDataSource = foodStockLocalDataSource
+        )
+        healthArticleRepo = HealthArticleRepoImpl(
+            remoteDataSource = healthArticleRemoteDataSource
         )
         adminRepo = AdminRepoImpl(
             adminDataSource = adminDataSource

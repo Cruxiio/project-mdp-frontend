@@ -3,6 +3,7 @@ package com.example.nutrisaver
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -35,6 +36,7 @@ import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
@@ -49,6 +51,7 @@ fun MyAppNavigation(
     logMealViewModel: LogMealViewModel
 ) {
     // buat nested navigation
+    val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = CustomViewModelFactory)
     NavHost(navController = navController, startDestination = "auth") {
 
         // navigation antara login dan register
@@ -86,7 +89,10 @@ fun MyAppNavigation(
                 LogHistoryScreen(navController = navController, logMealViewModel = logMealViewModel)
             }
             composable("userhealtharticle") {
-                UserHealthArticleScreen(navController = navController)
+                UserHealthArticleScreen(
+                    navController = navController,
+                    healthArticleViewModel = healthArticleViewModel
+                )
             }
             composable("foodstock") {
                 FoodStockScreen(navController = navController, foodStockViewModel = foodStockViewModel)
@@ -159,7 +165,10 @@ fun MyAppNavigation(
                 ApplicationScreen(navController = navController, authViewModel)
             }
             composable("adminhealtharticle") {
-                AdminHealthArticleScreen(navController = navController)
+                AdminHealthArticleScreen(
+                    navController = navController,
+                    healthArticleViewModel = healthArticleViewModel
+                )
             }
         }
     }
