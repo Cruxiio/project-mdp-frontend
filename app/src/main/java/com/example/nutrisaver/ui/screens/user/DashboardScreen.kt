@@ -309,12 +309,12 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
                     letterSpacing = (-0.5).sp
                 )
                 IconButton(onClick = {
-                    navController.navigate("notification")
+                    navController.navigate("dashboard")
                 }) {
                     Image(
-                        painter = painterResource(id = R.drawable.notification),
-                        contentDescription = "Notification Button",
-                        modifier = Modifier.size(24.dp)
+                        painter = painterResource(id = R.drawable.nutrisaver_launcher),
+                        contentDescription = "Dashboard",
+                        modifier = Modifier.size(75.dp)
                     )
                 }
             }

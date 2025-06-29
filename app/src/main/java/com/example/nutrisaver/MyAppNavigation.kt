@@ -145,9 +145,6 @@ fun MyAppNavigation(
                     userViewModel = userViewModel
                 )
             }
-            composable("notification") {
-                NotificationScreen(navController = navController)
-            }
         }
 
         navigation(startDestination = "alluser", route = "admin") {
