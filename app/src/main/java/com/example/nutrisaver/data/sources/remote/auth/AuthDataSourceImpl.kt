@@ -10,6 +10,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.HttpException
 import java.io.File
 
 class AuthDataSourceImpl(
@@ -37,6 +38,34 @@ class AuthDataSourceImpl(
         val userJson = webservice.getUserProfile(idToken, userId)
         return User.fromUserJson(userJson)
             ?: throw Exception("Gagal mem-parsing data profil user dari server.")
+    }
+
+    override suspend fun getUserProfileForRegister(idToken: String, userId: String): User? {
+        val formattedToken = "Bearer $idToken"
+        try {
+            // 1. Panggil webservice secara langsung.
+            //    - Jika sukses (2xx), akan mengembalikan UserJson.
+            //    - Jika gagal (misal 404), akan melempar HttpException.
+            val userJson = webservice.getUserProfile(formattedToken, userId)
+
+            // 2. Jika tidak ada exception, berarti user ditemukan. Mapping hasilnya.
+            return User.fromUserJson(userJson)
+
+        } catch (e: Exception) {
+            // 3. Tangkap semua exception.
+            Log.e("AuthDataSource", "Error during getUserProfileForRegister check", e)
+
+            // 4. Cek secara spesifik apakah errornya adalah HttpException dengan kode 404.
+            if (e is HttpException && e.code() == 404) {
+                // Jika ya, ini BUKAN error. Ini adalah kasus valid untuk user baru.
+                // Kembalikan null untuk memberitahu ViewModel.
+                Log.d("AuthDataSource", "User not found on remote (404), this is expected for new registration. Returning null.")
+                return null
+            }
+
+            // 5. Untuk semua error lainnya (koneksi putus, server 500, dll), lemparkan kembali.
+            throw e
+        }
     }
 
     override suspend fun updateUserProfile(

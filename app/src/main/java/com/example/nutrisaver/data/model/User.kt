@@ -42,13 +42,13 @@ data class User(
         // Mapper dari UserJson (dari API) ke User (untuk aplikasi)
         fun fromUserJson(json: UserJson): User? {
             // Validasi field wajib ada agar tidak crash
-            if (json.uuid == null || json.name == null || json.username == null || json.email == null) {
+            if (json.uuid == null || json.name == null || json.username == null || json.email == null || json.role == null) {
                 return null
             }
             return User(
                 id = json.id,
                 uuid = json.uuid,
-                role = "user",
+                role = json.role,
                 name = json.name,
                 username = json.username,
                 email = json.email,
@@ -98,4 +98,14 @@ data class User(
         updatedAt = this.updatedAt?.toString(),
         deletedAt = this.deletedAt?.toString()
     )
+    fun isProfileComplete(): Boolean {
+        // Anggap profil lengkap jika data-data penting ini tidak kosong/null.
+        // Sesuaikan daftar ini dengan kebutuhan bisnis Anda.
+        return weight != null &&
+                height != null &&
+                gender.orEmpty().isNotEmpty() &&
+                goal.orEmpty().isNotEmpty() &&
+                dietType.orEmpty().isNotEmpty()
+    }
+
 }

@@ -62,11 +62,13 @@ import com.example.nutrisaver.ui.navbar.AdminBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
 import com.example.nutrisaver.viewmodel.AdminUserState // Import the state
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
+import com.example.nutrisaver.viewmodel.AuthViewModel
 
 @Composable
 fun AllUserScreen(
     navController: NavController,
-    adminUsersViewModel: AdminUsersViewModel
+    adminUsersViewModel: AdminUsersViewModel,
+    authViewModel: AuthViewModel
 ) {
     LaunchedEffect(Unit) {
         adminUsersViewModel.init()

@@ -8,6 +8,7 @@ import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
@@ -23,6 +24,7 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
             val adminRepository = application.adminRepo
             val recipeRepository = application.recipeRepo
             val weightLogRepository = application.weightLogRepo
+            val healthArticleRepository = application.healthArticleRepo
             val feedbackRepository = application.feedbackRepo
 
             when {
@@ -36,6 +38,8 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
                     AdminUsersViewModel(adminRepository, application)
                 isAssignableFrom(LogMealViewModel::class.java) ->
                     LogMealViewModel(recipeRepository, consumRepository, application)
+                isAssignableFrom(HealthArticleViewModel::class.java) ->
+                    HealthArticleViewModel(healthArticleRepository)
                 isAssignableFrom(FeedbackViewModel::class.java) ->
                     FeedbackViewModel(feedbackRepository, application)
                 else ->

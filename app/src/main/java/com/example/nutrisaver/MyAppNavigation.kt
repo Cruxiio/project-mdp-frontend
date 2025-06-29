@@ -3,6 +3,7 @@ package com.example.nutrisaver
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -37,6 +38,7 @@ import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
@@ -51,6 +53,9 @@ fun MyAppNavigation(
     logMealViewModel: LogMealViewModel,
     feedBackViewModel: FeedbackViewModel
 ) {
+    
+    val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = CustomViewModelFactory)
+    
     // buat nested navigation
     NavHost(navController = navController, startDestination = "auth") {
 
@@ -89,7 +94,10 @@ fun MyAppNavigation(
                 LogHistoryScreen(navController = navController, logMealViewModel = logMealViewModel)
             }
             composable("userhealtharticle") {
-                UserHealthArticleScreen(navController = navController)
+                UserHealthArticleScreen(
+                    navController = navController,
+                    healthArticleViewModel = healthArticleViewModel
+                )
             }
             composable("foodstock") {
                 FoodStockScreen(navController = navController, foodStockViewModel = foodStockViewModel)
@@ -148,9 +156,6 @@ fun MyAppNavigation(
                     userViewModel = userViewModel
                 )
             }
-            composable("notification") {
-                NotificationScreen(navController = navController)
-            }
             composable("userfeedback") {
                 FeedbackScreen(
                     navController = navController,
@@ -163,14 +168,18 @@ fun MyAppNavigation(
             composable("alluser") {
                 AllUserScreen(
                     navController = navController,
-                    adminUsersViewModel = adminUsersViewModel
+                    adminUsersViewModel = adminUsersViewModel,
+                    authViewModel = authViewModel
                 )
             }
             composable("application") {
-                ApplicationScreen(navController = navController)
+                ApplicationScreen(navController = navController, authViewModel)
             }
             composable("adminhealtharticle") {
-                AdminHealthArticleScreen(navController = navController)
+                AdminHealthArticleScreen(
+                    navController = navController,
+                    healthArticleViewModel = healthArticleViewModel
+                )
             }
             composable("adminfeedback") {
                 FeedbackScreen(
