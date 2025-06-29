@@ -120,6 +120,7 @@ fun ProfileContent(
     val greenGradient = Brush.horizontalGradient(listOf(colorResource(id = R.color.green), colorResource(id = R.color.green_teal_dark)))
     val logoutGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.logout_btn_1), colorResource(id = R.color.logout_btn_2)))
     val itemGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.item_1), colorResource(id = R.color.item_2)))
+    val feedbackGradient = Brush.verticalGradient(listOf(colorResource(R.color.feedback_btn_1), colorResource(R.color.feedback_btn_2)))
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -139,9 +140,10 @@ fun ProfileContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 20.dp)
                     .verticalScroll(rememberScrollState())
             ) {
+                Spacer(Modifier.height(40.dp))
+
                 // --- BAGIAN HEADER PROFIL ---
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -151,14 +153,16 @@ fun ProfileContent(
                         Box(
                             modifier = Modifier
                                 .size(130.dp)
-                                .clip(CircleShape)
+                                .background(Color.Gray, shape = CircleShape)
                                 .border(BorderStroke(2.dp, Color.White), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            // Logika untuk menampilkan gambar profil
                             val painter = when {
+                                // For EditProfileScreen: if a new image is selected, it takes precedence
+                                // (selectedImageUri is already an absolute content URI, so no prepending needed here)
                                 selectedImageUri != null -> rememberAsyncImagePainter(selectedImageUri)
-                                !user.profilePicture.isNullOrBlank() -> rememberAsyncImagePainter(user.profilePicture)
+                                // For both screens: use the new absoluteProfilePictureUrl
+                                !user.absoluteProfilePictureUrl.isNullOrBlank() -> rememberAsyncImagePainter(user.absoluteProfilePictureUrl)
                                 else -> null
                             }
 
@@ -167,12 +171,12 @@ fun ProfileContent(
                                     painter = painter,
                                     contentDescription = "Profile Picture",
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize().clip(CircleShape)
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Person,
-                                    contentDescription = "Default Profile Picture",
+                                    contentDescription = "Default Profile Icon",
                                     tint = Color.White,
                                     modifier = Modifier.size(60.dp)
                                 )
@@ -282,7 +286,25 @@ fun ProfileContent(
                     }
                 }
                 HorizontalDivider(thickness = 1.dp)
+
                 Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = {
+                        navController.navigate("userfeedback")
+                    },
+                    contentPadding = PaddingValues(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 24.dp)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize().background(feedbackGradient, shape = CircleShape), contentAlignment = Alignment.Center) {
+                        Text("Feedback", fontSize = 18.sp, fontFamily = OpenSans, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
                 // Tombol Logout
                 Button(
                     onClick = { authViewModel.signOut() },

@@ -1,6 +1,7 @@
 package com.example.nutrisaver.ui.screens.user
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -42,21 +43,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.nutrisaver.R
 import com.example.nutrisaver.ui.theme.OpenSans
+import coil.compose.rememberAsyncImagePainter
 import com.example.nutrisaver.viewmodel.UserViewModel
-import com.example.nutrisaver.data.model.User // Import User data class
 
 @Composable
 fun EditProfileScreen(navController: NavController, userViewModel: UserViewModel) {
@@ -135,13 +136,16 @@ private fun EditProfileContent(
     var name by remember { mutableStateOf("") } // Add name field
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    // Removed password field as per recommendation for separate flow
-    var profilePictureUri by remember { mutableStateOf<Uri?>(null) } // To hold current or selected URI
 
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) } // This holds the *new* selected image
+    // This will hold the URI of the image selected from the gallery.
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    // This will hold the *current* profile picture URI from the userProfile.
+    var currentProfilePictureUrl by remember { mutableStateOf<String?>(null) }
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
+        // When an image is selected, update selectedImageUri
         selectedImageUri = uri
     }
 
@@ -156,17 +160,10 @@ private fun EditProfileContent(
             name = user.name
             username = user.username
             email = user.email
-            user.profilePicture?.let { uriString ->
-                try {
-                    profilePictureUri = Uri.parse(uriString)
-                } catch (e: Exception) {
-                    // Handle invalid URI string if necessary
-                    profilePictureUri = null
-                }
-            }
+            currentProfilePictureUrl = user.absoluteProfilePictureUrl // This is the value passed to rememberAsyncImagePainter below
+            Log.d("ProfileImageDebug", "Profile Picture URL from User model: ${user.absoluteProfilePictureUrl}")
         }
     }
-
 
     Column(
         modifier = modifier
@@ -191,9 +188,18 @@ private fun EditProfileContent(
                     contentAlignment = Alignment.Center
                 ) {
                     val painter = when {
-                        selectedImageUri != null -> rememberAsyncImagePainter(selectedImageUri) // New selected image
-                        profilePictureUri != null -> rememberAsyncImagePainter(profilePictureUri) // Existing profile picture
-                        else -> null
+                        selectedImageUri != null -> {
+                            Log.d("ProfileImageDebug", "Using selectedImageUri: $selectedImageUri")
+                            rememberAsyncImagePainter(selectedImageUri)
+                        }
+                        !currentProfilePictureUrl.isNullOrBlank() -> {
+                            Log.d("ProfileImageDebug", "Using currentProfilePictureUrl: $currentProfilePictureUrl")
+                            rememberAsyncImagePainter(currentProfilePictureUrl)
+                        }
+                        else -> {
+                            Log.d("ProfileImageDebug", "Using default Person icon.")
+                            null
+                        }
                     }
 
                     if (painter != null) {
@@ -201,7 +207,9 @@ private fun EditProfileContent(
                             painter = painter,
                             contentDescription = "Profile Image",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(shape = CircleShape)
                         )
                     } else {
                         Icon(
@@ -325,15 +333,12 @@ private fun EditProfileContent(
                 onClick = {
                     val currentUser = userProfile // Get the current user data
                     if (currentUser != null) {
-                        // Create a copy of the user with only the fields updated by this screen
                         val updatedUser = currentUser.copy(
                             name = name,
                             username = username,
                             email = email,
-                            // Convert URI to String for profilePicture
-                            profilePicture = selectedImageUri?.toString() ?: currentUser.profilePicture
+                            profilePicture = selectedImageUri?.toString() ?: currentProfilePictureUrl
                         )
-                        // Call ViewModel to update user profile
                         userViewModel.updateUserProfile(updatedUser) // Use the new function
                     }
                     navController.popBackStack() // Navigate back to profile

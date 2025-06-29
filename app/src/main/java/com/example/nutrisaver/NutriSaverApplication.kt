@@ -14,6 +14,8 @@ import com.example.nutrisaver.data.repositories.CommonRepo
 import com.example.nutrisaver.data.repositories.CommonRepoImpl
 import com.example.nutrisaver.data.repositories.ConsumptionRepo
 import com.example.nutrisaver.data.repositories.ConsumptionRepoImpl
+import com.example.nutrisaver.data.repositories.FeedbackRepo
+import com.example.nutrisaver.data.repositories.FeedbackRepoImpl
 import com.example.nutrisaver.data.repositories.FoodStockRepo
 import com.example.nutrisaver.data.repositories.FoodStockRepoImpl
 import com.example.nutrisaver.data.repositories.HealthArticleRepo
@@ -42,6 +44,8 @@ import com.example.nutrisaver.data.sources.remote.common.ConsumptionDataSourceIm
 import com.example.nutrisaver.data.sources.remote.common.FoodStockDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.IngredientDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.RecipeDataSourceImpl
+import com.example.nutrisaver.data.sources.remote.common.UserFeedbackDataSource
+import com.example.nutrisaver.data.sources.remote.common.UserFeedbackDataSourceImpl
 import com.example.nutrisaver.data.sources.remote.common.WeightLogDataSourceImpl
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -64,6 +68,7 @@ class NutriSaverApplication : Application() {
     lateinit var recipeRepo : RecipeRepo
     lateinit var weightLogRepo: WeightLogRepo
     lateinit var healthArticleRepo: HealthArticleRepo
+    lateinit var feedbackRepo: FeedbackRepo
 
     override fun onCreate() {
         super.onCreate()
@@ -98,7 +103,7 @@ class NutriSaverApplication : Application() {
         val retrofitService = retrofit.create(Webservice::class.java)
 
         //Buat instance untuk semua Remote Data Source ===
-        val authRemoteDataSource = AuthDataSourceImpl(retrofitService)
+        val authRemoteDataSource = AuthDataSourceImpl(retrofitService, this)
         val commonRemoteDataSource = CommonDataSourceImpl(retrofitService)
         val consumptionRemoteDataSource = ConsumptionDataSourceImpl(retrofitService)
         val ingredientRemoteDataSource = IngredientDataSourceImpl(retrofitService)
@@ -107,6 +112,7 @@ class NutriSaverApplication : Application() {
         val recipeRemoteDataSource = RecipeDataSourceImpl(retrofitService)
         val weightLogRemoteDataSource = WeightLogDataSourceImpl(retrofitService)
         val healthArticleRemoteDataSource = HealthArticleDataSourceImpl(retrofitService)
+        val feedbackRemoteDataSource = UserFeedbackDataSourceImpl(retrofitService)
 
         // Inisialisasi Repositories dengan SEMUA dependensinya ===
         // Sekarang kita memberikan dependensi remote DAN lokal
@@ -116,7 +122,8 @@ class NutriSaverApplication : Application() {
         )
         authRepo = AuthRepoImpl(
             authDataSource = authRemoteDataSource,
-            authLocalDataSource = authLocalDataSource
+            authLocalDataSource = authLocalDataSource,
+            context = this
         )
         consumRepo = ConsumptionRepoImpl(
             consumpRemoteDataSource = consumptionRemoteDataSource,
@@ -142,6 +149,9 @@ class NutriSaverApplication : Application() {
         weightLogRepo = WeightLogRepoImpl(
             weightRemoteDataSource = weightLogRemoteDataSource,
             weightLocalDataSource = weightLogLocalDataSource
+        )
+        feedbackRepo = FeedbackRepoImpl(
+            feedbackDataSource = feedbackRemoteDataSource
         )
 
 //        Log.w("DATABASE_DEBUG", "!!! MENGHAPUS SEMUA TABEL DI DATABASE LOKAL SAAT STARTUP !!!")

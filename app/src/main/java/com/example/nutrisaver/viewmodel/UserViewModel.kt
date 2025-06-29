@@ -70,12 +70,13 @@ class UserViewModel(
         _userState.value = UserState.Loading
         viewModelScope.launch {
             try {
-                val rawToken = firebaseUser.getIdToken(true).await().token
+                // DIUBAH: Hanya ambil token mentah
+                val token = firebaseUser.getIdToken(true).await().token
                 val uid = firebaseUser.uid
 
-                if (rawToken != null) {
-                    val bearerToken = "Bearer $rawToken"
-                    val profile = authRepo.getUserProfile(bearerToken, uid)
+                if (token != null) {
+                    // Panggil repo HANYA dengan token mentah
+                    val profile = authRepo.getUserProfile(token, uid)
                     _userProfile.value = profile
                     _userState.value = UserState.Success
                 } else {
@@ -107,14 +108,11 @@ class UserViewModel(
         _userState.value = UserState.Loading
         viewModelScope.launch {
             try {
-                val rawToken = firebaseUser.getIdToken(true).await().token
-                if (rawToken != null) {
-                    val bearerToken = "Bearer $rawToken"
-                    // Call the AuthRepo to update user profile remotely
-                    // This uses the existing updateUserProfile in AuthRepoImpl, which passes User to AuthDataSourceImpl
-                    val updatedUser = authRepo.updateUserProfile(bearerToken, user)
-
-                    // Update local user profile cache with the response from the server
+                // DIUBAH: Hanya ambil token mentah
+                val token = firebaseUser.getIdToken(true).await().token
+                if (token != null) {
+                    // Panggil repo HANYA dengan token mentah
+                    val updatedUser = authRepo.updateUserProfile(token, user)
                     _userProfile.value = updatedUser
                     _userState.value = UserState.Success
                 } else {
@@ -143,10 +141,11 @@ class UserViewModel(
         _userState.value = UserState.Loading
         viewModelScope.launch {
             try {
-                val rawToken = firebaseUser.getIdToken(true).await().token
-                if (rawToken != null) {
-                    val bearerToken = "Bearer $rawToken"
-                    val updatedUser = authRepo.updateUserInformation(bearerToken, user)
+                // DIUBAH: Hanya ambil token mentah
+                val token = firebaseUser.getIdToken(true).await().token
+                if (token != null) {
+                    // Panggil repo HANYA dengan token mentah
+                    val updatedUser = authRepo.updateUserInformation(token, user)
                     _userProfile.value = updatedUser
                     _userState.value = UserState.Success
                 } else {
@@ -167,19 +166,10 @@ class UserViewModel(
         _userState.value = UserState.Loading
         viewModelScope.launch {
             try {
-                val firebaseUser = auth.currentUser
-                if (firebaseUser != null) {
-                    val rawToken = firebaseUser.getIdToken(true).await().token
-                    if (rawToken != null) {
-                        val allergens = commonRepo.getAllergen("") // Using getAllergen now
-                        _allergenState.value = allergens
-                        _userState.value = UserState.Success
-                    } else {
-                        throw Exception("Gagal mendapatkan token autentikasi untuk alergen.")
-                    }
-                } else {
-                    _userState.value = UserState.Error("User not authenticated to fetch allergens.")
-                }
+                // Tidak perlu token untuk endpoint ini
+                val allergens = commonRepo.getAllergen("")
+                _allergenState.value = allergens
+                _userState.value = UserState.Success
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e("UserViewModel", "Gagal mengambil daftar alergen", e)
@@ -194,14 +184,14 @@ class UserViewModel(
         _userState.value = UserState.Loading
         viewModelScope.launch {
             try {
+                // DIUBAH: Hanya ambil token mentah
                 val token = firebaseUser.getIdToken(true).await().token ?: throw Exception("Token tidak valid")
-                val bearerToken = "Bearer $token"
 
-                authRepo.getUserProfile(bearerToken, firebaseUser.uid).let { _userProfile.value = it }
-                consumptionRepo.refreshTodaysConsumption(bearerToken)
-                weightLogRepo.refreshWeightHistory(bearerToken)
-                foodStockRepo.getExpiringSoonStock(bearerToken).let { _expiringFoodStock.value = it }
-                commonRepo.getAllergen("").let { _allergenState.value = it } // Using getAllergen here too
+                // Panggil semua fungsi repo HANYA dengan token mentah
+                authRepo.getUserProfile(token, firebaseUser.uid).let { _userProfile.value = it }
+                consumptionRepo.refreshTodaysConsumption(token)
+                weightLogRepo.refreshWeightHistory(token)
+                foodStockRepo.getExpiringSoonStock(token).let { _expiringFoodStock.value = it }
 
                 _userState.value = UserState.Success
             } catch (e: Exception) {
@@ -214,15 +204,17 @@ class UserViewModel(
 
     fun updateWaterIntake(amount: Int) {
         if (amount == 0) return
-
         val firebaseUser = auth.currentUser ?: return
 
         viewModelScope.launch {
             try {
+                // DIUBAH: Hanya ambil token mentah
                 val token = firebaseUser.getIdToken(true).await().token ?: throw Exception("Token tidak valid")
-                val bearerToken = "Bearer $token"
-                consumptionRepo.updateWaterIntake(bearerToken, amount)
-                weightLogRepo.refreshWeightHistory(bearerToken)
+
+                // Panggil repo HANYA dengan token mentah
+                // Fungsi updateWaterIntake di repo akan memanggil refreshTodaysConsumption secara otomatis
+                consumptionRepo.updateWaterIntake(token, amount)
+
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e("UserViewModel", "Gagal mengupdate asupan air", e)
@@ -235,9 +227,11 @@ class UserViewModel(
         viewModelScope.launch {
             _userState.value = UserState.Loading
             try {
+                // DIUBAH: Hanya ambil token mentah
                 val token = auth.currentUser?.getIdToken(true)?.await()?.token ?: throw Exception("Token tidak valid")
-                val bearerToken = "Bearer $token"
-                weightLogRepo.logWeight(bearerToken, weight, unit, date)
+
+                // Panggil repo HANYA dengan token mentah
+                weightLogRepo.logWeight(token, weight, unit, date)
                 _userState.value = UserState.Success
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

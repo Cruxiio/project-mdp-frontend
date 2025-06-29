@@ -28,17 +28,27 @@ data class User(
     var updatedAt: Instant?,
     var deletedAt: Instant? = null
 ) {
+    val absoluteProfilePictureUrl: String?
+        get() = if (!profilePicture.isNullOrBlank()) {
+            // IMPORTANT: Match this base URL to your server's address
+            // This is the same URL you used in your Retrofit base URL, but WITHOUT the /api/
+            // because /uploads is typically served directly from the root.
+            "http://10.0.2.2:3000" + profilePicture
+        } else {
+            null
+        }
+
     companion object {
         // Mapper dari UserJson (dari API) ke User (untuk aplikasi)
         fun fromUserJson(json: UserJson): User? {
             // Validasi field wajib ada agar tidak crash
-            if (json.uuid == null || json.name == null || json.username == null || json.email == null) {
+            if (json.uuid == null || json.name == null || json.username == null || json.email == null || json.role == null) {
                 return null
             }
             return User(
                 id = json.id,
                 uuid = json.uuid,
-                role = "user",
+                role = json.role,
                 name = json.name,
                 username = json.username,
                 email = json.email,
@@ -88,4 +98,14 @@ data class User(
         updatedAt = this.updatedAt?.toString(),
         deletedAt = this.deletedAt?.toString()
     )
+    fun isProfileComplete(): Boolean {
+        // Anggap profil lengkap jika data-data penting ini tidak kosong/null.
+        // Sesuaikan daftar ini dengan kebutuhan bisnis Anda.
+        return weight != null &&
+                height != null &&
+                gender.orEmpty().isNotEmpty() &&
+                goal.orEmpty().isNotEmpty() &&
+                dietType.orEmpty().isNotEmpty()
+    }
+
 }
