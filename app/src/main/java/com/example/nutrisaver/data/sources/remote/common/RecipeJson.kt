@@ -43,3 +43,40 @@ data class NutrientJson(
 data class RecipeSearchRequestJson(
     @Json(name = "query") val query: String
 )
+
+// ini raw json dari recipe favorite
+@JsonClass(generateAdapter = true)
+data class RecipeFavoriteJson(
+    @Json(name = "id") val id: Int,
+    @Json(name = "recipe_id") val recipeId: Int,
+    @Json(name = "title") val title: String,
+    @Json(name = "image") val image: String,
+    @Json(name = "calories") val calories: Double,
+    @Json(name = "protein") val protein: Double,
+    @Json(name = "fat") val fat: Double,
+    @Json(name = "carbs") val carbs: Double,
+)
+
+@JsonClass(generateAdapter = true)
+data class RecipeFavoriteGetAllResponse(
+    @Json(name = "recipes") var recipes: List<RecipeFavoriteJson>?,
+){
+}
+
+@JsonClass(generateAdapter = true)
+data class isRecipeFavoriteExistJson(
+    @Json(name = "exist") var exist: Boolean,
+){
+}
+
+@JsonClass(generateAdapter = true)
+data class RequestBodyRecipeFavorite(
+    @Json(name = "recipe_id") val recipeId: Int,
+    @Json(name = "title") val title: String,
+    @Json(name = "image") val image: String,
+    @Json(name = "calories") val calories: Double,
+    @Json(name = "protein") val protein: Double,
+    @Json(name = "fat") val fat: Double,
+    @Json(name = "carbs") val carbs: Double,
+)
+

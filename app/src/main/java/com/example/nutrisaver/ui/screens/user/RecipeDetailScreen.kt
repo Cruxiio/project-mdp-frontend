@@ -145,9 +145,11 @@ fun RecipeDetailScreen(navController: NavController, recipeId : Int, recipeViewM
 //    )
     // data recipe dari backend
     val recipeData by recipeViewModel.recipeDetailState.observeAsState(null)
+    val recipeFavStatus by recipeViewModel.recipeFavoriteState.observeAsState(false)
 
     LaunchedEffect(Unit) {
         recipeViewModel.getRecipeDetail(recipeId)
+        recipeViewModel.checkUserFavoriteRecipeExist(recipeId)
     }
 
     // RecipeState logic
@@ -175,6 +177,8 @@ fun RecipeDetailScreen(navController: NavController, recipeId : Int, recipeViewM
                     RecipeDetailContent(
                         recipe = recipe,
                         recipeId = recipeId,
+                        recipeViewModel = recipeViewModel,
+                        favorite = recipeFavStatus,
                         modifier = Modifier.padding(innerPadding),
                         navController = navController
                     )
@@ -256,6 +260,8 @@ private fun TopBar(
 private fun RecipeDetailContent(
     recipe: RecipeDetail, // todo: ganti ke tipe data aslinya
     recipeId: Int,
+    recipeViewModel: RecipeViewModel,
+    favorite: Boolean,
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
@@ -267,7 +273,7 @@ private fun RecipeDetailContent(
     val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
 
     // State for favorite toggle
-    var isFavorite by remember { mutableStateOf(false) }
+//    var isFavorite by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -468,10 +474,10 @@ private fun RecipeDetailContent(
 
         TopBar(
             onBackClick = { navController.popBackStack() },
-            isFavorite = isFavorite,
+            isFavorite = favorite,
             onFavoriteClick = {
-                isFavorite = !isFavorite
                 // TODO: Add logic to save/remove from favorites
+                recipeViewModel.createOrDeleteFavoriteRecipes(recipe.recipeId, recipe.title, recipe.image, recipe.calories, recipe.protein, recipe.fat, recipe.carbs)
             },
             modifier = Modifier
                 .fillMaxWidth()

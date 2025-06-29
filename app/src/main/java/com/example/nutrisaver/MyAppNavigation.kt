@@ -130,7 +130,7 @@ fun MyAppNavigation(
                 RecipeScreen(navController = navController, recipeViewModel = recipeViewModel)
             }
             composable("favoriterecipe") {
-                FavoriteRecipeScreen(navController = navController)
+                FavoriteRecipeScreen(navController = navController, recipeViewModel = recipeViewModel)
             }
             composable(
                 "searchresults/{keyword}",

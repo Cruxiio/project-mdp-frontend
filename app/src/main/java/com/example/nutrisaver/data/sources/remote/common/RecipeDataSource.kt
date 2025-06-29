@@ -3,6 +3,7 @@ package com.example.nutrisaver.data.sources.remote.common
 import android.util.Log
 import com.example.nutrisaver.data.model.Recipe
 import com.example.nutrisaver.data.model.RecipeDetail
+import com.example.nutrisaver.data.model.RecipeFavorite
 import com.example.nutrisaver.data.model.RecipePlain
 import com.example.nutrisaver.data.sources.remote.Webservice
 
@@ -10,6 +11,10 @@ interface RecipeDataSource {
     suspend fun searchRecipes(token: String, query: String): List<Recipe>
     suspend fun getAllRecipes(token: String, keyword: String, type: String, page: Int, perpage: Int): List<RecipePlain>
     suspend fun getRecipeDetail(token: String, recipeId: Int): RecipeDetail
+    suspend fun getFavoriteRecipes(token: String, keyword: String): List<RecipeFavorite>
+    suspend fun addFavoriteRecipes(token: String, recipeFav: RecipeFavorite)
+    suspend fun isUserFavoriteRecipeExist(token: String, recipeId: Int): Boolean
+    suspend fun deleteFavoriteRecipes(token: String, recipeId: Int)
 }
 
 class RecipeDataSourceImpl(
@@ -58,6 +63,56 @@ class RecipeDataSourceImpl(
         }
         catch (e: Exception) {
             Log.e("RecipeRemoteDS", "Failed to get recipes detail", e)
+            throw e
+        }
+    }
+
+    override suspend fun getFavoriteRecipes(token: String, keyword: String): List<RecipeFavorite> {
+        try {
+            val formattedToken = "Bearer $token"
+            val responseJson = webservice.getFavoriteRecipes(formattedToken, keyword)
+            val listRecipeFavoriteJson = responseJson.recipes ?: emptyList()
+            return listRecipeFavoriteJson.mapNotNull { RecipeFavorite.fromJson(it) }
+        }
+        catch (e: Exception) {
+            Log.e("RecipeRemoteDS", "Failed to get favorite recipes", e)
+            throw e
+        }
+    }
+
+    override suspend fun addFavoriteRecipes(
+        token: String,
+        recipeFav: RecipeFavorite
+    ) {
+        try {
+            val formattedToken = "Bearer $token"
+
+            webservice.addFavoriteRecipes(formattedToken, recipeFav.toCreateRequest())
+        }catch (e: Exception) {
+            Log.e("RecipeRemoteDS", "Failed to create favorite recipe", e)
+            throw e
+        }
+    }
+
+    override suspend fun isUserFavoriteRecipeExist(token: String, recipeId: Int): Boolean {
+        try {
+            val formattedToken = "Bearer $token"
+            val responseJson = webservice.isUserFavoriteRecipeExist(formattedToken, recipeId)
+
+            return responseJson.exist
+        }catch (e: Exception) {
+            Log.e("RecipeRemoteDS", "Failed to get is user favorite recipe exist", e)
+            throw e
+        }
+    }
+
+    override suspend fun deleteFavoriteRecipes(token: String, recipeId: Int) {
+        try {
+            val formattedToken = "Bearer $token"
+            webservice.deleteFavoriteRecipes(formattedToken, recipeId)
+        }
+        catch (e: Exception) {
+            Log.e("RecipeRemoteDS", "Failed to get is user favorite recipe exist", e)
             throw e
         }
     }

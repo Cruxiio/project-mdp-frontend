@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisaver.data.model.RecipeDetail
+import com.example.nutrisaver.data.model.RecipeFavorite
 import com.example.nutrisaver.data.model.RecipePlain
 import com.example.nutrisaver.data.repositories.CommonRepo
 import com.example.nutrisaver.data.repositories.FoodStockRepo
@@ -39,6 +40,12 @@ class RecipeViewModel(
 
     private val _recipeDetailState = MutableLiveData<RecipeDetail>(null)
     val recipeDetailState: LiveData<RecipeDetail> = _recipeDetailState
+
+    private val _listRecipeFavoriteState = MutableLiveData<List<RecipeFavorite>>(null)
+    val listRecipeFavoriteState: LiveData<List<RecipeFavorite>> = _listRecipeFavoriteState
+
+    private val _recipeFavoriteState = MutableLiveData<Boolean>(false)
+    val recipeFavoriteState: LiveData<Boolean> = _recipeFavoriteState
 
 
     fun getAllRecipe(keyword: String, type: String, page: Int, perpage:Int) {
@@ -79,4 +86,87 @@ class RecipeViewModel(
             }
         }
     }
+
+    fun getFavoriteRecipes(keyword: String) {
+        _recipeStatusState.value = RecipeStatusState.Loading
+        viewModelScope.launch {
+            try {
+                val token = auth.currentUser?.getIdToken(false)?.await()?.token ?: throw Exception("Sesi tidak valid.")
+                _listRecipeFavoriteState.value = recipeRepo.getFavoriteRecipes(token, keyword) // ambil data recipe
+                _recipeStatusState.value = RecipeStatusState.Success
+            }
+            catch (e: Exception) {
+                Log.e("RecipeViewModel", "Fetch Favorite Recipe Failed", e)
+                _recipeStatusState.value = RecipeStatusState.Error(e.message ?: "Gagal mendapatkan recipe favorit")
+            }
+        }
+    }
+
+    fun checkUserFavoriteRecipeExist(recipeId: Int){
+        _recipeStatusState.value = RecipeStatusState.Loading
+        viewModelScope.launch {
+            try {
+                val token = auth.currentUser?.getIdToken(false)?.await()?.token ?: throw Exception("Sesi tidak valid.")
+                _recipeFavoriteState.value = recipeRepo.isUserFavoriteRecipeExist(token, recipeId) // ambil data recipe
+                _recipeStatusState.value = RecipeStatusState.Success
+            }
+            catch (e: Exception) {
+                Log.e("RecipeViewModel", "Check Favorite Recipe Exist Failed", e)
+                _recipeStatusState.value = RecipeStatusState.Error(e.message ?: "Gagal check recipe favorit")
+            }
+        }
+    }
+
+    fun createOrDeleteFavoriteRecipes(recipeId: Int, title: String, image: String, calories: Double, protein: Double, fat: Double, carbs: Double){
+        _recipeStatusState.value = RecipeStatusState.Loading
+        viewModelScope.launch {
+            try {
+                val token = auth.currentUser?.getIdToken(false)?.await()?.token ?: throw Exception("Sesi tidak valid.")
+
+                if (_recipeFavoriteState.value == true){
+                    // jika sudah ada di data favorite recipes, maka hapus
+                    recipeRepo.deleteFavoriteRecipes(token, recipeId) //hapus data fav recipe
+                }
+                else{
+                    // jika belum add ke db
+                    val newFavRecipe = RecipeFavorite(
+                        id = -1, // ini nda penting soale sebelum dikirm ke BE idnya nda diambil
+                        recipeId = recipeId,
+                        title = title,
+                        image = image,
+                        calories = calories,
+                        protein = protein,
+                        fat = fat,
+                        carbs = carbs
+                    )
+                    recipeRepo.addFavoriteRecipes(token, newFavRecipe)
+                }
+                // toggle nilai fav state
+                _recipeFavoriteState.value = !_recipeFavoriteState.value
+                _recipeStatusState.value = RecipeStatusState.Success
+            }
+            catch (e: Exception) {
+                Log.e("RecipeViewModel", "Create or Delete Favorite Recipe Failed", e)
+                _recipeStatusState.value = RecipeStatusState.Error(e.message ?: "Gagal create atau delete recipe favorit")
+            }
+        }
+    }
+
+    fun deleteRecipeFav(recipeId: Int) {
+        _recipeStatusState.value = RecipeStatusState.Loading
+        viewModelScope.launch {
+            try{
+                val token = auth.currentUser?.getIdToken(false)?.await()?.token ?: throw Exception("Sesi tidak valid.")
+                recipeRepo.deleteFavoriteRecipes(token, recipeId) //hapus data fav recipe
+                // refresh data favorite recipes
+                _listRecipeFavoriteState.value = recipeRepo.getFavoriteRecipes(token, "")
+                _recipeStatusState.value = RecipeStatusState.Success
+            }
+            catch (e: Exception) {
+                Log.e("RecipeViewModel", "Create or Delete Favorite Recipe Failed", e)
+                _recipeStatusState.value = RecipeStatusState.Error(e.message ?: "Gagal create atau delete recipe favorit")
+            }
+        }
+    }
+
 }

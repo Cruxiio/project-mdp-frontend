@@ -14,15 +14,18 @@ import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllRespons
 import com.example.nutrisaver.data.sources.remote.common.IngredientJson
 import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeDetailJson
+import com.example.nutrisaver.data.sources.remote.common.RecipeFavoriteGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.RecipeJson
 import com.example.nutrisaver.data.sources.remote.common.RecipePlainGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.RecipePlainJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
+import com.example.nutrisaver.data.sources.remote.common.RequestBodyRecipeFavorite
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.UserFeedbackJson
 import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
 import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
+import com.example.nutrisaver.data.sources.remote.common.isRecipeFavoriteExistJson
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -151,6 +154,31 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Path("recipe_id") recipeId: Int
     ): RecipeDetailJson
+
+    // user favorite recipe API
+    @GET("api/user/recipe")
+    suspend fun getFavoriteRecipes(
+        @Header("Authorization") token: String,
+        @Query("keyword") keyword: String,
+    ): RecipeFavoriteGetAllResponse
+
+    @POST("api/user/recipe")
+    suspend fun addFavoriteRecipes(
+        @Header("Authorization") token: String,
+        @Body request: RequestBodyRecipeFavorite,
+    )
+
+    @GET("api/user/recipe/detail/{recipe_id}")
+    suspend fun isUserFavoriteRecipeExist(
+        @Header("Authorization") token: String,
+        @Path("recipe_id") recipeId: Int
+    ): isRecipeFavoriteExistJson
+
+    @DELETE("api/user/recipe/{recipe_id}")
+    suspend fun deleteFavoriteRecipes(
+        @Header("Authorization") token: String,
+        @Path("recipe_id") recipeId: Int
+    )
 
     @POST("api/consumption/log")
     suspend fun logMeal(
