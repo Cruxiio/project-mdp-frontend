@@ -94,14 +94,21 @@ class HealthArticleViewModel(
     /**
      * [UPDATE] Memperbarui artikel yang ada. Fungsi ini memerlukan token.
      */
-    fun updateArticle(articleId: Int, title: String?, content: String?, targetGoal: String?, targetDietType: String?) {
+    fun updateArticle(
+        articleId: Int,
+        title: String?,
+        content: String?,
+        targetGoal: String?,
+        targetDietType: String?,
+        createdBy: String?
+    ) {
         _crudState.value = CrudState.Loading
         viewModelScope.launch {
             try {
                 val token = FirebaseAuth.getInstance().currentUser?.getIdToken(true)?.await()?.token
                 if (token == null) throw Exception("Sesi tidak valid. Silakan login kembali.")
 
-                healthArticleRepo.updateArticle(token, articleId, title, content, targetGoal, targetDietType)
+                healthArticleRepo.updateArticle(token, articleId, title, content, targetGoal, targetDietType, createdBy)
                 _crudState.postValue(CrudState.Success)
                 // Refresh daftar artikel setelah berhasil update
                 loadHealthArticles()

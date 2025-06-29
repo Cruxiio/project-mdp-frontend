@@ -17,6 +17,7 @@ import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleRequestJson
+import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleResponseJson
 import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
 import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
 import okhttp3.ResponseBody
@@ -134,27 +135,27 @@ interface Webservice {
         @Query("date") date: String
     ): Response<DailyConsumptionJson>
 
-    @POST("api/health-articles")
+    @POST("api/common/health-articles")
     suspend fun createHealthArticle(
         @Header("Authorization") token: String,
         @Body request: CreateHealthArticleRequestJson
     ): Response<HealthArticleJson>
 
-    @GET("api/health-articles")
+    @GET("api/common/health-articles")
     suspend fun getHealthArticles(
         @Query("target_goal") targetGoal: String? = null,
         @Query("target_diet_type") targetDietType: String? = null,
         @Query("title") title: String? = null
     ): HealthArticleResponseJson
 
-    @PATCH("api/health-articles/{article_id}")
+    @PATCH("api/common/health-articles/{article_id}")
     suspend fun updateHealthArticle(
         @Header("Authorization") token: String,
         @Path("article_id") articleId: Int,
         @Body request: UpdateHealthArticleRequestJson
-    ): Response<HealthArticleJson>
+    ): Response<UpdateHealthArticleResponseJson>
 
-    @DELETE("api/health-articles/{article_id}")
+    @DELETE("api/common/health-articles/{article_id}")
     suspend fun deleteHealthArticle(
         @Header("Authorization") token: String,
         @Path("article_id") articleId: Int

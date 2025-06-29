@@ -1,8 +1,10 @@
 package com.example.nutrisaver.data.sources.remote
 
+import android.util.Log
 import com.example.nutrisaver.data.model.HealthArticle
 import com.example.nutrisaver.data.sources.remote.common.CreateHealthArticleRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleRequestJson
+import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleResponseJson
 import retrofit2.HttpException
 
 /**
@@ -80,17 +82,18 @@ class HealthArticleDataSourceImpl(
     /**
      * [UPDATE] Mengirim pembaruan artikel ke API.
      */
+    // Di HealthArticleDataSourceImpl
     override suspend fun updateHealthArticle(
         token: String,
         articleId: Int,
         request: UpdateHealthArticleRequestJson
     ): HealthArticle {
         val response = webservice.updateHealthArticle("Bearer $token", articleId, request)
-
         if (response.isSuccessful) {
-            val updatedArticleJson = response.body()
-            return HealthArticle.fromJson(updatedArticleJson)
-                ?: throw IllegalStateException("Data artikel yang diterima setelah update tidak valid.")
+            // Ambil objek artikel dari dalam wrapper
+            val updatedArticleJson = response.body()?.article
+            return HealthArticle.fromJson(updatedArticleJson) // <-- Langkah A
+                ?: throw IllegalStateException("Data artikel yang diterima setelah update tidak valid.") // <-- Langkah B
         } else {
             throw HttpException(response)
         }

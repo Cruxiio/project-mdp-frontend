@@ -1,5 +1,6 @@
 package com.example.nutrisaver.ui.screens.admin
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +33,8 @@ import com.example.nutrisaver.ui.theme.OpenSans
 import com.example.nutrisaver.viewmodel.CrudState
 import com.example.nutrisaver.viewmodel.HealthArticleListState
 import com.example.nutrisaver.viewmodel.HealthArticleViewModel
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
@@ -76,7 +79,7 @@ fun AdminHealthArticleScreen(navController: NavController, healthArticleViewMode
             modifier = Modifier.padding(innerPadding),
             healthArticleViewModel = healthArticleViewModel,
             onEditArticle = { article ->
-                editingArticle = article // Mode Edit
+                editingArticle = article
                 showAddEditBottomSheet = true
             },
             onDeleteArticle = { articleId ->
@@ -90,13 +93,11 @@ fun AdminHealthArticleScreen(navController: NavController, healthArticleViewMode
                 onDismiss = { showAddEditBottomSheet = false },
                 onSave = { title, content, goal, diet, createdBy ->
                     if (editingArticle == null) {
-                        // CREATE
                         healthArticleViewModel.createArticle(title, content, goal, diet, createdBy)
                     } else {
-                        // UPDATE
-                        healthArticleViewModel.updateArticle(editingArticle!!.id, title, content, goal, diet)
+                        healthArticleViewModel.updateArticle(editingArticle!!.id, title, content, goal, diet, createdBy)
                     }
-                    showAddEditBottomSheet = false // Tutup bottom sheet
+                    showAddEditBottomSheet = false
                 }
             )
         }
@@ -118,10 +119,22 @@ fun AdminHealthArticleContent(
     var selectedDietFilter by remember { mutableStateOf("All") }
     var showGoalDropdown by remember { mutableStateOf(false) }
     var showDietDropdown by remember { mutableStateOf(false) }
-
     // Memuat artikel berdasarkan filter
-    LaunchedEffect(searchQuery, selectedGoalFilter, selectedDietFilter) {
-        healthArticleViewModel.loadHealthArticles(searchQuery, selectedGoalFilter, selectedDietFilter)
+    LaunchedEffect(Unit) {
+        // Buat flow yang memancarkan setiap kali salah satu state filter berubah
+        snapshotFlow {
+            Triple(searchQuery, selectedGoalFilter, selectedDietFilter)
+        }
+            .debounce(300) // Tunggu 300ms setelah pengguna berhenti mengetik sebelum memanggil API
+            .distinctUntilChanged() // Hanya panggil jika nilainya benar-benar berubah
+            .collect { (query, goal, diet) ->
+                Log.d("AdminScreen", "Fetching articles with: Q='$query', G='$goal', D='$diet'")
+                healthArticleViewModel.loadHealthArticles(
+                    title = query,
+                    targetGoal = goal,
+                    targetDietType = diet
+                )
+            }
     }
 
     Box(modifier = modifier.fillMaxSize().background(backgroundGradient)) {
@@ -324,14 +337,16 @@ private fun HealthArticleCard(
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(end = 16.dp)
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Tags
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         TagChip(
                             text = article.targetGoal.replaceFirstChar { it.titlecase() },
@@ -348,14 +363,14 @@ private fun HealthArticleCard(
 
                 // Kolom untuk Tombol Aksi (Edit & Delete)
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp) // Beri sedikit jarak
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(
                         onClick = onEditClick,
                         modifier = Modifier
                             .size(36.dp)
                             .background(
-                                Color.Blue.copy(alpha = 0.15f),
+                                Color.Blue.copy(alpha = 0.1f),
                                 CircleShape
                             )
                     ) {
@@ -363,9 +378,11 @@ private fun HealthArticleCard(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
                             tint = Color.Blue,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
+
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     IconButton(
                         onClick = { showDeleteDialog = true }, // Tampilkan dialog konfirmasi
@@ -380,7 +397,7 @@ private fun HealthArticleCard(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete",
                             tint = Color.Red,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }

@@ -27,7 +27,8 @@ interface HealthArticleRepo {
         title: String?,
         content: String?,
         targetGoal: String?,
-        targetDietType: String?
+        targetDietType: String?,
+        createdBy: String?
     ): HealthArticle
 
     suspend fun deleteArticle(
@@ -100,7 +101,8 @@ class HealthArticleRepoImpl(
         title: String?,
         content: String?,
         targetGoal: String?,
-        targetDietType: String?
+        targetDietType: String?,
+        createdBy: String?
     ): HealthArticle {
         Log.d(TAG, "updateArticle: Memperbarui artikel dengan ID: $articleId")
         try {
@@ -109,7 +111,8 @@ class HealthArticleRepoImpl(
                 title = title,
                 content = content,
                 targetGoal = targetGoal,
-                targetDietType = targetDietType
+                targetDietType = targetDietType,
+                createdBy = createdBy
             )
             return remoteDataSource.updateHealthArticle(token, articleId, request)
         } catch (e: Exception) {
