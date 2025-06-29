@@ -4,9 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.nutrisaver.viewmodel.AdminFeedbackViewModel
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
+import com.example.nutrisaver.viewmodel.CreateRecipeViewModel
+import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.RecipeViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
@@ -23,6 +27,8 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
             val adminRepository = application.adminRepo
             val recipeRepository = application.recipeRepo
             val weightLogRepository = application.weightLogRepo
+            val healthArticleRepository = application.healthArticleRepo
+            val feedbackRepository = application.feedbackRepo
 
             when {
                 isAssignableFrom(AuthViewModel::class.java) ->
@@ -37,6 +43,14 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
                     LogMealViewModel(recipeRepository, consumRepository, application)
                 isAssignableFrom(RecipeViewModel::class.java) ->
                     RecipeViewModel(commonRepository,recipeRepository, foodStockRepository, application)
+                isAssignableFrom(HealthArticleViewModel::class.java) ->
+                    HealthArticleViewModel(healthArticleRepository)
+                isAssignableFrom(FeedbackViewModel::class.java) ->
+                    FeedbackViewModel(feedbackRepository, application)
+                isAssignableFrom(AdminFeedbackViewModel::class.java) ->
+                    AdminFeedbackViewModel(adminRepository, application)
+                isAssignableFrom(CreateRecipeViewModel::class.java) ->
+                    CreateRecipeViewModel(foodStockRepository)
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

@@ -7,8 +7,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.nutrisaver.ui.theme.NutriSaverTheme
+import com.example.nutrisaver.viewmodel.AdminFeedbackViewModel
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
+import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.RecipeViewModel
@@ -31,6 +33,8 @@ class MainActivity : ComponentActivity() {
                 val adminUsersViewModel: AdminUsersViewModel = viewModel(factory=factory)
                 val logMealViewModel : LogMealViewModel = viewModel(factory=factory)
                 val recipeViewModel : RecipeViewModel = viewModel(factory=factory)
+                val feedbackViewModel : FeedbackViewModel = viewModel(factory=factory)
+                val adminFeedbackViewModel : AdminFeedbackViewModel = viewModel(factory=factory)
 
                 MyAppNavigation(
                     navController = navController,
@@ -39,10 +43,10 @@ class MainActivity : ComponentActivity() {
                     adminUsersViewModel = adminUsersViewModel,
                     logMealViewModel = logMealViewModel,
                     foodStockViewModel = foodStockViewModel,
-                    recipeViewModel = recipeViewModel
+                    recipeViewModel = recipeViewModel,
+                    feedBackViewModel = feedbackViewModel,
+                    adminFeedbackViewModel = adminFeedbackViewModel
                 )
-
-                MyAppNavigation(navController = navController, authViewModel = authViewModel, userViewModel = userViewModel, adminUsersViewModel = adminUsersViewModel , logMealViewModel = logMealViewModel, foodStockViewModel = foodStockViewModel, recipeViewModel = recipeViewModel)
             }
         }
     }

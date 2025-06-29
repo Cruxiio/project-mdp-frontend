@@ -11,7 +11,7 @@ data class RegisterDetailInp(
     fun checkKosong(): String {
         if (name.isEmpty() || gender.isEmpty() || dateOfBirth.isEmpty() || weight == 0
             || height == 0 || goalOption.isEmpty() || targetWeight == 0 || protein.toDouble() == 0.0
-            || carbs.toDouble() == 0.0 || fat.toDouble() == 0.0 || allergen.isEmpty() || dietTypeOption.isEmpty()) {
+            || carbs.toDouble() == 0.0 || fat.toDouble() == 0.0 || dietTypeOption.isEmpty()) {
             return "Semua input harus diisi!"
         }
         return ""

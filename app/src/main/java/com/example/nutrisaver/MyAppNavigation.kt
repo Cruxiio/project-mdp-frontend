@@ -3,6 +3,7 @@ package com.example.nutrisaver
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -10,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.nutrisaver.ui.screens.admin.AdminFeedbackScreen
 import com.example.nutrisaver.ui.screens.admin.AdminHealthArticleScreen
 import com.example.nutrisaver.ui.screens.admin.AllUserScreen
 import com.example.nutrisaver.ui.screens.admin.ApplicationScreen
@@ -23,6 +25,7 @@ import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.EditInformationScreen
 import com.example.nutrisaver.ui.screens.user.EditProfileScreen
 import com.example.nutrisaver.ui.screens.user.FavoriteRecipeScreen
+import com.example.nutrisaver.ui.screens.user.FeedbackScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
 import com.example.nutrisaver.ui.screens.user.LogHistoryScreen
 import com.example.nutrisaver.ui.screens.user.LogMealScreen
@@ -32,9 +35,12 @@ import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
 import com.example.nutrisaver.ui.screens.user.RecipeScreen
 import com.example.nutrisaver.ui.screens.user.SearchResultScreen
 import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
+import com.example.nutrisaver.viewmodel.AdminFeedbackViewModel
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
+import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
+import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
 import com.example.nutrisaver.viewmodel.RecipeViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
@@ -48,10 +54,15 @@ fun MyAppNavigation(
     foodStockViewModel: FoodStockViewModel,
     adminUsersViewModel: AdminUsersViewModel,
     logMealViewModel: LogMealViewModel,
-    recipeViewModel : RecipeViewModel
+    recipeViewModel : RecipeViewModel,
+    feedBackViewModel: FeedbackViewModel,
+    adminFeedbackViewModel: AdminFeedbackViewModel
 ) {
+    
+    val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = CustomViewModelFactory)
+    
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "user") {
+    NavHost(navController = navController, startDestination = "admin") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {
@@ -88,7 +99,10 @@ fun MyAppNavigation(
                 LogHistoryScreen(navController = navController, logMealViewModel = logMealViewModel)
             }
             composable("userhealtharticle") {
-                UserHealthArticleScreen(navController = navController)
+                UserHealthArticleScreen(
+                    navController = navController,
+                    healthArticleViewModel = healthArticleViewModel
+                )
             }
             composable("foodstock") {
                 FoodStockScreen(navController = navController, foodStockViewModel = foodStockViewModel)
@@ -172,8 +186,11 @@ fun MyAppNavigation(
                     userViewModel = userViewModel
                 )
             }
-            composable("notification") {
-                NotificationScreen(navController = navController)
+            composable("userfeedback") {
+                FeedbackScreen(
+                    navController = navController,
+                    feedbackViewModel = feedBackViewModel
+                )
             }
         }
 
@@ -181,14 +198,24 @@ fun MyAppNavigation(
             composable("alluser") {
                 AllUserScreen(
                     navController = navController,
-                    adminUsersViewModel = adminUsersViewModel
+                    adminUsersViewModel = adminUsersViewModel,
+                    authViewModel = authViewModel
                 )
             }
             composable("application") {
-                ApplicationScreen(navController = navController)
+                ApplicationScreen(navController = navController, authViewModel)
             }
             composable("adminhealtharticle") {
-                AdminHealthArticleScreen(navController = navController)
+                AdminHealthArticleScreen(
+                    navController = navController,
+                    healthArticleViewModel = healthArticleViewModel
+                )
+            }
+            composable("adminfeedback") {
+                AdminFeedbackScreen(
+                    navController = navController,
+                    adminFeedbackViewModel = adminFeedbackViewModel
+                )
             }
         }
     }

@@ -1,5 +1,9 @@
 package com.example.nutrisaver.data.sources.remote
 
+import com.example.nutrisaver.data.model.json.CreateHealthArticleRequestJson
+import com.example.nutrisaver.data.model.json.HealthArticleJson
+import com.example.nutrisaver.data.model.json.HealthArticleResponseJson
+import com.example.nutrisaver.data.model.json.UpdateHealthArticleRequestJson
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import com.example.nutrisaver.data.sources.remote.common.AddFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
@@ -16,6 +20,7 @@ import com.example.nutrisaver.data.sources.remote.common.RecipePlainJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
+import com.example.nutrisaver.data.sources.remote.common.UserFeedbackJson
 import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
 import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
 import okhttp3.MultipartBody
@@ -69,6 +74,15 @@ interface Webservice {
         @Body user: UserJson
     ): UserJson
 
+    @GET("api/user/feedback")
+    suspend fun getUserFeedback(@Header("Authorization") token: String): List<UserFeedbackJson>
+
+    @POST("api/user/feedback")
+    suspend fun addFeedback(
+        @Header("Authorization") token: String,
+        @Body feedback: UserFeedbackJson
+    ): UserFeedbackJson
+
     @GET("api/consumption/today") // Sesuaikan jika path berbeda
     suspend fun getTodaysConsumption(@Header("Authorization") token: String): DailyConsumptionJson
 
@@ -99,10 +113,23 @@ interface Webservice {
 
     // admin api
     @GET("api/admin/users")
-    suspend fun getUsers(): List<UserJson>
+    suspend fun getUsers(@Header("Authorization") bearerToken: String): List<UserJson>
 
     @DELETE("api/admin/users/{userId}")
-    suspend fun deleteUser(@Path("userId") userId: String)
+    suspend fun deleteUser(
+        @Header("Authorization") bearerToken: String,
+        @Path("userId") userId: String
+    )
+
+    @GET("api/admin/feedback")
+    suspend fun getAllFeedback(@Header("Authorization") bearerToken: String): List<UserFeedbackJson>
+
+    @PATCH("api/admin/feedback/{id}")
+    suspend fun respondFeedback(
+        @Header("Authorization") bearerToken: String,
+        @Path("id") feedbackId: Int,
+        @Body requestBody: UserFeedbackJson
+    )
 
     @POST("api/recipe/search")
     suspend fun searchRecipes(
@@ -154,4 +181,30 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Query("date") date: String
     ): Response<DailyConsumptionJson>
+
+    @POST("api/common/health-articles")
+    suspend fun createHealthArticle(
+        @Header("Authorization") token: String,
+        @Body request: CreateHealthArticleRequestJson
+    ): Response<HealthArticleJson>
+
+    @GET("api/common/health-articles")
+    suspend fun getHealthArticles(
+        @Query("target_goal") targetGoal: String? = null,
+        @Query("target_diet_type") targetDietType: String? = null,
+        @Query("title") title: String? = null
+    ): HealthArticleResponseJson
+
+    @PATCH("api/common/health-articles/{article_id}")
+    suspend fun updateHealthArticle(
+        @Header("Authorization") token: String,
+        @Path("article_id") articleId: Int,
+        @Body request: UpdateHealthArticleRequestJson
+    ): Response<HealthArticleJson>
+
+    @DELETE("api/common/health-articles/{article_id}")
+    suspend fun deleteHealthArticle(
+        @Header("Authorization") token: String,
+        @Path("article_id") articleId: Int
+    ): Response<Unit>
 }
