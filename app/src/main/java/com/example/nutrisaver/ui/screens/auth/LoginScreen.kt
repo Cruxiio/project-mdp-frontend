@@ -78,22 +78,35 @@ fun LoginScreen(modifier: Modifier = Modifier,
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
     LaunchedEffect(authState.value) {
-        when(authState.value){
+        // Gunakan 'val state' untuk smart casting
+        when (val state = authState.value) {
             is AuthState.Authenticated -> {
-                navController.navigate("user") {
+                Toast.makeText(context, "Login Berhasil! Peran: ${state.role}", Toast.LENGTH_SHORT).show()
+
+                // Logika navigasi berdasarkan peran
+                val destination = when (state.role) {
+                    "admin" -> "admin" // Rute untuk halaman admin
+                    "user" -> "user"   // Rute untuk halaman user
+                    else -> "user"     // Default fallback ke halaman user jika peran tidak dikenali
+                }
+
+                navController.navigate(destination) {
                     popUpTo("auth") { inclusive = true }
                     launchSingleTop = true
                 }
             }
             is AuthState.NeedsRegistrationDetails -> {
-                // Gunakan nama rute yang benar dari NavHost Anda
                 navController.navigate("register-detail") {
                     popUpTo("auth") { inclusive = true }
                     launchSingleTop = true
                 }
             }
-            is AuthState.Error -> Toast.makeText(context,
-                (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
+            is AuthState.Error -> Toast.makeText(
+                context,
+                state.message, Toast.LENGTH_SHORT
+            ).show()
+
+            // State lain seperti Loading, Unauthenticated, dll tidak perlu aksi navigasi.
             else -> Unit
         }
     }
