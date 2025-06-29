@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.nutrisaver.viewmodel.AdminFeedbackViewModel
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.CreateRecipeViewModel
@@ -43,6 +44,8 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
                     HealthArticleViewModel(healthArticleRepository)
                 isAssignableFrom(FeedbackViewModel::class.java) ->
                     FeedbackViewModel(feedbackRepository, application)
+                isAssignableFrom(AdminFeedbackViewModel::class.java) ->
+                    AdminFeedbackViewModel(adminRepository, application)
                 isAssignableFrom(CreateRecipeViewModel::class.java) ->
                     CreateRecipeViewModel(foodStockRepository)
                 else ->

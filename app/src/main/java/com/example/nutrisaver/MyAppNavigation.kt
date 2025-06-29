@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.nutrisaver.ui.screens.admin.AdminFeedbackScreen
 import com.example.nutrisaver.ui.screens.admin.AdminHealthArticleScreen
 import com.example.nutrisaver.ui.screens.admin.AllUserScreen
 import com.example.nutrisaver.ui.screens.admin.ApplicationScreen
@@ -34,6 +35,7 @@ import com.example.nutrisaver.ui.screens.user.RecipeDetailScreen
 import com.example.nutrisaver.ui.screens.user.RecipeScreen
 import com.example.nutrisaver.ui.screens.user.SearchResultScreen
 import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
+import com.example.nutrisaver.viewmodel.AdminFeedbackViewModel
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FeedbackViewModel
@@ -51,13 +53,14 @@ fun MyAppNavigation(
     foodStockViewModel: FoodStockViewModel,
     adminUsersViewModel: AdminUsersViewModel,
     logMealViewModel: LogMealViewModel,
-    feedBackViewModel: FeedbackViewModel
+    feedBackViewModel: FeedbackViewModel,
+    adminFeedbackViewModel: AdminFeedbackViewModel
 ) {
     
     val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = CustomViewModelFactory)
     
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "auth") {
+    NavHost(navController = navController, startDestination = "admin") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {
@@ -164,7 +167,7 @@ fun MyAppNavigation(
             }
         }
 
-        navigation(startDestination = "alluser", route = "admin") {
+        navigation(startDestination = "adminfeedback", route = "admin") {
             composable("alluser") {
                 AllUserScreen(
                     navController = navController,
@@ -182,8 +185,9 @@ fun MyAppNavigation(
                 )
             }
             composable("adminfeedback") {
-                FeedbackScreen(
-                    navController = navController
+                AdminFeedbackScreen(
+                    navController = navController,
+                    adminFeedbackViewModel = adminFeedbackViewModel
                 )
             }
         }
