@@ -24,6 +24,7 @@ import com.example.nutrisaver.ui.screens.user.DashboardScreen
 import com.example.nutrisaver.ui.screens.user.EditInformationScreen
 import com.example.nutrisaver.ui.screens.user.EditProfileScreen
 import com.example.nutrisaver.ui.screens.user.FavoriteRecipeScreen
+import com.example.nutrisaver.ui.screens.user.FeedbackScreen
 import com.example.nutrisaver.ui.screens.user.FoodStockScreen
 import com.example.nutrisaver.ui.screens.user.LogHistoryScreen
 import com.example.nutrisaver.ui.screens.user.LogMealScreen
@@ -35,6 +36,7 @@ import com.example.nutrisaver.ui.screens.user.SearchResultScreen
 import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
+import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.HealthArticleViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
@@ -48,10 +50,13 @@ fun MyAppNavigation(
     userViewModel: UserViewModel,
     foodStockViewModel: FoodStockViewModel,
     adminUsersViewModel: AdminUsersViewModel,
-    logMealViewModel: LogMealViewModel
+    logMealViewModel: LogMealViewModel,
+    feedBackViewModel: FeedbackViewModel
 ) {
-    // buat nested navigation
+    
     val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = CustomViewModelFactory)
+    
+    // buat nested navigation
     NavHost(navController = navController, startDestination = "auth") {
 
         // navigation antara login dan register
@@ -151,6 +156,12 @@ fun MyAppNavigation(
                     userViewModel = userViewModel
                 )
             }
+            composable("userfeedback") {
+                FeedbackScreen(
+                    navController = navController,
+                    feedbackViewModel = feedBackViewModel
+                )
+            }
         }
 
         navigation(startDestination = "alluser", route = "admin") {
@@ -168,6 +179,11 @@ fun MyAppNavigation(
                 AdminHealthArticleScreen(
                     navController = navController,
                     healthArticleViewModel = healthArticleViewModel
+                )
+            }
+            composable("adminfeedback") {
+                FeedbackScreen(
+                    navController = navController
                 )
             }
         }

@@ -143,6 +143,38 @@ fun ApplicationContent(
                     )
                 }
             }
+            
+            Spacer(Modifier.height(10.dp))
+            
+            Button(
+                onClick = {
+                    navController.navigate("adminfeedback")
+                },
+                contentPadding = PaddingValues(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                shape = CircleShape,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .padding(bottom = 10.dp)
+            ) {
+              Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(greenGradient, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Feedback",
+                        fontSize = 20.sp,
+                        fontFamily = OpenSans,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                      )
+              }
+            }
 
             // Beri jarak antara tombol sebelumnya dengan tombol logout
             Spacer(Modifier.height(24.dp)) // Anda bisa atur jarak ini

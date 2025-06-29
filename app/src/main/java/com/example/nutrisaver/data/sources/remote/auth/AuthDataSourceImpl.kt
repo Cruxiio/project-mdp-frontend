@@ -76,36 +76,6 @@ class AuthDataSourceImpl(
         return webservice.updateUserProfile(bearerToken, data, profilePicture)
     }
 
-    // Helper function to convert Uri to MultipartBody.Part
-    private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part? {
-        return try {
-            val contentResolver = context.contentResolver
-            val inputStream = contentResolver.openInputStream(fileUri)
-            val file = File(context.cacheDir, "temp_upload_file") // Create a temp file
-            inputStream?.use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            if (file.exists() && file.length() > 0) {
-                val mediaType = contentResolver.getType(fileUri)?.toMediaTypeOrNull() ?: "image/*".toMediaTypeOrNull()
-                val requestFile = file.asRequestBody(mediaType)
-                MultipartBody.Part.createFormData(partName, file.name, requestFile)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            Log.e("AuthDataSourceImpl", "Error preparing file part: ${e.message}")
-            null
-        }
-    }
-
-    // Helper function to convert String to RequestBody
-    private fun createPartFromString(descriptionString: String): RequestBody {
-        return descriptionString.toRequestBody("text/plain".toMediaTypeOrNull())
-    }
-
     override suspend fun updateUserInformation(idToken: String, user: User): User {
         val userJsonToUpdate = user.toUserJson()
         val formattedToken = "Bearer $idToken"
