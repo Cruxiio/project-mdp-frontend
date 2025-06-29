@@ -10,14 +10,15 @@ import com.google.firebase.auth.FirebaseAuth
 class AdminDataSourceImpl(
     private val webservice: Webservice
 ): AdminDataSource {
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     override suspend fun getUsers(token: String): List<User> {
         val bearerToken = "Bearer $token"
         val usersJson = webservice.getUsers(bearerToken)
-        return usersJson.map{ it ->
-            User.fromUserJson(it)!!
+        val users = usersJson.mapNotNull {
+            User.fromUserJson(it)
         }
+        Log.e("AdminDataSource",  users.toString())
+        return users
     }
 
     override suspend fun deleteUser(token: String, id: Int) {

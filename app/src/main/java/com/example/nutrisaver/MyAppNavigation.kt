@@ -167,7 +167,7 @@ fun MyAppNavigation(
             }
         }
 
-        navigation(startDestination = "adminfeedback", route = "admin") {
+        navigation(startDestination = "alluser", route = "admin") {
             composable("alluser") {
                 AllUserScreen(
                     navController = navController,

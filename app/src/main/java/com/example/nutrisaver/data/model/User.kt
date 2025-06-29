@@ -42,13 +42,18 @@ data class User(
         // Mapper dari UserJson (dari API) ke User (untuk aplikasi)
         fun fromUserJson(json: UserJson): User? {
             // Validasi field wajib ada agar tidak crash
-            if (json.uuid == null || json.name == null || json.username == null || json.email == null || json.role == null) {
+            if (json.id == null ||
+                json.uuid == null ||
+                json.name == null ||
+                json.username == null ||
+                json.email == null) {
                 return null
             }
+
             return User(
                 id = json.id,
                 uuid = json.uuid,
-                role = json.role,
+                role = json.role ?: "",
                 name = json.name,
                 username = json.username,
                 email = json.email,
