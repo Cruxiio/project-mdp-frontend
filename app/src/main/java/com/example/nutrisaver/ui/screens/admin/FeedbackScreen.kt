@@ -579,7 +579,7 @@ private fun ResponseBottomSheet(
                         onSubmit(responseText.trim(), "done")
                     }
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(2f),
                 enabled = responseText.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.green),

@@ -57,6 +57,9 @@ class UserViewModel(
     private val _expiringFoodStock = MutableLiveData<List<FoodStock>>()
     val expiringFoodStock: LiveData<List<FoodStock>> = _expiringFoodStock
 
+    init {
+        refreshDashboardData()
+    }
     /**
      * Fetches the user profile from the repository.
      */
