@@ -3,6 +3,7 @@ package com.example.nutrisaver.data.sources.remote.common
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
+// ini buat data recipe + nutrisi
 @JsonClass(generateAdapter = true)
 data class RecipeJson(
     @Json(name = "id") val id: Int?,
@@ -10,6 +11,20 @@ data class RecipeJson(
     @Json(name = "image") val image: String?,
     @Json(name = "nutrition") val nutrition: RecipeNutritionJson?
 )
+
+// ini raw data recipe
+@JsonClass(generateAdapter = true)
+data class RecipePlainJson(
+    @Json(name = "recipe_id") val recipeId: Int,
+    @Json(name = "title") val title: String,
+    @Json(name = "image") val image: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class RecipePlainGetAllResponse(
+    @Json(name = "recipes") var recipes: List<RecipePlainJson>?,
+){
+}
 
 @JsonClass(generateAdapter = true)
 data class RecipeNutritionJson(

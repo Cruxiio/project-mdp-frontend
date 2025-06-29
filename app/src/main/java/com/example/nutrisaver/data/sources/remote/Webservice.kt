@@ -9,7 +9,10 @@ import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
 import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.IngredientJson
 import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
+import com.example.nutrisaver.data.sources.remote.common.RecipeDetailJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeJson
+import com.example.nutrisaver.data.sources.remote.common.RecipePlainGetAllResponse
+import com.example.nutrisaver.data.sources.remote.common.RecipePlainJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
@@ -106,6 +109,21 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Body request: RecipeSearchRequestJson
     ): List<RecipeJson>
+
+    @GET("api/recipe/search")
+    suspend fun getRecipes(
+        @Header("Authorization") token: String,
+        @Query("keyword") keyword: String,
+        @Query("type") type: String,
+        @Query("page") page: Int,
+        @Query("perpage") perpage: Int
+    ): RecipePlainGetAllResponse
+
+    @GET("api/recipe/detail/{recipe_id}")
+    suspend fun getRecipesDetail(
+        @Header("Authorization") token: String,
+        @Path("recipe_id") recipeId: Int
+    ): RecipeDetailJson
 
     @POST("api/consumption/log")
     suspend fun logMeal(

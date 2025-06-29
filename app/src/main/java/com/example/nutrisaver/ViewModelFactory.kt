@@ -8,6 +8,7 @@ import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
+import com.example.nutrisaver.viewmodel.RecipeViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
 val CustomViewModelFactory = object : ViewModelProvider.Factory {
@@ -34,6 +35,8 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
                     AdminUsersViewModel(adminRepository, application)
                 isAssignableFrom(LogMealViewModel::class.java) ->
                     LogMealViewModel(recipeRepository, consumRepository, application)
+                isAssignableFrom(RecipeViewModel::class.java) ->
+                    RecipeViewModel(commonRepository,recipeRepository, foodStockRepository, application)
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

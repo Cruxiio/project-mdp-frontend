@@ -36,6 +36,7 @@ import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
+import com.example.nutrisaver.viewmodel.RecipeViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
 @Composable
@@ -46,7 +47,8 @@ fun MyAppNavigation(
     userViewModel: UserViewModel,
     foodStockViewModel: FoodStockViewModel,
     adminUsersViewModel: AdminUsersViewModel,
-    logMealViewModel: LogMealViewModel
+    logMealViewModel: LogMealViewModel,
+    recipeViewModel : RecipeViewModel
 ) {
     // buat nested navigation
     NavHost(navController = navController, startDestination = "user") {
@@ -111,16 +113,41 @@ fun MyAppNavigation(
                 )
             }
             composable("recipe") {
-                RecipeScreen(navController = navController)
+                RecipeScreen(navController = navController, recipeViewModel = recipeViewModel)
             }
             composable("favoriterecipe") {
                 FavoriteRecipeScreen(navController = navController)
             }
-            composable("searchresults") {
-                SearchResultScreen(navController = navController)
+            composable(
+                "searchresults/{keyword}",
+                arguments = listOf(navArgument("keyword") {
+                    type = NavType.StringType // Tentukan tipe datanya, misalnya Int
+                })
+                ) {
+                backStackEntry ->
+                // Ambil argumen ID dari backStackEntry
+                val keyword = backStackEntry.arguments?.getString("keyword")
+                SearchResultScreen(navController = navController, keyword= keyword!!, recipeViewModel)
             }
-            composable("recipedetail") {
-                RecipeDetailScreen(navController = navController)
+            composable(
+                "recipedetail/{recipe_id}",
+                arguments = listOf(navArgument("recipe_id") {
+                    type = NavType.IntType // Tentukan tipe datanya, misalnya Int
+                })
+            ) {
+                backStackEntry ->
+                // Ambil argumen ID dari backStackEntry
+                val recipeId = backStackEntry.arguments?.getInt("recipe_id")
+                if (recipeId != null) {
+                    RecipeDetailScreen(
+                        navController = navController,
+                        recipeId = recipeId, // Kirim ID ke recipe detail screen
+                        recipeViewModel = recipeViewModel
+                    )
+                } else {
+                    // kembali ke layar sebelumnya jika id null
+                    navController.popBackStack()
+                }
             }
             composable("createrecipe") {
                 CreateRecipeScreen(navController = navController)

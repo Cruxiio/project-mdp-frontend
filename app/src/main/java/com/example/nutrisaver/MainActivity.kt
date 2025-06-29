@@ -11,6 +11,7 @@ import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
+import com.example.nutrisaver.viewmodel.RecipeViewModel
 import com.example.nutrisaver.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
@@ -29,6 +30,7 @@ class MainActivity : ComponentActivity() {
                 val foodStockViewModel : FoodStockViewModel = viewModel(factory=factory)
                 val adminUsersViewModel: AdminUsersViewModel = viewModel(factory=factory)
                 val logMealViewModel : LogMealViewModel = viewModel(factory=factory)
+                val recipeViewModel : RecipeViewModel = viewModel(factory=factory)
 
                 MyAppNavigation(
                     navController = navController,
@@ -36,10 +38,11 @@ class MainActivity : ComponentActivity() {
                     userViewModel = userViewModel,
                     adminUsersViewModel = adminUsersViewModel,
                     logMealViewModel = logMealViewModel,
-                    foodStockViewModel = foodStockViewModel
+                    foodStockViewModel = foodStockViewModel,
+                    recipeViewModel = recipeViewModel
                 )
 
-                MyAppNavigation(navController = navController, authViewModel = authViewModel, userViewModel = userViewModel, adminUsersViewModel = adminUsersViewModel , logMealViewModel = logMealViewModel, foodStockViewModel = foodStockViewModel)
+                MyAppNavigation(navController = navController, authViewModel = authViewModel, userViewModel = userViewModel, adminUsersViewModel = adminUsersViewModel , logMealViewModel = logMealViewModel, foodStockViewModel = foodStockViewModel, recipeViewModel = recipeViewModel)
             }
         }
     }

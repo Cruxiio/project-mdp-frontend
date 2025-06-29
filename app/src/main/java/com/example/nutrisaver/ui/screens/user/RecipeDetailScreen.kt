@@ -1,5 +1,7 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +38,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,6 +50,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +60,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.RecipeDetail
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.RecipeStatusState
+import com.example.nutrisaver.viewmodel.RecipeViewModel
 
 // Data classes to match the JSON structure
 data class RecipeDetailDummy(
@@ -101,47 +109,79 @@ data class IngredientDummy(
 )
 
 @Composable
-fun RecipeDetailScreen(navController: NavController) {
+fun RecipeDetailScreen(navController: NavController, recipeId : Int, recipeViewModel: RecipeViewModel) {
     // data sample dari json yang diambil, todo: nanti ganti ke data yang diambil
-    val sampleRecipe = RecipeDetailDummy(
-        id = 945221,
-        title = "Peanut Butter Banana Oat Breakfast Cookies",
-        image = "https://img.spoonacular.com/recipes/945221-556x370.jpg",
-        readyInMinutes = 45,
-        servings = 16,
-        vegetarian = false,
-        vegan = false,
-        glutenFree = true,
-        dairyFree = true,
-        veryHealthy = false,
-        cheap = false,
-        veryPopular = true,
-        sustainable = false,
-        lowFodmap = false,
-        nutrition = NutritionDummy(
-            nutrients = listOf(
-                NutrientDummy("Calories", 103.19, "kcal"),
-                NutrientDummy("Protein", 3.67, "g"),
-                NutrientDummy("Fat", 5.38, "g"),
-                NutrientDummy("Carbohydrates", 11.25, "g")
-            ),
-            caloricBreakdown = CaloricBreakdownDummy(13.58, 44.8, 41.62)
-        ),
-        extendedIngredients = listOf(
-            IngredientDummy(9040, "bananas", "2 ripe bananas, mashed until smooth & creamy", 2.0, ""),
-            IngredientDummy(10116098, "creamy peanut butter", "1/3 cup peanut butter - creamy or chunky", 0.33, "cup"),
-            IngredientDummy(8121, "oatmeal", "1 1/2 cups quick oatmeal - uncooked", 1.5, "cups")
-        ),
-        instructions = "Preheat oven to 350 degrees. In a large bowl, mix mashed banana & peanut butter until completely combined...",
-        summary = "If you want to add more gluten free and dairy free recipes to your repertoire, this might be a recipe you should try."
-    )
+//    val sampleRecipe = RecipeDetailDummy(
+//        id = 945221,
+//        title = "Peanut Butter Banana Oat Breakfast Cookies",
+//        image = "https://img.spoonacular.com/recipes/945221-556x370.jpg",
+//        readyInMinutes = 45,
+//        servings = 16,
+//        vegetarian = false,
+//        vegan = false,
+//        glutenFree = true,
+//        dairyFree = true,
+//        veryHealthy = false,
+//        cheap = false,
+//        veryPopular = true,
+//        sustainable = false,
+//        lowFodmap = false,
+//        nutrition = NutritionDummy(
+//            nutrients = listOf(
+//                NutrientDummy("Calories", 103.19, "kcal"),
+//                NutrientDummy("Protein", 3.67, "g"),
+//                NutrientDummy("Fat", 5.38, "g"),
+//                NutrientDummy("Carbohydrates", 11.25, "g")
+//            ),
+//            caloricBreakdown = CaloricBreakdownDummy(13.58, 44.8, 41.62)
+//        ),
+//        extendedIngredients = listOf(
+//            IngredientDummy(9040, "bananas", "2 ripe bananas, mashed until smooth & creamy", 2.0, ""),
+//            IngredientDummy(10116098, "creamy peanut butter", "1/3 cup peanut butter - creamy or chunky", 0.33, "cup"),
+//            IngredientDummy(8121, "oatmeal", "1 1/2 cups quick oatmeal - uncooked", 1.5, "cups")
+//        ),
+//        instructions = "Preheat oven to 350 degrees. In a large bowl, mix mashed banana & peanut butter until completely combined...",
+//        summary = "If you want to add more gluten free and dairy free recipes to your repertoire, this might be a recipe you should try."
+//    )
+    // data recipe dari backend
+    val recipeData by recipeViewModel.recipeDetailState.observeAsState(null)
 
-    Scaffold { innerPadding ->
-        RecipeDetailContent(
-            recipe = sampleRecipe,
-            modifier = Modifier.padding(innerPadding),
-            navController = navController
-        )
+    LaunchedEffect(Unit) {
+        recipeViewModel.getRecipeDetail(recipeId)
+    }
+
+    // RecipeState logic
+    val recipeState = recipeViewModel.recipeStatusState.observeAsState(RecipeStatusState.Idle)
+    val context = LocalContext.current
+
+    LaunchedEffect(recipeState.value) {
+        when (recipeState.value) {
+            is RecipeStatusState.Success -> {
+//                Toast.makeText(context, "Berhasil load!", Toast.LENGTH_SHORT).show()
+                Log.d("recipeDetailScreen", "isi data recipe ${recipeData}")
+            }
+            is RecipeStatusState.Error -> {
+                Toast.makeText(context, (recipeState.value as RecipeStatusState.Error).message, Toast.LENGTH_SHORT).show()
+            }
+            else -> Unit
+        }
+    }
+
+    when(recipeState.value){
+        is RecipeStatusState.Success -> {
+            recipeData?.let {
+                recipe ->
+                Scaffold { innerPadding ->
+                    RecipeDetailContent(
+                        recipe = recipe,
+                        recipeId = recipeId,
+                        modifier = Modifier.padding(innerPadding),
+                        navController = navController
+                    )
+                }
+            }
+        }
+        else -> {}
     }
 }
 
@@ -214,7 +254,8 @@ private fun TopBar(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RecipeDetailContent(
-    recipe: RecipeDetailDummy, // todo: ganti ke tipe data aslinya
+    recipe: RecipeDetail, // todo: ganti ke tipe data aslinya
+    recipeId: Int,
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
@@ -248,7 +289,8 @@ private fun RecipeDetailContent(
                     .aspectRatio(16f / 9f),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = R.drawable.default_food_image),
-                error = painterResource(id = R.drawable.default_food_image)
+                error = painterResource(id = R.drawable.default_food_image),
+                fallback = painterResource(id = R.drawable.default_food_image)
             )
 
             Column(
@@ -276,12 +318,12 @@ private fun RecipeDetailContent(
                     InfoItem(
                         icon = painterResource(R.drawable.fire_icon),
                         label = "Calories",
-                        value = "${recipe.nutrition.nutrients.find { it.name == "Calories" }?.amount?.toInt() ?: 0} kcal"
+                        value = "${recipe.calories?.toInt() ?: 0} kcal"
                     )
                     InfoItem(
                         icon = painterResource(R.drawable.time_icon_2),
                         label = "Time",
-                        value = "${recipe.readyInMinutes} min"
+                        value = "${recipe.timeToCook} min"
                     )
                     InfoItem(
                         icon = painterResource(R.drawable.group_icon),
@@ -315,17 +357,17 @@ private fun RecipeDetailContent(
                         ) {
                             NutritionItem(
                                 label = "Protein",
-                                value = "${recipe.nutrition.nutrients.find { it.name == "Protein" }?.amount?.toInt() ?: 0}g",
+                                value = "${recipe.protein?.toInt() ?: 0}g",
                                 color = Color(0xFF4CAF50)
                             )
                             NutritionItem(
                                 label = "Fat",
-                                value = "${recipe.nutrition.nutrients.find { it.name == "Fat" }?.amount?.toInt() ?: 0}g",
+                                value = "${recipe.fat?.toInt() ?: 0}g",
                                 color = Color(0xFFFF9800)
                             )
                             NutritionItem(
                                 label = "Carbs",
-                                value = "${recipe.nutrition.nutrients.find { it.name == "Carbohydrates" }?.amount?.toInt() ?: 0}g",
+                                value = "${recipe.carbs?.toInt() ?: 0}g",
                                 color = Color(0xFFF44336)
                             )
                         }
@@ -338,15 +380,18 @@ private fun RecipeDetailContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (recipe.vegetarian) DietaryTag("Vegetarian")
-                    if (recipe.vegan) DietaryTag("Vegan")
-                    if (recipe.glutenFree) DietaryTag("Gluten Free")
-                    if (recipe.dairyFree) DietaryTag("Dairy Free")
-                    if (recipe.veryHealthy) DietaryTag("Healthy")
-                    if (recipe.cheap) DietaryTag("Cheap")
-                    if (recipe.veryPopular) DietaryTag("Very Popular")
-                    if (recipe.sustainable) DietaryTag("Sustainable")
-                    if (recipe.lowFodmap) DietaryTag("Low Fodmap")
+                    recipe.tags.forEach {
+                        tag -> DietaryTag(tag)
+                    }
+//                    if (recipe.vegetarian) DietaryTag("Vegetarian")
+//                    if (recipe.vegan) DietaryTag("Vegan")
+//                    if (recipe.glutenFree) DietaryTag("Gluten Free")
+//                    if (recipe.dairyFree) DietaryTag("Dairy Free")
+//                    if (recipe.veryHealthy) DietaryTag("Healthy")
+//                    if (recipe.cheap) DietaryTag("Cheap")
+//                    if (recipe.veryPopular) DietaryTag("Very Popular")
+//                    if (recipe.sustainable) DietaryTag("Sustainable")
+//                    if (recipe.lowFodmap) DietaryTag("Low Fodmap")
                 }
 
                 // Ingredients Section
@@ -368,7 +413,7 @@ private fun RecipeDetailContent(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        recipe.extendedIngredients.take(5).forEach { ingredient ->
+                        recipe.ingredients.take(5).forEach { ingredient ->
                             Text(
                                 text = "• ${ingredient.original}",
                                 fontSize = 14.sp,
@@ -378,9 +423,9 @@ private fun RecipeDetailContent(
                             )
                         }
 
-                        if (recipe.extendedIngredients.size > 5) {
+                        if (recipe.ingredients.size > 5) {
                             Text(
-                                text = "... and ${recipe.extendedIngredients.size - 5} more ingredients",
+                                text = "... and ${recipe.ingredients.size - 5} more ingredients",
                                 fontSize = 12.sp,
                                 fontFamily = OpenSans,
                                 color = Color.Gray,
@@ -410,7 +455,7 @@ private fun RecipeDetailContent(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = recipe.instructions.take(200) + if (recipe.instructions.length > 200) "..." else "",
+                            text = recipe.instruction.take(200) + if (recipe.instruction.length > 200) "..." else "",
                             fontSize = 14.sp,
                             fontFamily = OpenSans,
                             color = Color.Black,

@@ -1,11 +1,11 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.rememberScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,24 +19,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -45,7 +43,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,27 +64,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.RecipePlain
 import com.example.nutrisaver.ui.navbar.UserBottomNavBar
 import com.example.nutrisaver.ui.theme.OpenSans
-import java.time.format.TextStyle
-
-// data class dummy buat tampilan
-// todo: nanti dihapus setelah backend
-data class RecipeDummy(
-    val id: Int,
-    val name: String,
-    val imageRes: Int = R.drawable.default_food_image
-)
+import com.example.nutrisaver.viewmodel.AuthState
+import com.example.nutrisaver.viewmodel.RecipeStatusState
+import com.example.nutrisaver.viewmodel.RecipeViewModel
 
 @Composable
-fun RecipeScreen(navController: NavController) {
+fun RecipeScreen(navController: NavController, recipeViewModel: RecipeViewModel) {
     Scaffold(
         bottomBar = {
             UserBottomNavBar(navController = navController)
         }
     ) { innerPadding ->
-        RecipeContent(modifier = Modifier.padding(innerPadding), navController)
+        RecipeContent(modifier = Modifier.padding(innerPadding), navController,recipeViewModel)
     }
 }
 
@@ -91,7 +88,8 @@ fun RecipeScreen(navController: NavController) {
 @Composable
 private fun RecipeContent(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    recipeViewModel: RecipeViewModel
 ) {
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
@@ -104,23 +102,48 @@ private fun RecipeContent(
     )
 
     // Sample data - todo: replace with actual data
-    val allRecipes = remember {
-        (1..100).map { index ->
-            RecipeDummy(
-                id = index,
-                name = "Recipe $index"
-            )
-        }
-    }
+//    val allRecipes = remember {
+//        (1..100).map { index ->
+//            RecipeDummy(
+//                id = index,
+//                name = "Recipe $index"
+//            )
+//        }
+//    }
+
+    // data recipe dari backend
+    val allRecipes by recipeViewModel.listRecipeState.observeAsState(emptyList())
 
     var searchQuery by remember { mutableStateOf("") }
     var currentPage by remember { mutableStateOf(1) }
     var showPageSelector by remember { mutableStateOf(false) }
-    var selectedFilter by remember { mutableStateOf("Popularity") }
+    var selectedFilter by remember { mutableStateOf("popularity") }
 
+    // RecipeState logic
+    val recipeState = recipeViewModel.recipeStatusState.observeAsState(RecipeStatusState.Idle)
+    val context = LocalContext.current
+    val totalPages = 10
     val itemsPerPage = 6
-    val totalPages = (allRecipes.size + itemsPerPage - 1) / itemsPerPage // todo: total pages
-    val currentPageItems = allRecipes.drop((currentPage - 1) * itemsPerPage).take(itemsPerPage)
+    var currentPageItems: List<RecipePlain> = listOf()
+
+    // buat update tampilan recipe sesuai jenis filter dan page
+    LaunchedEffect(selectedFilter, currentPage) {
+        recipeViewModel.getAllRecipe("", selectedFilter, currentPage-1, itemsPerPage)
+    }
+
+
+    LaunchedEffect(recipeState.value) {
+        when (recipeState.value) {
+            is RecipeStatusState.Success -> {
+//                Toast.makeText(context, "Berhasil load!", Toast.LENGTH_SHORT).show()
+                Log.d("isi recipe", "${allRecipes}")
+            }
+            is RecipeStatusState.Error -> {
+                Toast.makeText(context, (recipeState.value as RecipeStatusState.Error).message, Toast.LENGTH_SHORT).show()
+            }
+            else -> Unit
+        }
+    }
 
     Box(
         modifier = modifier
@@ -222,14 +245,16 @@ private fun RecipeContent(
                 )
                 Button(
                     onClick = {
-                        navController.navigate("searchresults")
+                        navController.navigate("searchresults/${searchQuery}")
                     },
                     contentPadding = PaddingValues(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
                     shape = CircleShape,
-                    modifier = Modifier.height(48.dp).weight(1f)
+                    modifier = Modifier
+                        .height(48.dp)
+                        .weight(1f)
                 ) {
                     Box(
                         modifier = Modifier
@@ -272,35 +297,41 @@ private fun RecipeContent(
                 FilterButton(
                     modifier = Modifier.weight(1f),
                     text = "Popularity",
-                    isSelected = selectedFilter == "Popularity",
-                    onClick = { selectedFilter = "Popularity" }
+                    isSelected = selectedFilter == "popularity",
+                    onClick = { selectedFilter = "popularity"; currentPage = 1 }
                 )
                 FilterButton(
                     modifier = Modifier.weight(1f),
                     text = "Foodstock",
-                    isSelected = selectedFilter == "Foodstock",
-                    onClick = { selectedFilter = "Foodstock" }
+                    isSelected = selectedFilter == "foodstock",
+                    onClick = { selectedFilter = "foodstock"; currentPage = 1 }
                 )
                 FilterButton(
                     modifier = Modifier.weight(1f),
                     text = "Nutrition",
-                    isSelected = selectedFilter == "Nutrition",
-                    onClick = { selectedFilter = "Nutrition" }
+                    isSelected = selectedFilter == "nutrition",
+                    onClick = { selectedFilter = "nutrition"; currentPage = 1 }
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            RecipeGrid(
-                recipes = currentPageItems,
-                navController = navController
-            )
+            when (recipeState.value) {
+                is RecipeStatusState.Success -> {
+                    Log.d("isi all recipes sblm tampil", "${allRecipes}")
+                    RecipeGrid(
+                        recipes = allRecipes,
+                        navController = navController
+                    )
+                }
+                else -> {}
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             PaginationControls(
                 currentPage = currentPage,
-                totalPages = totalPages,
+                totalPages = totalPages, // todo ganti sesuai total pages yang ada
                 onPreviousClick = {
                     if (currentPage > 1) currentPage--
                 },
@@ -341,7 +372,7 @@ private fun RecipeContent(
 
 @Composable
 fun RecipeGrid(
-    recipes: List<RecipeDummy>, // todo: ganti ke tipe data aslinya
+    recipes: List<RecipePlain>, // todo: ganti ke tipe data aslinya
     navController: NavController
 ) {
     Column(
@@ -661,7 +692,7 @@ fun PageNumberItem(
 
 @Composable
 private fun RecipeGridItem(
-    recipe: RecipeDummy, // todo: ganti ke tipe data aslinya
+    recipe: RecipePlain, // todo: ganti ke tipe data aslinya
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
@@ -674,24 +705,27 @@ private fun RecipeGridItem(
             .background(itemGradient, shape = RoundedCornerShape(10.dp))
             .padding(15.dp)
             .clickable {
-                navController.navigate("recipedetail")
+                navController.navigate("recipedetail/${recipe.recipeId}")
             }
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(id = recipe.imageRes),
-                contentDescription = "Recipe image",
+            AsyncImage(
+                model = recipe.image, // Di sinilah Anda meletakkan URL String
+                contentDescription = "Recipe image", // Deskripsi untuk aksesibilitas
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
                     .padding(bottom = 8.dp)
                     .clip(RoundedCornerShape(10.dp)),
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Crop, // Atur bagaimana gambar di-scale
+                // Tampilkan gambar lokal ini JIKA link-nya TIDAK BISA DIAKSES (misal: error 404, tidak ada internet)
+                error = painterResource(id = R.drawable.default_food_image),
+                fallback = painterResource(id = R.drawable.default_food_image) // Tampilkan gambar lokal ini JIKA link-nya NULL
             )
             Text(
-                recipe.name,
+                recipe.title,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
