@@ -89,7 +89,7 @@ fun ApplicationContent(
     val backgroundGradient = Brush.verticalGradient(listOf(background, background2))
     val green = colorResource(id = R.color.green)
     val greenTealDark = colorResource(id = R.color.green_teal_dark)
-    val greenGradient = Brush.horizontalGradient(listOf(green, greenTealDark))
+    val greenGradient = Brush.verticalGradient(listOf(green, greenTealDark))
     val logoutGradient = Brush.verticalGradient(listOf(colorResource(id = R.color.logout_btn_1), colorResource(id = R.color.logout_btn_2)))
 
     // Box ini hanya untuk background
@@ -126,7 +126,7 @@ fun ApplicationContent(
                 shape = CircleShape,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
+                    .height(50.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -157,8 +157,7 @@ fun ApplicationContent(
                 shape = CircleShape,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(bottom = 10.dp)
+                    .height(50.dp)
             ) {
               Box(
                     modifier = Modifier

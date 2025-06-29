@@ -10,11 +10,11 @@ import com.google.firebase.auth.FirebaseAuth
 class AdminDataSourceImpl(
     private val webservice: Webservice
 ): AdminDataSource {
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance() // Get FirebaseAuth instance
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     override suspend fun getUsers(token: String): List<User> {
         val bearerToken = "Bearer $token"
-        val usersJson = webservice.getUsers(bearerToken) // Pass token
+        val usersJson = webservice.getUsers(bearerToken)
         return usersJson.map{ it ->
             User.fromUserJson(it)!!
         }
@@ -23,7 +23,7 @@ class AdminDataSourceImpl(
     override suspend fun deleteUser(token: String, id: Int) {
         try {
             val bearerToken = "Bearer $token"
-            webservice.deleteUser(bearerToken, id.toString()) // Pass token and convert ID to String
+            webservice.deleteUser(bearerToken, id.toString())
         } catch (e: Exception) {
             Log.e("AdminDataSource", "deleteUser: Failed to delete user", e)
             throw e
@@ -33,7 +33,7 @@ class AdminDataSourceImpl(
     override suspend fun getAllFeedback(token: String): List<UserFeedback> {
         try {
             val bearerToken = "Bearer $token"
-            val feedbackJson = webservice.getAllFeedback(bearerToken) // Pass token
+            val feedbackJson = webservice.getAllFeedback(bearerToken)
             return feedbackJson.mapNotNull { UserFeedback.fromUserFeedbackJson(it) }
         } catch (e: Exception) {
             Log.e("AdminDataSource", "getAllFeedback: GAGAL mengambil dari remote.", e)
@@ -41,14 +41,17 @@ class AdminDataSourceImpl(
         }
     }
 
+    // Corrected: Added newStatus parameter
     override suspend fun respondFeedback(token: String, id: Int, adminResponse: String) {
         try {
             val bearerToken = "Bearer $token"
             val requestBodyJson = UserFeedbackJson(
                 id = null,
                 userId = null,
+                userName = null,
+                userEmail = null,
                 message = null,
-                status = "reviewed", // Assuming status is set to reviewed by backend
+                status = "done",
                 adminResponse = adminResponse,
                 respondedBy = null,
                 createdAt = null,

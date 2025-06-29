@@ -8,6 +8,8 @@ data class UserFeedback(
     val id: Int,
     @SerializedName("user_id")
     val userId: Int,
+    val userName: String? = null,
+    val userEmail: String? = null,
     val message: String,
     val status: String, // PENDING, REVIEWED, DONE
     val adminResponse: String? = null,
@@ -19,12 +21,13 @@ data class UserFeedback(
         fun fromUserFeedbackJson(json: UserFeedbackJson): UserFeedback? {
             // Basic validation for essential fields to prevent crashes or illogical states
             if (json.id == null || json.userId == null || json.message == null || json.status == null || json.createdAt == null) {
-                // You might want to log this error or throw a more specific exception
                 return null
             }
             return UserFeedback(
                 id = json.id,
                 userId = json.userId,
+                userName = json.userName,
+                userEmail = json.userEmail,
                 message = json.message,
                 status = json.status,
                 adminResponse = json.adminResponse,
@@ -38,6 +41,8 @@ data class UserFeedback(
     fun toUserFeedbackJson() = UserFeedbackJson(
         id = this.id,
         userId = this.userId,
+        userName = this.userName,
+        userEmail = this.userEmail,
         message = this.message,
         status = this.status,
         adminResponse = this.adminResponse,
