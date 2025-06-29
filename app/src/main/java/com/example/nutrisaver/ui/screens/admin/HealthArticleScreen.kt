@@ -382,7 +382,7 @@ private fun HealthArticleCard(
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(14.dp))
 
                     IconButton(
                         onClick = { showDeleteDialog = true }, // Tampilkan dialog konfirmasi
