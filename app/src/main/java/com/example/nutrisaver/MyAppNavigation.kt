@@ -154,11 +154,12 @@ fun MyAppNavigation(
             composable("alluser") {
                 AllUserScreen(
                     navController = navController,
-                    adminUsersViewModel = adminUsersViewModel
+                    adminUsersViewModel = adminUsersViewModel,
+                    authViewModel = authViewModel
                 )
             }
             composable("application") {
-                ApplicationScreen(navController = navController)
+                ApplicationScreen(navController = navController, authViewModel)
             }
             composable("adminhealtharticle") {
                 AdminHealthArticleScreen(navController = navController)
