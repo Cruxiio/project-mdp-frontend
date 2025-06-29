@@ -1,5 +1,6 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,9 +22,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.RadioButton
-import androidx.compose.material.RadioButtonDefaults
-import androidx.compose.material.TextButton
+import java.util.TimeZone
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -44,8 +43,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -71,8 +73,10 @@ import java.util.Date
 import java.util.Locale
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import com.example.nutrisaver.data.model.Allergen
 import com.example.nutrisaver.viewmodel.UserViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun EditInformationScreen(navController: NavController, userViewModel: UserViewModel) {
@@ -134,17 +138,20 @@ private fun TopBar(
 
 // helper function to convert millis to date
 private fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    formatter.timeZone = TimeZone.getTimeZone("UTC") // <-- CRITICAL: Set formatter to UTC
     return formatter.format(Date(millis))
 }
 
-// helper function to convert date string to millis
+// Helper function to convert date String (YYYY-MM-DD format from backend) to millis
 private fun convertDateToMillis(dateString: String): Long? {
-    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    formatter.timeZone = TimeZone.getTimeZone("UTC") // <-- CRITICAL: Set formatter to UTC
     return try {
         formatter.parse(dateString)?.time
     } catch (e: Exception) {
-        null // Return null if parsing fails
+        Log.e("DateConversion", "Failed to parse date string '$dateString': ${e.message}")
+        null
     }
 }
 
@@ -156,18 +163,15 @@ private fun EditInformationContent(
     userViewModel: UserViewModel
 ) {
     val userProfile by userViewModel.userProfile.observeAsState()
+    val coroutineScope = rememberCoroutineScope() // Get a CoroutineScope
 
     var gender by remember { mutableStateOf("Male") }
     var showDateModal by remember { mutableStateOf(false) }
 
-    val initialDateMillis = remember(userProfile?.dateOfBirth) {
-        userProfile?.dateOfBirth?.let { dateString ->
-            convertDateToMillis(dateString)
-        } ?: System.currentTimeMillis()
-    }
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
-    var dateOfBirth by remember { mutableStateOf(userProfile?.dateOfBirth ?: "") }
-
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = System.currentTimeMillis() // Default to today initially
+    )
+    var dateOfBirth by remember { mutableStateOf("") }
 
     var weight by remember { mutableStateOf(0) }
     var height by remember { mutableStateOf(0) }
@@ -204,7 +208,6 @@ private fun EditInformationContent(
     LaunchedEffect(userProfile) {
         userProfile?.let { user ->
             gender = user.gender.replaceFirstChar { it.uppercase(Locale.getDefault()) }
-            dateOfBirth = user.dateOfBirth
             weight = user.weight
             height = user.height
             goal = user.goal.replaceFirstChar { it.uppercase(Locale.getDefault()) }
@@ -214,6 +217,22 @@ private fun EditInformationContent(
             carbs = user.carbsRatio.toString()
             fat = user.fatRatio.toString()
             userAllergies = user.allergen
+
+            if (user.dateOfBirth.isNotEmpty() && user.dateOfBirth != dateOfBirth) { // Only update if different
+                val millisFromProfile = convertDateToMillis(user.dateOfBirth)
+                if (millisFromProfile != null) {
+                    coroutineScope.launch { // Launch in a coroutine as `selectedDateMillis` is state
+                        datePickerState.selectedDateMillis = millisFromProfile
+                        dateOfBirth = user.dateOfBirth // Update our local state as well
+                    }
+                } else {
+                    // Fallback if parsing fails, set to default today
+                    coroutineScope.launch {
+                        datePickerState.selectedDateMillis = System.currentTimeMillis()
+                        dateOfBirth = convertMillisToDate(System.currentTimeMillis())
+                    }
+                }
+            }
         }
     }
 
@@ -227,6 +246,7 @@ private fun EditInformationContent(
     // Update `dateOfBirth` whenever the `datePickerState`'s selection changes
     LaunchedEffect(datePickerState.selectedDateMillis) {
         datePickerState.selectedDateMillis?.let {
+            // Update the dateOfBirth string whenever the datePickerState selection changes
             dateOfBirth = convertMillisToDate(it)
         }
     }
@@ -736,10 +756,9 @@ private fun EditInformationContent(
 
             Button(
                 onClick = {
-                    // Collect all the updated information
                     val updatedUser = userProfile?.copy(
                         gender = gender.lowercase(Locale.getDefault()),
-                        dateOfBirth = dateOfBirth,
+                        dateOfBirth = dateOfBirth, // Use the state variable `dateOfBirth`
                         weight = weight,
                         height = height,
                         goal = goal.lowercase(Locale.getDefault()),
@@ -750,11 +769,10 @@ private fun EditInformationContent(
                         fatRatio = fat.toFloatOrNull() ?: 0f,
                         allergen = userAllergies
                     )
-                    // Call ViewModel to update user information
                     updatedUser?.let {
                         userViewModel.updateUserInformation(it)
                     }
-                    navController.popBackStack() // Navigate back to profile
+                    navController.popBackStack()
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(
