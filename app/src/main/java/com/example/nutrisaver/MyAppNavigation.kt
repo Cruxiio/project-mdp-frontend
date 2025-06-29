@@ -52,7 +52,7 @@ fun MyAppNavigation(
 ) {
     // buat nested navigation
     val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = CustomViewModelFactory)
-    NavHost(navController = navController, startDestination = "user") {
+    NavHost(navController = navController, startDestination = "admin") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {

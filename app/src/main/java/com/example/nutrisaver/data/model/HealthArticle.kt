@@ -3,7 +3,7 @@ package com.example.nutrisaver.data.model
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.nutrisaver.data.sources.remote.common.HealthArticleJson
+import com.example.nutrisaver.data.model.json.HealthArticleJson
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException

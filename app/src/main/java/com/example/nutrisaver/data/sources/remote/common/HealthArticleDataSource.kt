@@ -2,9 +2,8 @@ package com.example.nutrisaver.data.sources.remote
 
 import android.util.Log
 import com.example.nutrisaver.data.model.HealthArticle
-import com.example.nutrisaver.data.sources.remote.common.CreateHealthArticleRequestJson
-import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleRequestJson
-import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleResponseJson
+import com.example.nutrisaver.data.model.json.CreateHealthArticleRequestJson
+import com.example.nutrisaver.data.model.json.UpdateHealthArticleRequestJson
 import retrofit2.HttpException
 
 /**
@@ -53,6 +52,7 @@ class HealthArticleDataSourceImpl(
             targetDietType = targetDietType,
             title = title
         )
+        Log.d("ParsingDebug", "HealthArticleResponseJson yang di-parsing: $response")
         // Transformasi dari List<HealthArticleJson> ke List<HealthArticle> (domain model)
         return response.articles?.mapNotNull { json ->
             HealthArticle.fromJson(json)
@@ -91,7 +91,8 @@ class HealthArticleDataSourceImpl(
         val response = webservice.updateHealthArticle("Bearer $token", articleId, request)
         if (response.isSuccessful) {
             // Ambil objek artikel dari dalam wrapper
-            val updatedArticleJson = response.body()?.article
+            val updatedArticleJson = response.body()
+            Log.d("UpdateDebug", "JSON diterima dari server: $updatedArticleJson")
             return HealthArticle.fromJson(updatedArticleJson) // <-- Langkah A
                 ?: throw IllegalStateException("Data artikel yang diterima setelah update tidak valid.") // <-- Langkah B
         } else {

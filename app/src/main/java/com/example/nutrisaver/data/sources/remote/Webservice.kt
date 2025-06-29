@@ -1,14 +1,15 @@
 package com.example.nutrisaver.data.sources.remote
 
+import com.example.nutrisaver.data.model.json.CreateHealthArticleRequestJson
+import com.example.nutrisaver.data.model.json.HealthArticleJson
+import com.example.nutrisaver.data.model.json.HealthArticleResponseJson
+import com.example.nutrisaver.data.model.json.UpdateHealthArticleRequestJson
 import com.example.nutrisaver.data.sources.remote.auth.UserJson
 import com.example.nutrisaver.data.sources.remote.common.AddFoodStockResponseJson
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
-import com.example.nutrisaver.data.sources.remote.common.CreateHealthArticleRequestJson
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionDetailJson
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionJson
 import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
-import com.example.nutrisaver.data.sources.remote.common.HealthArticleJson
-import com.example.nutrisaver.data.sources.remote.common.HealthArticleResponseJson
 import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.IngredientJson
 import com.example.nutrisaver.data.sources.remote.common.NewFoodStockRequestJson
@@ -16,8 +17,6 @@ import com.example.nutrisaver.data.sources.remote.common.RecipeJson
 import com.example.nutrisaver.data.sources.remote.common.RecipeSearchRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.UpdateFoodStockResponseJson
-import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleRequestJson
-import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleResponseJson
 import com.example.nutrisaver.data.sources.remote.common.WaterUpdateRequestJson
 import com.example.nutrisaver.data.sources.remote.common.WeightLogJson
 import okhttp3.ResponseBody
@@ -153,7 +152,7 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Path("article_id") articleId: Int,
         @Body request: UpdateHealthArticleRequestJson
-    ): Response<UpdateHealthArticleResponseJson>
+    ): Response<HealthArticleJson>
 
     @DELETE("api/common/health-articles/{article_id}")
     suspend fun deleteHealthArticle(

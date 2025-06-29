@@ -1,9 +1,9 @@
 package com.example.nutrisaver.data.repositories
 import android.util.Log
 import com.example.nutrisaver.data.model.HealthArticle
+import com.example.nutrisaver.data.model.json.CreateHealthArticleRequestJson
+import com.example.nutrisaver.data.model.json.UpdateHealthArticleRequestJson
 import com.example.nutrisaver.data.sources.remote.HealthArticleDataSource
-import com.example.nutrisaver.data.sources.remote.common.CreateHealthArticleRequestJson
-import com.example.nutrisaver.data.sources.remote.common.UpdateHealthArticleRequestJson
 
 interface HealthArticleRepo {
     suspend fun getHealthArticles(
