@@ -235,23 +235,19 @@ fun DashboardContent(modifier: Modifier = Modifier, navController: NavController
     }
 
     // --- 3. SIAPKAN VARIABEL UNTUK UI DENGAN NILAI DEFAULT ---
-    val currentCalories = consumption?.totalCalories?.toFloat() ?: 0f
-    val targetCalories = consumption?.targetCalories ?: 2000f
-
-    val currentProtein = consumption?.totalProtein?.toFloat() ?: 0f
-    val targetProtein = consumption?.targetProtein?.toFloat() ?: 100f
-
-    val currentFat = consumption?.totalFat?.toFloat() ?: 0f
-    val targetFat = consumption?.targetFat?.toFloat() ?: 70f
-
-    val currentCarbs = consumption?.totalCarbs?.toFloat() ?: 0f
-    val targetCarbs = consumption?.targetCarbs?.toFloat() ?: 250f
-
-    // State untuk water intake, diambil dari ViewModel dan bisa diubah di UI
-    // var currentWater by remember(consumption) { mutableStateOf(consumption?.totalWater?.toInt() ?: 0) }
-
+    // Ambil data PROGRES (current) dari log konsumsi harian
+    val currentCalories = consumption?.totalCalories ?: 0f
+    val currentProtein = consumption?.totalProtein ?: 0f
+    val currentFat = consumption?.totalFat ?: 0f
+    val currentCarbs = consumption?.totalCarbs ?: 0f
     val currentWater = consumption?.totalWater?.toInt() ?: 0
-    val targetWater = consumption?.targetWater?.toInt() ?: 2000
+
+    // Ambil data TARGET dari profil utama pengguna (sumber yang lebih pasti setelah refresh)
+    val targetCalories = userProfile?.nutritionNeeds?.calories?.toFloat() ?: 2000f
+    val targetProtein = userProfile?.nutritionNeeds?.protein?.toFloat() ?: 100f
+    val targetFat = userProfile?.nutritionNeeds?.fat?.toFloat() ?: 70f
+    val targetCarbs = userProfile?.nutritionNeeds?.carbs?.toFloat() ?: 250f
+    val targetWater = userProfile?.nutritionNeeds?.water ?: 2000
     val waterIntakeProgress = if (targetWater > 0f) minOf(currentWater.toFloat() / targetWater, 1f) else 0f
     var showWaterIntakeBottomSheet by remember { mutableStateOf(false) }
     var isReduceMode by remember { mutableStateOf(false) }
