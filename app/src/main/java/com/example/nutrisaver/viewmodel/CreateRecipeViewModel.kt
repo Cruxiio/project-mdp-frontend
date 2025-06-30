@@ -2,12 +2,15 @@
 
 package com.example.nutrisaver.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nutrisaver.data.model.FoodStock
+import com.example.nutrisaver.data.model.RecipeDetail
 import com.example.nutrisaver.data.repositories.FoodStockRepo
+import com.example.nutrisaver.data.repositories.RecipeRepo
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -19,7 +22,8 @@ data class ChosenIngredient(
 )
 
 class CreateRecipeViewModel(
-    private val foodStockRepo: FoodStockRepo
+    private val foodStockRepo: FoodStockRepo,
+    private val recipeRepo: RecipeRepo
 ) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -31,6 +35,9 @@ class CreateRecipeViewModel(
     // State untuk daftar bahan yang telah dipilih untuk resep
     private val _chosenIngredients = MutableLiveData<List<ChosenIngredient>>(emptyList())
     val chosenIngredients: LiveData<List<ChosenIngredient>> = _chosenIngredients
+
+    private val _recipeDetailState = MutableLiveData<RecipeDetail>(null)
+    val recipeDetailState: LiveData<RecipeDetail> = _recipeDetailState
 
     // State untuk error
     private val _error = MutableLiveData<String?>()
@@ -102,5 +109,44 @@ class CreateRecipeViewModel(
         val currentList = _chosenIngredients.value?.toMutableList() ?: return
         currentList.removeAll { it.foodStock.id == chosenIngredient.foodStock.id }
         _chosenIngredients.value = currentList
+    }
+
+    fun getRecipeDetail(recipeId: Int){
+        viewModelScope.launch {
+            try {
+//              // ambil token user
+                val token = auth.currentUser?.getIdToken(false)?.await()?.token ?: throw Exception("Sesi tidak valid.")
+                _recipeDetailState.value = recipeRepo.getRecipeDetail(token,recipeId) // ambil data recipe detail
+
+            }
+            catch (e: Exception) {
+                Log.e("RecipeViewModel", "Fetch Recipe Detail Failed", e)
+//                _recipeStatusState.value = RecipeStatusState.Error(e.message ?: "Gagal mendapatkan recipe detail")
+            }
+        }
+    }
+
+    fun reduceIngredientQty() {
+        viewModelScope.launch {
+            try {
+//              // ambil token user
+                val token = auth.currentUser?.getIdToken(false)?.await()?.token ?: throw Exception("Sesi tidak valid.")
+                if (_chosenIngredients.value.size > 0){
+                    var idx = 0;
+                    _chosenIngredients.value.forEach {
+                        idx++;
+                        Log.d("createRecipeDetail", "$idx. ${it.foodStock}")
+                        foodStockRepo.updateFoodStockQuantity(token, it.foodStock.id ?: -1, it.amountToUse)
+                    }
+                }
+                // reset
+                _chosenIngredients.value = emptyList()
+
+            }
+            catch (e: Exception) {
+                Log.e("RecipeViewModel", "Update ingredient Qty Failed", e)
+//                _recipeStatusState.value = RecipeStatusState.Error(e.message ?: "Gagal mendapatkan recipe detail")
+            }
+        }
     }
 }

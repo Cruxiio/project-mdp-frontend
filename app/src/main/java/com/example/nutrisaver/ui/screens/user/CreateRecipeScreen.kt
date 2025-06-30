@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -68,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.nutrisaver.CustomViewModelFactory
 import com.example.nutrisaver.R
 import com.example.nutrisaver.data.model.FoodStock
@@ -80,12 +82,14 @@ import com.example.nutrisaver.viewmodel.CreateRecipeViewModel
 @Composable
 fun CreateRecipeScreen(
     navController: NavController,
-    createRecipeViewModel: CreateRecipeViewModel = viewModel(factory = CustomViewModelFactory)
+    recipeId: Int,
+    createRecipeViewModel: CreateRecipeViewModel,
 ) {
     Scaffold { innerPadding ->
         CreateRecipeContent(
             modifier = Modifier.padding(innerPadding),
             navController = navController,
+            recipeId = recipeId,
             createRecipeViewModel = createRecipeViewModel
         )
     }
@@ -133,6 +137,7 @@ private fun TopBar(
 private fun CreateRecipeContent(
     modifier: Modifier = Modifier,
     navController: NavController,
+    recipeId: Int,
     createRecipeViewModel: CreateRecipeViewModel
 ) {
     val background = colorResource(id = R.color.bg2_1)
@@ -145,6 +150,7 @@ private fun CreateRecipeContent(
     // Mengambil state dari ViewModel
     val userFoodStock by createRecipeViewModel.userFoodStock.observeAsState(emptyList())
     val chosenIngredients by createRecipeViewModel.chosenIngredients.observeAsState(emptyList())
+    val recipeData by createRecipeViewModel.recipeDetailState.observeAsState(null)
 
     // State lokal untuk UI
     var showInfoDialog by remember { mutableStateOf(false) }
@@ -164,6 +170,7 @@ private fun CreateRecipeContent(
     // Memuat data food stock saat layar pertama kali dibuka
     LaunchedEffect(Unit) {
         createRecipeViewModel.loadUserFoodStock()
+        createRecipeViewModel.getRecipeDetail(recipeId)
     }
 
     Box(
@@ -190,19 +197,34 @@ private fun CreateRecipeContent(
                         drawLine(color = Color.Gray, start = Offset(0f, bottomY - strokeWidth), end = Offset(size.width, bottomY - strokeWidth), strokeWidth = strokeWidth)
                     }
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 32.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Box(modifier = Modifier.height(120.dp).width(120.dp).clip(RoundedCornerShape(10.dp))) {
-                        Image(painter = painterResource(id = R.drawable.default_food_image), contentDescription = "deskripsi gambar recipe", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Recipe Name", modifier = Modifier.padding(bottom = 8.dp), fontSize = 20.sp, fontFamily = OpenSans, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                        Text("Key Ingredient", fontSize = 16.sp, fontFamily = OpenSans, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                        Text("Key Ingredient", fontSize = 16.sp, fontFamily = OpenSans, textAlign = TextAlign.Center)
+                recipeData?.let {
+                    recipe ->
+                    val keyIngredients = recipe.ingredients.joinToString(separator = ", ") { it.name }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 32.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(modifier = Modifier.height(120.dp).width(120.dp).clip(RoundedCornerShape(10.dp))) {
+//                        Image(painter = painterResource(id = R.drawable.default_food_image), contentDescription = "deskripsi gambar recipe", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            AsyncImage(
+                                model = recipe.image,
+                                contentDescription = "Recipe Image",
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                placeholder = painterResource(id = R.drawable.default_food_image),
+                                error = painterResource(id = R.drawable.default_food_image),
+                                fallback = painterResource(id = R.drawable.default_food_image)
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(recipe.title, modifier = Modifier.padding(bottom = 8.dp), fontSize = 20.sp, fontFamily = OpenSans, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                            Text("Key Ingredient", fontSize = 16.sp, fontFamily = OpenSans, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                            Text(keyIngredients, fontSize = 16.sp, fontFamily = OpenSans, textAlign = TextAlign.Center)
+                        }
                     }
                 }
+
             }
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -340,6 +362,8 @@ private fun CreateRecipeContent(
             onDismissRequest = { openConfirmDialog.value = false },
             onConfirmRequest = {
                 openConfirmDialog.value = false
+                createRecipeViewModel.reduceIngredientQty()
+                navController.popBackStack() // kembali ke halaman sebelumnya
                 // TODO: Panggil fungsi ViewModel untuk membuat resep
             },
             icon = Icons.Default.CheckCircle

@@ -1,5 +1,7 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,7 +42,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,13 +62,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.RecipePlain
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.RecipeStatusState
+import com.example.nutrisaver.viewmodel.RecipeViewModel
+import kotlinx.coroutines.delay
 
 @Composable
-fun SearchResultScreen(navController: NavController) {
+fun SearchResultScreen(navController: NavController, keyword:String, recipeViewModel: RecipeViewModel) {
     Scaffold { innerPadding ->
-        SearchResultContent(modifier = Modifier.padding(innerPadding), navController)
+        SearchResultContent(modifier = Modifier.padding(innerPadding), navController, keyword, recipeViewModel)
     }
 }
 
@@ -98,10 +108,13 @@ private fun TopBar(
 @Composable
 private fun SearchResultContent(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    keyword: String,
+    recipeViewModel: RecipeViewModel
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    val itemResults = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig") // todo: ganti ke hasil search
+    var searchQuery by remember { mutableStateOf(keyword) }
+    val itemResults by recipeViewModel.listRecipeState.observeAsState(emptyList())
+//        listOf("Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig") // todo: ganti ke hasil search
 
     val background = colorResource(id = R.color.bg2_1)
     val background2 = colorResource(id = R.color.bg2_2)
@@ -110,6 +123,29 @@ private fun SearchResultContent(
     val filterTypeOptions = listOf("DESC", "ASC")
     var filterType by remember { mutableStateOf(filterTypeOptions[0]) }
     var filterTypeExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(searchQuery, filterType) {
+        // Tunggu selama 500 milidetik (0.5 detik).
+        delay(500L)
+        recipeViewModel.getAllRecipe(searchQuery, "popularity", 0, 6)
+    }
+
+    // RecipeState logic
+    val recipeState = recipeViewModel.recipeStatusState.observeAsState(RecipeStatusState.Idle)
+    val context = LocalContext.current
+
+    LaunchedEffect(recipeState.value) {
+        when (recipeState.value) {
+            is RecipeStatusState.Success -> {
+//                Toast.makeText(context, "Berhasil load!", Toast.LENGTH_SHORT).show()
+                Log.d("isi recipe", "${itemResults}")
+            }
+            is RecipeStatusState.Error -> {
+                Toast.makeText(context, (recipeState.value as RecipeStatusState.Error).message, Toast.LENGTH_SHORT).show()
+            }
+            else -> Unit
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize().background(backgroundGradient)) {
         Column(
@@ -232,9 +268,16 @@ private fun SearchResultContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(itemResults) { item ->
-                        RecipeGridItem(navController)
+                    when (recipeState.value){
+                        is RecipeStatusState.Success -> {
+                            Log.d("searchResultScreen", "isi all recipes sblm tampil: ${itemResults}")
+                            items(itemResults) { item ->
+                                RecipeGridItem(navController,item)
+                            }
+                        }
+                        else -> {}
                     }
+
                 }
             }
         }
@@ -244,6 +287,7 @@ private fun SearchResultContent(
 @Composable
 private fun RecipeGridItem(
     navController: NavController,
+    recipe: RecipePlain,
     modifier: Modifier = Modifier
 ) {
     val item1 = colorResource(id = R.color.item2_1)
@@ -255,24 +299,27 @@ private fun RecipeGridItem(
             .background(itemGradient, shape = RoundedCornerShape(10.dp))
             .padding(15.dp)
             .clickable {
-                navController.navigate("recipedetail")
+                navController.navigate("recipedetail/${recipe.recipeId}")
             }
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(R.drawable.default_food_image), // todo: ganti ke link gambar aslinya
-                contentDescription = "Recipe image",
+            AsyncImage(
+                model = recipe.image, // Di sinilah Anda meletakkan URL String
+                contentDescription = "Recipe image", // Deskripsi untuk aksesibilitas
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
                     .padding(bottom = 8.dp)
                     .clip(RoundedCornerShape(10.dp)),
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Crop, // Atur bagaimana gambar di-scale
+                // Tampilkan gambar lokal ini JIKA link-nya TIDAK BISA DIAKSES (misal: error 404, tidak ada internet)
+                error = painterResource(id = R.drawable.default_food_image),
+                fallback = painterResource(id = R.drawable.default_food_image) // Tampilkan gambar lokal ini JIKA link-nya NULL
             )
             Text(
-                "Nama Recipe", // todo: ganti ke nama recipe aslinya
+                recipe.title, // todo: ganti ke nama recipe aslinya
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,

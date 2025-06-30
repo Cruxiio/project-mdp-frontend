@@ -1,5 +1,7 @@
 package com.example.nutrisaver.ui.screens.user
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,7 +39,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -54,8 +60,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.nutrisaver.R
+import com.example.nutrisaver.data.model.RecipeFavorite
 import com.example.nutrisaver.ui.theme.OpenSans
+import com.example.nutrisaver.viewmodel.RecipeStatusState
+import com.example.nutrisaver.viewmodel.RecipeViewModel
+import kotlinx.coroutines.delay
 
 // dummy data class buat nampilin recipe
 // todo: ganti ke object aslinya nanti setelah selesai
@@ -165,7 +176,7 @@ private fun generateDummyFavoriteRecipes(): List<UserRecipeDummy> {
 }
 
 @Composable
-fun FavoriteRecipeScreen(navController: NavController) {
+fun FavoriteRecipeScreen(navController: NavController,recipeViewModel: RecipeViewModel) {
     Scaffold(
         topBar = {
             TopBar(onBackClick = { navController.popBackStack() })
@@ -173,6 +184,7 @@ fun FavoriteRecipeScreen(navController: NavController) {
     ) { innerPadding ->
         FavoriteRecipeContent(
             modifier = Modifier.padding(innerPadding),
+            recipeViewModel = recipeViewModel,
             navController = navController
         )
     }
@@ -216,6 +228,7 @@ private fun TopBar(
 @Composable
 private fun FavoriteRecipeContent(
     modifier: Modifier = Modifier,
+    recipeViewModel: RecipeViewModel,
     navController: NavController
 ) {
     val background = colorResource(id = R.color.bg2_1)
@@ -225,17 +238,43 @@ private fun FavoriteRecipeContent(
     var searchQuery by remember { mutableStateOf("") }
     var favoriteRecipes by remember { mutableStateOf(generateDummyFavoriteRecipes()) } // todo: ganti ke data yang diambil melalui viewmodel
 
-    // Filter recipes based on search query
-    val filteredRecipes = remember(searchQuery, favoriteRecipes) {
-        if (searchQuery.isBlank()) {
-            favoriteRecipes
-        } else {
-            favoriteRecipes.filter { recipe ->
-                recipe.title.contains(searchQuery, ignoreCase = true) ||
-                        recipe.description.contains(searchQuery, ignoreCase = true)
+    // data recipe dari backend
+    val listRecipeFavState by recipeViewModel.listRecipeFavoriteState.observeAsState(emptyList())
+
+    // RecipeState logic
+    val recipeState = recipeViewModel.recipeStatusState.observeAsState(RecipeStatusState.Idle)
+    val context = LocalContext.current
+
+    LaunchedEffect(searchQuery) {
+        // debounce 500ms
+        delay(500L)
+        recipeViewModel.getFavoriteRecipes(searchQuery)
+    }
+
+    LaunchedEffect(recipeState.value) {
+        when (recipeState.value) {
+            is RecipeStatusState.Success -> {
+//                Toast.makeText(context, "Berhasil load!", Toast.LENGTH_SHORT).show()
+                Log.d("favoriteRecipeScreen", "isi data recipe ${listRecipeFavState}")
             }
+            is RecipeStatusState.Error -> {
+                Toast.makeText(context, (recipeState.value as RecipeStatusState.Error).message, Toast.LENGTH_SHORT).show()
+            }
+            else -> Unit
         }
     }
+
+    // Filter recipes based on search query
+//    val filteredRecipes = remember(searchQuery, favoriteRecipes) {
+//        if (searchQuery.isBlank()) {
+//            favoriteRecipes
+//        } else {
+//            favoriteRecipes.filter { recipe ->
+//                recipe.title.contains(searchQuery, ignoreCase = true) ||
+//                        recipe.description.contains(searchQuery, ignoreCase = true)
+//            }
+//        }
+//    }
 
     Box(
         modifier = modifier
@@ -282,52 +321,71 @@ private fun FavoriteRecipeContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Recipe Count
-            Text(
-                text = "${filteredRecipes.size} favorite recipe${if (filteredRecipes.size != 1) "s" else ""}",
-                fontSize = 16.sp,
-                fontFamily = OpenSans,
-                fontWeight = FontWeight.Bold
-            )
+            when(recipeState.value){
+                is RecipeStatusState.Success -> {
+                    listRecipeFavState?.let {
+                        recipeFav ->
+                        Text(
+                            text = "${recipeFav.size} favorite recipe${if (recipeFav.size != 1) "s" else ""}",
+                            fontSize = 16.sp,
+                            fontFamily = OpenSans,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                else -> {Text(
+                    text = "0 favorite recipe",
+                    fontSize = 16.sp,
+                    fontFamily = OpenSans,
+                    fontWeight = FontWeight.Bold
+                )}
+            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Recipes List
-            if (filteredRecipes.isEmpty()) {
-                EmptyFavoritesState(
-                    isSearching = searchQuery.isNotBlank()
-                )
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                    items(filteredRecipes) { recipe ->
-                        FavoriteRecipeCard(
-                            recipe = recipe,
-                            onRecipeClick = {
-                                // Navigate to recipe detail
-                                navController.navigate("recipe_detail/${recipe.recipeId}")
-                            },
-                            onRemoveFromFavorites = {
-                                // Remove from favorites
-                                favoriteRecipes = favoriteRecipes.filter { it.id != recipe.id }
-                            }
-                        )
+            listRecipeFavState?.let {
+                recipeFav ->
+                if (recipeFav.isEmpty()) {
+                    EmptyFavoritesState(
+                        isSearching = searchQuery.isNotBlank()
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(recipeFav) { recipe ->
+                            FavoriteRecipeCard(
+                                recipe = recipe,
+                                onRecipeClick = {
+                                    // Navigate to recipe detail
+                                    navController.navigate("recipedetail/${recipe.recipeId}")
+                                },
+                                onRemoveFromFavorites = { recipeId ->
+                                    // Remove from favorites
+                                    recipeViewModel.deleteRecipeFav(recipeId)
+                                }
+                            )
+                        }
                     }
                 }
             }
+
         }
     }
 }
 
 @Composable
 private fun FavoriteRecipeCard(
-    recipe: UserRecipeDummy, // todo: ganti ke tipe data aslinya nanti setelah selesai
+    recipe: RecipeFavorite, // todo: ganti ke tipe data aslinya nanti setelah selesai
     onRecipeClick: () -> Unit,
-    onRemoveFromFavorites: () -> Unit
+    onRemoveFromFavorites: (recipeId: Int) -> Unit
 ) {
     var showRemoveDialog by remember { mutableStateOf(false) }
     val green = colorResource(R.color.green)
+    var deletedRecipeID by remember { mutableStateOf(-1) }
 
     Card(
         modifier = Modifier
@@ -346,41 +404,45 @@ private fun FavoriteRecipeCard(
                     .fillMaxWidth()
                     .height(180.dp)
             ) {
-                // Recipe Image (placeholder)
-                Image(
-                    painter = painterResource(id = R.drawable.default_food_image), // Replace with actual image loading
-                    contentDescription = recipe.title,
+                // Recipe Image
+                AsyncImage(
+                    model = recipe.image,
+                    contentDescription = "Recipe Image",
                     modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                    contentScale = ContentScale.Crop
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.default_food_image),
+                    error = painterResource(id = R.drawable.default_food_image),
+                    fallback = painterResource(id = R.drawable.default_food_image)
                 )
 
                 // Vegan Badge
-                if (recipe.vegan) {
-                    Box(
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .background(
-                                Color.Green.copy(alpha = 0.9f),
-                                RoundedCornerShape(12.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                            .align(Alignment.TopStart)
-                    ) {
-                        Text(
-                            text = "VEGAN",
-                            fontSize = 14.sp,
-                            fontFamily = OpenSans,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
+                // Todo sementara badge disable dulu karena dar backend nda ada data
+//                if (recipe.vegan) {
+//                    Box(
+//                        modifier = Modifier
+//                            .padding(12.dp)
+//                            .background(
+//                                Color.Green.copy(alpha = 0.9f),
+//                                RoundedCornerShape(12.dp)
+//                            )
+//                            .padding(horizontal = 8.dp, vertical = 4.dp)
+//                            .align(Alignment.TopStart)
+//                    ) {
+//                        Text(
+//                            text = "VEGAN",
+//                            fontSize = 14.sp,
+//                            fontFamily = OpenSans,
+//                            fontWeight = FontWeight.Bold,
+//                            color = Color.White
+//                        )
+//                    }
+//                }
 
                 // Favorite Heart Button
                 IconButton(
-                    onClick = { showRemoveDialog = true },
+                    onClick = { showRemoveDialog = true; deletedRecipeID = recipe.recipeId },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(14.dp)
@@ -419,16 +481,17 @@ private fun FavoriteRecipeCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Description
-                Text(
-                    text = recipe.description,
-                    fontSize = 14.sp,
-                    fontFamily = OpenSans,
-                    color = Color.Gray,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
+                // Todo ini juga sementara disable karena nda ada data description dari BE
+//                Text(
+//                    text = recipe.description,
+//                    fontSize = 14.sp,
+//                    fontFamily = OpenSans,
+//                    color = Color.Gray,
+//                    maxLines = 2,
+//                    overflow = TextOverflow.Ellipsis
+//                )
+//
+//                Spacer(modifier = Modifier.height(12.dp))
 
                 // Nutrition Info
                 Row(
@@ -463,7 +526,7 @@ private fun FavoriteRecipeCard(
     // Remove from favorites confirmation dialog
     if (showRemoveDialog) {
         AlertDialog(
-            onDismissRequest = { showRemoveDialog = false },
+            onDismissRequest = { showRemoveDialog = false; deletedRecipeID = -1 },
             title = {
                 Text(
                     text = "Remove from Favorites",
@@ -481,8 +544,9 @@ private fun FavoriteRecipeCard(
             confirmButton = {
                 Button(
                     onClick = {
-                        onRemoveFromFavorites()
+                        onRemoveFromFavorites(deletedRecipeID)
                         showRemoveDialog = false
+                        deletedRecipeID = -1
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.delete_confirm))
                 ) {
