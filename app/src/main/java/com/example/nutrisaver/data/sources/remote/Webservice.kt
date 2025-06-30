@@ -95,10 +95,10 @@ interface Webservice {
     @GET("api/foodstock/stock") // Sesuaikan path jika nama endpoint Anda berbeda
     suspend fun getAllFoodStock(@Header("Authorization") token: String): List<FoodStockJson> // <-- DIUBAH
 
-    @DELETE("api/foodstock/delete/{id}")
+    @DELETE("api/foodstock/delete/{food_stock_id}")
     suspend fun deleteFoodStock(
         @Header("Authorization") token: String,
-        @Path("id") id: Int
+        @Path("food_stock_id") id: Int
     ): Response<Unit> // Gunakan Response<Unit> karena kita hanya butuh status sukses/gagal
 
     @PUT("api/foodstock/update/{id}")
