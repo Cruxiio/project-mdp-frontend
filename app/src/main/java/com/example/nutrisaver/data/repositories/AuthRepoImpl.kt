@@ -61,6 +61,7 @@ class AuthRepoImpl(
     override suspend fun getUserProfile(idToken: String, userId: String): User {
         Log.d("AuthRepo", "Attempting to fetch user $userId from local cache...")
         val localUser = authLocalDataSource.getUser(userId)
+        Log.e("AuthRepo", "getUserProfile: ${localUser}", )
 
         if (localUser != null) {
             // 2. JIKA ADA: Langsung kembalikan data dari lokal. Selesai! Cepat & bisa offline.
