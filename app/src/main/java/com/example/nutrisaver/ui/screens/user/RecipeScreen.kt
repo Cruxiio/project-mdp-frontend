@@ -61,6 +61,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -728,9 +729,11 @@ private fun RecipeGridItem(
                 recipe.title,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontFamily = OpenSans,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

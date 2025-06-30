@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -202,16 +203,16 @@ private fun CreateRecipeContent(
                     val keyIngredients = recipe.ingredients.joinToString(separator = ", ") { it.name }
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 32.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(modifier = Modifier.height(120.dp).width(120.dp).clip(RoundedCornerShape(10.dp))) {
 //                        Image(painter = painterResource(id = R.drawable.default_food_image), contentDescription = "deskripsi gambar recipe", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                             AsyncImage(
                                 model = recipe.image,
                                 contentDescription = "Recipe Image",
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.wrapContentSize(),
+                                contentScale = ContentScale.Fit,
                                 placeholder = painterResource(id = R.drawable.default_food_image),
                                 error = painterResource(id = R.drawable.default_food_image),
                                 fallback = painterResource(id = R.drawable.default_food_image)
