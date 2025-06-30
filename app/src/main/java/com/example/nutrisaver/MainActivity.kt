@@ -10,6 +10,7 @@ import com.example.nutrisaver.ui.theme.NutriSaverTheme
 import com.example.nutrisaver.viewmodel.AdminFeedbackViewModel
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
+import com.example.nutrisaver.viewmodel.CreateRecipeViewModel
 import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.LogMealViewModel
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
                 val recipeViewModel : RecipeViewModel = viewModel(factory=factory)
                 val feedbackViewModel : FeedbackViewModel = viewModel(factory=factory)
                 val adminFeedbackViewModel : AdminFeedbackViewModel = viewModel(factory=factory)
+                val createRecipeViewModel: CreateRecipeViewModel = viewModel(factory = factory)
 
                 MyAppNavigation(
                     navController = navController,
@@ -45,7 +47,8 @@ class MainActivity : ComponentActivity() {
                     foodStockViewModel = foodStockViewModel,
                     recipeViewModel = recipeViewModel,
                     feedBackViewModel = feedbackViewModel,
-                    adminFeedbackViewModel = adminFeedbackViewModel
+                    adminFeedbackViewModel = adminFeedbackViewModel,
+                    createRecipeViewModel = createRecipeViewModel
                 )
             }
         }

@@ -107,10 +107,10 @@ interface Webservice {
         @Path("id") id: Int
     ): Response<Unit> // Gunakan Response<Unit> karena kita hanya butuh status sukses/gagal
 
-    @PUT("api/foodstock/update/{id}")
+    @PUT("api/foodstock/update/{food_stock_id}")
     suspend fun updateFoodStock(
         @Header("Authorization") token: String,
-        @Path("id") id: Int,
+        @Path("food_stock_id") id: Int,
         @Body request: UpdateFoodStockRequestJson // <-- Gunakan request yang baru
     ): UpdateFoodStockResponseJson
 

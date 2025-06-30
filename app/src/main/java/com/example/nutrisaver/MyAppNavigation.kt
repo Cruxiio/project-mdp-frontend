@@ -38,6 +38,7 @@ import com.example.nutrisaver.ui.screens.user.UserHealthArticleScreen
 import com.example.nutrisaver.viewmodel.AdminFeedbackViewModel
 import com.example.nutrisaver.viewmodel.AdminUsersViewModel
 import com.example.nutrisaver.viewmodel.AuthViewModel
+import com.example.nutrisaver.viewmodel.CreateRecipeViewModel
 import com.example.nutrisaver.viewmodel.FeedbackViewModel
 import com.example.nutrisaver.viewmodel.FoodStockViewModel
 import com.example.nutrisaver.viewmodel.HealthArticleViewModel
@@ -56,13 +57,14 @@ fun MyAppNavigation(
     logMealViewModel: LogMealViewModel,
     recipeViewModel : RecipeViewModel,
     feedBackViewModel: FeedbackViewModel,
-    adminFeedbackViewModel: AdminFeedbackViewModel
+    adminFeedbackViewModel: AdminFeedbackViewModel,
+    createRecipeViewModel: CreateRecipeViewModel
 ) {
     
     val healthArticleViewModel: HealthArticleViewModel = viewModel(factory = CustomViewModelFactory)
     
     // buat nested navigation
-    NavHost(navController = navController, startDestination = "admin") {
+    NavHost(navController = navController, startDestination = "auth") {
 
         // navigation antara login dan register
         navigation(startDestination = "login", route = "auth") {
@@ -163,8 +165,22 @@ fun MyAppNavigation(
                     navController.popBackStack()
                 }
             }
-            composable("createrecipe") {
-                CreateRecipeScreen(navController = navController)
+            composable(
+                "createrecipe/{recipe_id}",
+                arguments = listOf(navArgument("recipe_id") {
+                    type = NavType.IntType // Tentukan tipe datanya, misalnya Int
+                })
+            ) {
+                    backStackEntry ->
+                // Ambil argumen ID dari backStackEntry
+                val recipeId = backStackEntry.arguments?.getInt("recipe_id")
+                if (recipeId != null) {
+                    CreateRecipeScreen(navController = navController, recipeId, createRecipeViewModel)
+                } else {
+                    // kembali ke layar sebelumnya jika id null
+                    navController.popBackStack()
+                }
+
             }
             composable("profile") {
                 ProfileScreen(

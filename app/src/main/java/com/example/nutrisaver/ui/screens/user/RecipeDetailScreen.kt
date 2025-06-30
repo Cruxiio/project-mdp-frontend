@@ -492,7 +492,7 @@ private fun RecipeDetailContent(
         ) {
             Button(
                 onClick = {
-                    navController.navigate("createrecipe")
+                    navController.navigate("createrecipe/${recipe.recipeId}")
                 },
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(

@@ -50,7 +50,7 @@ val CustomViewModelFactory = object : ViewModelProvider.Factory {
                 isAssignableFrom(AdminFeedbackViewModel::class.java) ->
                     AdminFeedbackViewModel(adminRepository, application)
                 isAssignableFrom(CreateRecipeViewModel::class.java) ->
-                    CreateRecipeViewModel(foodStockRepository)
+                    CreateRecipeViewModel(foodStockRepository, recipeRepository)
                 else ->
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
