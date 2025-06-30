@@ -66,11 +66,11 @@ class LogMealViewModel(
 
     // Blok init untuk langsung memuat data saat ViewModel dibuat
     // dan otomatis memuat ulang saat tanggal berubah
-//    init {
-//        _historySelectedDate.onEach { date ->
-//            fetchHistoryForDate(date)
-//        }.launchIn(viewModelScope)
-//    }
+    init {
+        _historySelectedDate.onEach { date ->
+            fetchHistoryForDate(date)
+        }.launchIn(viewModelScope)
+    }
 
     fun changeHistoryDate(newDate: LocalDate) {
         _historySelectedDate.value = newDate

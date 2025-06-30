@@ -37,6 +37,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import com.example.nutrisaver.ui.theme.OpenSans
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,6 +46,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import coil.compose.AsyncImage
 import com.example.nutrisaver.data.model.FoodStock
 import com.example.nutrisaver.ui.screens.user.ExpiryStatus
 import com.example.nutrisaver.ui.screens.user.FoodStockItemDummy
@@ -231,13 +233,25 @@ fun FoodStockItemCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.default_food_image),
-                contentDescription = "Food image for ${item.name}",
+//            Image(
+//                painter = painterResource(id = R.drawable.default_food_image),
+//                contentDescription = "Food image for ${item.name}",
+//                modifier = Modifier
+//                    .size(70.dp)
+//                    .clip(RoundedCornerShape(8.dp)),
+//                contentScale = ContentScale.Crop,
+//            )
+            AsyncImage(
+                model = item.imageUrl,
+                contentDescription = item.name,
+                placeholder = painterResource(id = R.drawable.default_food_image),
+                error = painterResource(id = R.drawable.default_food_image),
                 modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop,
+                    .width(70.dp)
+                    .height(70.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .wrapContentSize(),
+                contentScale = ContentScale.Fit,
             )
             Column {
                 Text(

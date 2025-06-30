@@ -150,7 +150,7 @@ fun LogMealContent(
     var selectedRecipe by remember { mutableStateOf<Recipe?>(null) }
     var customFoodName by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("100") }
-    var selectedUnit by remember { mutableStateOf("grams") }
+    var selectedUnit by remember { mutableStateOf("gram") }
     var calories by remember { mutableStateOf("") }
     var carbs by remember { mutableStateOf("") }
     var protein by remember { mutableStateOf("") }
