@@ -161,6 +161,8 @@ class AuthViewModel(
         _authState.value = AuthState.ToRegisterPage2
     }
 
+    // Di dalam file AuthViewModel.kt
+
     fun signup(inp: RegisterDetailInp) {
         val err = inp.checkKosong()
         if (err.isNotEmpty()) {
@@ -171,12 +173,18 @@ class AuthViewModel(
         _authState.value = AuthState.Loading
         viewModelScope.launch {
             try {
-                val userRole = "user" // Role default untuk semua pendaftar baru
+                val userRole = "user"
+
+                // 1. Deklarasikan variabel di sini agar bisa diakses di seluruh blok 'try'
+                val firebaseUser: FirebaseUser
+
                 if (registerInp.password.isNotEmpty()) {
                     // --- ALUR REGISTRASI MANUAL ---
                     Log.d("AuthViewModel", "Signup path: Manual Registration")
                     val authResult = auth.createUserWithEmailAndPassword(registerInp.email, registerInp.password).await()
-                    val firebaseUser = authResult.user ?: throw Exception("Gagal membuat user di Firebase.")
+
+                    // 2. Isi nilainya di sini
+                    firebaseUser = authResult.user ?: throw Exception("Gagal membuat user di Firebase.")
 
                     val userToRegister = User(
                         id = null, uuid = firebaseUser.uid, role = userRole, name = inp.name,
@@ -195,16 +203,15 @@ class AuthViewModel(
                 } else {
                     // --- ALUR MELENGKAPI PROFIL GOOGLE ---
                     Log.d("AuthViewModel", "Signup path: Google Profile Completion")
-                    val firebaseUser = auth.currentUser ?: throw Exception("Sesi login Google tidak ditemukan.")
+
+                    // 2. Isi nilainya di sini juga
+                    firebaseUser = auth.currentUser ?: throw Exception("Sesi login Google tidak ditemukan.")
 
                     val userToRegister = User(
-                        id = null, uuid = firebaseUser.uid, role = userRole,
-                        name = inp.name.ifEmpty { firebaseUser.displayName ?: "" },
-                        username = firebaseUser.displayName?.split(" ")?.first() ?: "user",
-                        email = firebaseUser.email!!,
+                        id = null, uuid = firebaseUser.uid, role = userRole, name = inp.name,
+                        username = registerInp.username, email = registerInp.email,
                         dateOfBirth = MockDB.dateFormater(inp.dateOfBirth), gender = inp.gender,
-                        weight = inp.weight, height = inp.height,
-                        profilePicture = firebaseUser.photoUrl?.toString(),
+                        weight = inp.weight, height = inp.height, profilePicture = null,
                         goal = inp.goalOption, targetWeight = inp.targetWeight,
                         dietType = inp.dietTypeOption, proteinRatio = inp.protein,
                         carbsRatio = inp.carbs, fatRatio = inp.fat, allergen = inp.allergen,
@@ -215,8 +222,9 @@ class AuthViewModel(
                     authRepo.register(userToRegister)
                 }
 
-                // DIUBAH: Setelah registrasi berhasil, set state Authenticated dengan role 'user'
-                _authState.value = AuthState.Authenticated(role = userRole)
+                // 3. PANGGIL FUNGSI DENGAN PARAMETER YANG BENAR
+                fetchUserProfileAndSetState(firebaseUser)
+
                 registerInp = RegisterInp()
 
             } catch (e: Exception) {
