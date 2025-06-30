@@ -81,6 +81,7 @@ class UserViewModel(
                     // Panggil repo HANYA dengan token mentah
                     val profile = authRepo.getUserProfile(token, uid)
                     _userProfile.value = profile
+                    Log.e("UserViewModel", "fetchUserProfile: ${profile}", )
                     _userState.value = UserState.Success
                 } else {
                     throw Exception("Gagal mendapatkan token autentikasi.")

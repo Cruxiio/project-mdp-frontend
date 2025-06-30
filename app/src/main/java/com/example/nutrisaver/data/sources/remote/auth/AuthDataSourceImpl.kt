@@ -73,7 +73,8 @@ class AuthDataSourceImpl(
         data: Map<String, RequestBody>,
         profilePicture: MultipartBody.Part?
     ): UserJson {
-        return webservice.updateUserProfile(bearerToken, data, profilePicture)
+        val formatedToken = "Bearer $bearerToken"
+        return webservice.updateUserProfile(formatedToken, data, profilePicture)
     }
 
     override suspend fun updateUserInformation(idToken: String, user: User): User {

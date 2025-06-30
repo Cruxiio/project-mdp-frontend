@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -320,10 +322,30 @@ private fun RecipeContent(
             when (recipeState.value) {
                 is RecipeStatusState.Success -> {
                     Log.d("isi all recipes sblm tampil", "${allRecipes}")
-                    RecipeGrid(
-                        recipes = allRecipes,
-                        navController = navController
-                    )
+                    if (allRecipes.isEmpty()){
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
+                        ) {
+                            Text(
+                                text = if (searchQuery.isBlank()) "You have no food stock yet." else "No recipe found matching your search.",
+                                fontSize = 16.sp,
+                                fontFamily = OpenSans,
+                                color = Color.Gray,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    else{
+                        RecipeGrid(
+                            recipes = allRecipes,
+                            navController = navController
+                        )
+                    }
                 }
                 else -> {}
             }
