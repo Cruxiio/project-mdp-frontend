@@ -9,6 +9,7 @@ import com.example.nutrisaver.data.sources.remote.common.AddFoodStockResponseJso
 import com.example.nutrisaver.data.sources.remote.common.AllergenGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionDetailJson
 import com.example.nutrisaver.data.sources.remote.common.DailyConsumptionJson
+import com.example.nutrisaver.data.sources.remote.common.DecreaseFoodStockRequestJson
 import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
 import com.example.nutrisaver.data.sources.remote.common.IngredientGetAllResponse
 import com.example.nutrisaver.data.sources.remote.common.IngredientJson
@@ -112,6 +113,13 @@ interface Webservice {
         @Header("Authorization") token: String,
         @Path("food_stock_id") id: Int,
         @Body request: UpdateFoodStockRequestJson // <-- Gunakan request yang baru
+    ): UpdateFoodStockResponseJson
+
+    @PATCH("api/foodstock/{food_stock_id}/decrease") // Gunakan PATCH dan path yang sesuai
+    suspend fun decreaseFoodStock(
+        @Header("Authorization") token: String,
+        @Path("food_stock_id") id: Int,
+        @Body request: DecreaseFoodStockRequestJson // Body request baru
     ): UpdateFoodStockResponseJson
 
     // admin api

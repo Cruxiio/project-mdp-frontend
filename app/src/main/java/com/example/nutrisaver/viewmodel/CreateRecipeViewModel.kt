@@ -127,25 +127,38 @@ class CreateRecipeViewModel(
     }
 
     fun reduceIngredientQty() {
+        // 1. Tampilkan status loading ke UI
+        // _uiState.value = UiState.Loading
+
         viewModelScope.launch {
             try {
-//              // ambil token user
-                val token = auth.currentUser?.getIdToken(false)?.await()?.token ?: throw Exception("Sesi tidak valid.")
-                if (_chosenIngredients.value.size > 0){
-                    var idx = 0;
-                    _chosenIngredients.value.forEach {
-                        idx++;
-                        Log.d("createRecipeDetail", "$idx. ${it.foodStock}")
-                        foodStockRepo.updateFoodStockQuantity(token, it.foodStock.id ?: -1, it.amountToUse)
+                val token = auth.currentUser?.getIdToken(false)?.await()?.token
+                    ?: throw Exception("Sesi tidak valid, silakan login kembali.")
+
+                if (_chosenIngredients.value.isNotEmpty()) {
+                    // Lakukan semua operasi pengurangan stok
+                    _chosenIngredients.value.forEach { ingredientToUse ->
+                        Log.d("RecipeViewModel", "Mengurangi ${ingredientToUse.foodStock.name} sebanyak ${ingredientToUse.amountToUse}")
+
+                        // =============================================================
+                        // ▼▼▼ PANGGIL FUNGSI YANG BENAR DI SINI ▼▼▼
+                        // =============================================================
+                        foodStockRepo.decreaseFoodStockQuantity(
+                            token = token,
+                            id = ingredientToUse.foodStock.id ?: -1,
+                            quantityToDecrease = ingredientToUse.amountToUse
+                        )
                     }
                 }
-                // reset
-                _chosenIngredients.value = emptyList()
 
-            }
-            catch (e: Exception) {
-                Log.e("RecipeViewModel", "Update ingredient Qty Failed", e)
-//                _recipeStatusState.value = RecipeStatusState.Error(e.message ?: "Gagal mendapatkan recipe detail")
+                // 2. Jika semua berhasil, reset list dan tampilkan status sukses
+                _chosenIngredients.value = emptyList()
+                // _uiState.value = UiState.Success("Stok berhasil diperbarui!")
+
+            } catch (e: Exception) {
+                // 3. Jika terjadi error di mana pun, tangkap dan tampilkan pesan error
+                Log.e("RecipeViewModel", "Gagal mengurangi stok bahan.", e)
+                // _uiState.value = UiState.Error(e.message ?: "Terjadi kesalahan")
             }
         }
     }

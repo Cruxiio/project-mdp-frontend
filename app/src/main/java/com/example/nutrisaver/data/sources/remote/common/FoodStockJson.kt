@@ -57,3 +57,7 @@ data class UpdateFoodStockResponseJson(
     @Json(name = "foodStock") val foodStock: FoodStockJson?
 )
 
+data class DecreaseFoodStockRequestJson(
+    val decrease_quantity: Float
+)
+

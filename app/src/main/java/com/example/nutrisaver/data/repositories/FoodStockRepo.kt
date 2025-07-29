@@ -3,7 +3,9 @@ package com.example.nutrisaver.data.repositories
 import android.util.Log
 import com.example.nutrisaver.data.model.FoodStock
 import com.example.nutrisaver.data.sources.local.FoodStockLocalDataSource
+import com.example.nutrisaver.data.sources.local.entity.FoodStockEntity
 import com.example.nutrisaver.data.sources.remote.common.FoodStockDataSource
+import com.example.nutrisaver.data.sources.remote.common.FoodStockJson
 import kotlinx.coroutines.flow.first
 
 // ... (interface FoodStockRepo tetap sama) ...
@@ -13,6 +15,7 @@ interface FoodStockRepo {
     suspend fun deleteFoodStock(token: String, id: Int)
     suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock
     suspend fun getExpiringSoonStock(token: String): List<FoodStock>
+    suspend fun decreaseFoodStockQuantity(token: String, id: Int, quantityToDecrease: Float): FoodStockJson
 }
 
 
@@ -80,6 +83,30 @@ class FoodStockRepoImpl(
     override suspend fun getExpiringSoonStock(token: String): List<FoodStock> {
         // Fungsi ini langsung meneruskan panggilan ke remote data source
         return foodRemoteDataSource.getExpiringSoonStock(token)
+    }
+
+    override suspend fun decreaseFoodStockQuantity(token: String, id: Int, quantityToDecrease: Float): FoodStockJson {
+        // 1. Panggil API dan dapatkan FoodStockJson
+        val response = foodRemoteDataSource.decreaseFoodStockQuantity(token, id, quantityToDecrease)
+        val updatedFoodStockJson = response.foodStock
+
+        // 2. Ubah JSON -> Domain Model menggunakan companion object Anda
+        val foodStockDomain = FoodStock.fromStockJson(updatedFoodStockJson)
+
+        // =================================================================
+        // ▼▼▼ PERBAIKAN FINAL ▼▼▼
+        // =================================================================
+
+        // 3. Langsung simpan Domain Model ke local data source
+        if (foodStockDomain != null) {
+            // Karena insertOrUpdate butuh 'FoodStock', kita langsung berikan.
+            foodLocalDataSource.insertOrUpdate(foodStockDomain)
+        }
+
+        Log.d(TAG, "BERHASIL mengurangi stok di remote dan lokal.")
+
+        // 4. Kembalikan data JSON asli
+        return updatedFoodStockJson ?: throw IllegalStateException("API did not return valid data after update.")
     }
 
 }

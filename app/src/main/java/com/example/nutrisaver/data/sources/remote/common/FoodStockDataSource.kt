@@ -24,6 +24,7 @@ interface FoodStockDataSource {
     suspend fun deleteFoodStock(token: String, id: Int)
     suspend fun updateFoodStockQuantity(token: String, id: Int, quantity: Float): FoodStock
     suspend fun getExpiringSoonStock(token: String): List<FoodStock>
+    suspend fun decreaseFoodStockQuantity(token: String, id: Int, quantityToDecrease: Float): UpdateFoodStockResponseJson
 }
 
 /**
@@ -123,5 +124,10 @@ class FoodStockDataSourceImpl(
             Log.e("FoodStockRemoteDS", "Failed to get expiring stock", e)
             throw e
         }
+    }
+
+    override suspend fun decreaseFoodStockQuantity(token: String, id: Int, quantityToDecrease: Float): UpdateFoodStockResponseJson {
+        val request = DecreaseFoodStockRequestJson(decrease_quantity = quantityToDecrease)
+        return webservice.decreaseFoodStock("Bearer $token", id, request)
     }
 }
